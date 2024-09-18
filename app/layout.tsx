@@ -10,11 +10,14 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "FileGilla",
+  title: {
+    template: "%s",
+    default: "FileGilla",
+  },
   description: "Store your stuff on the cloud",
   openGraph: {
-    images: '/ogLogo.png'
-  }
+    images: "/ogLogo.png",
+  },
 };
 
 export default function RootLayout({
