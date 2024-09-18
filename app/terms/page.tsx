@@ -28,7 +28,7 @@ const Terms = () => {
               1. Acceptance of Terms
             </h2>
             <p className="text-gray-300">
-              By accessing or using [Your App Name] (the &#34;Service&#34;), you agree
+              By accessing or using FileGilla(the &#34;Service&#34;), you agree
               to be bound by these Terms of Service (&#34;Terms&#34;). If you disagree
               with any part of the terms, you may not access the Service.
             </p>
@@ -39,8 +39,7 @@ const Terms = () => {
               2. Description of Service
             </h2>
             <p className="text-gray-300">
-              [Your App Name] is a web-based application that provides [brief
-              description of your service]. We reserve the right to modify,
+              FileGilla is a web-based application that provides digital storage services. We reserve the right to modify,
               suspend, or discontinue the Service at any time without notice.
             </p>
           </section>
@@ -96,7 +95,7 @@ const Terms = () => {
             </h2>
             <p className="text-gray-300">
               The Service and its original content, features, and functionality
-              are owned by [Your Company Name] and are protected by
+              are owned by FileGilla and are protected by
               international copyright, trademark, patent, trade secret, and
               other intellectual property laws.
             </p>
