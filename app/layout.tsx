@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 
 import { Space_Grotesk } from "next/font/google";
+import { Providers } from "./providers";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn("antialiased", spaceGrotesk.className)}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
