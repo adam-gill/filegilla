@@ -7,11 +7,12 @@ import { useEffect } from "react";
 
 export default function Home() {
 
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
       console.log(session)
-  }, [])
+      console.log(status)
+  }, [session, status])
 
   return (
     <div className="w-full h-full flex">
@@ -21,7 +22,7 @@ export default function Home() {
       </div>
 
       <Button onClick={() => signIn("azure-ad-b2c")}>Sign In</Button>
-      {session && session.user && <p>{"Email: " + session.user}</p>}
+      {session && session.user && <p>{"Email: " + session.user.email}</p>}
 
       <Button onClick={() => signOut()}>Sign Out</Button>
 
