@@ -25,7 +25,7 @@ export const authConfig: NextAuthOptions = {
       id: "azure-ad-b2c",
       name: "Azure AD B2C",
       type: "oauth",
-      wellKnown: `https://auth.filegilla.com/auth.filegilla.com/B2C_1_defaultFlow/v2.0/.well-known/openid-configuration`,
+      wellKnown: process.env.WELL_KNOWN!,
       authorization: { params: { scope: "openid profile email" } },
       clientId: process.env.AZURE_AD_B2C_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_B2C_CLIENT_SECRET!,
