@@ -31,6 +31,7 @@ export const authConfig: NextAuthOptions = {
       clientSecret: process.env.AZURE_AD_B2C_CLIENT_SECRET!,
       idToken: true,
       profile(profile: ExtendedProfile): Promise<any> {
+        console.log(profile)
         return Promise.resolve({
           id: profile.sub || profile.oid || "",
           name: profile.name || "",
