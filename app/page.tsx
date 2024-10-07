@@ -57,17 +57,21 @@ export default function Home() {
           />
         </div>
 
-        <h1
+        <div
           className={`text-center mt-8 text-2xl transition-opacity duration-1000 ease-in-out ${
             hidden ? "opacity-0 invisible" : "opacity-100 visible"
           }`}
         >
-          All of your storage needs in one place
-        </h1>
+          <h1>All of your storage needs in one place</h1>
+          <h1 className="text-xl mt-4">Join for Free Today</h1>
+        </div>
 
-        <h1>Join for Free Today</h1>
-
-        <Button variant={"pretty"} className="mt-40 py-8 text-4xl px-20 rounded-full hover:scale-105 transition-all duration-500 ease-in-out">Join Now</Button>
+        <Button
+          variant={"pretty"}
+          className="mt-40 py-8 text-3xl px-20 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
+        >
+          Join Now
+        </Button>
       </main>
 
       <footer className="mt-auto py-4">
