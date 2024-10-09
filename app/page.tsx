@@ -8,10 +8,12 @@ import { useEffect, useState } from "react";
 import Typewriter from "typewriter-effect";
 import { useAuth } from "@/lib/useAuth";
 import { TailSpin } from "react-loading-icons";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [hidden, setHidden] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
   const { status } = useAuth({ page: "/" });
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
@@ -24,8 +26,18 @@ export default function Home() {
   }, [hidden]);
 
   useEffect(() => {
-    console.log(status)
-  }, [status])
+    console.log(status);
+  }, [status]);
+
+  if (status === "authenticated" || status === "loading") {
+    router.push("/dashboard");
+
+    return (
+      <>
+        <div className="flex cc min-h-screen">Redirecting...</div>
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen w-full px-8 mx-auto max-w-7xl">
