@@ -19,7 +19,8 @@ const buttonVariants = cva(
           "bg-neutral-100 text-neutral-900 shadow-sm hover:bg-neutral-100/80 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-800/80 text-lg",
         ghost: "hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-50",
         link: "text-neutral-900 underline-offset-4 hover:underline dark:text-neutral-50",
-        pretty: "bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90"
+        pretty: "bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90",
+        white: "bg-white text-black text-lg border-white border-2 hover:bg-black hover:text-white hover:scale-105 duration-300 transition-all"
       },
       size: {
         default: "h-9 px-4 py-2",

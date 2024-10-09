@@ -6,9 +6,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Typewriter from "typewriter-effect";
+import { useAuth } from "@/lib/useAuth";
+import { TailSpin } from "react-loading-icons";
 
 export default function Home() {
   const [hidden, setHidden] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const { status } = useAuth({ page: "/" });
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   useEffect(() => {
@@ -18,6 +22,10 @@ export default function Home() {
     };
     delayText();
   }, [hidden]);
+
+  useEffect(() => {
+    console.log(status)
+  }, [status])
 
   return (
     <div className="flex flex-col min-h-screen w-full px-8 mx-auto max-w-7xl">
@@ -33,12 +41,27 @@ export default function Home() {
             />
             <h1 className="text-2xl font-bold">FileGilla</h1>
           </li>
-          <li>
+          <li className="flex cc">
             <Button
-              onClick={() => signIn("azure-ad-b2c")}
-              variant={"secondary"}
+              className="w-24"
+              disabled={loading}
+              onClick={() => {
+                setLoading(true);
+                signIn("azure-ad-b2c");
+              }}
+              variant={"white"}
             >
-              Sign In
+              {loading ? (
+                <TailSpin
+                  stroke="#000"
+                  strokeWidth={2.5}
+                  width={24}
+                  height={24}
+                  speed={2.5}
+                />
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </li>
         </ul>
@@ -46,32 +69,48 @@ export default function Home() {
 
       <main className="flex-grow flex flex-col items-center">
         <div className="w-full h-[165px] max-w-[900px] mx-auto flex flex-col mt-16 text-7xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-blue-800 pb-4">
+          Storage in the Cloud with Privacy and Security
+        </div>
+        <div
+          className={`text-center mt-8 text-3xl transition-opacity duration-1000 ease-in-out `}
+        >
           <Typewriter
             options={{
-              strings: ["Storage in the Cloud with Privacy and Security"],
+              strings: [
+                "All of your storage needs in one place.",
+                "Complete data privacy and security.",
+                "Engineered with love.",
+              ],
               autoStart: true,
-              loop: false,
-              delay: 80,
-              deleteSpeed: 999999999,
+              loop: true,
+              delay: 60,
+              deleteSpeed: 50,
             }}
           />
         </div>
 
-        <div
-          className={`text-center mt-8 text-2xl transition-opacity duration-1000 ease-in-out ${
-            hidden ? "opacity-0 invisible" : "opacity-100 visible"
-          }`}
-        >
-          <h1>All of your storage needs in one place</h1>
-          <h1 className="text-xl mt-4">Join for Free Today</h1>
-        </div>
-
         <Button
+          disabled={loading}
+          onClick={() => {
+            setLoading(true);
+            signIn("azure-ad-b2c");
+          }}
           variant={"pretty"}
-          className="mt-40 py-8 text-3xl px-20 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
+          className="mt-36 w-72 py-8 text-3xl px-20 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
         >
-          Join Now
+          {loading ? (
+            <TailSpin
+              stroke="#000"
+              strokeWidth={2.5}
+              width={48}
+              height={48}
+              speed={2.5}
+            />
+          ) : (
+            "Join Now"
+          )}
         </Button>
+        <p className="mt-2">{"Join for free!"}</p>
       </main>
 
       <footer className="mt-auto py-4">
@@ -117,4 +156,16 @@ export default function Home() {
 
       <Button onClick={() => signOut()}>Sign Out</Button>
       <Button className="ml-4" onClick={() => router.push("/test")}>Go to test page</Button> */
+}
+
+{
+  /* <Typewriter
+            options={{
+              strings: ["Storage in the Cloud with Privacy and Security"],
+              autoStart: true,
+              loop: false,
+              delay: 70,
+              deleteSpeed: 999999999,
+            }}
+          /> */
 }

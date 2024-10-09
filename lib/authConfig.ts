@@ -3,19 +3,30 @@ import { JWT } from "next-auth/jwt";
 import { Profile as DefaultProfile } from "next-auth";
 
 interface ExtendedProfile extends DefaultProfile {
-  oid?: string;
-  emails?: string[] ; // Azure AD B2C often provides emails as an array
-  given_name?: string;
-  family_name?: string;
+  exp: number,
+  nbf: number,
+  ver: string,
+  iss: string,
+  sub: string,
+  aud: string,
+  iat: number,
+  auth_time: number,
+  idp: string,
+  oid: string,
+  extension_Username: string,
+  extension_FirstName: string
+  extension_LastName: string,
+  emails: string[],
+  tfp: string,
 }
 
 interface ExtendedSession extends Session {
   user: {
     id: string;
-    name: string | null;
+    username: string | null;
     email: string | null;
-    givenName: string | null;
-    surname: string | null;
+    firstName: string | null;
+    lastName: string | null;
   };
 }
 
@@ -26,18 +37,17 @@ export const authConfig: NextAuthOptions = {
       name: "Azure AD B2C",
       type: "oauth",
       wellKnown: process.env.WELL_KNOWN!,
-      authorization: { params: { scope: "openid profile email" } },
+      authorization: { params: { scope: "openid profile email", prompt: "login" } },
       clientId: process.env.AZURE_AD_B2C_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_B2C_CLIENT_SECRET!,
       idToken: true,
       profile(profile: ExtendedProfile): Promise<any> {
-        console.log(profile)
         return Promise.resolve({
           id: profile.sub || profile.oid || "",
-          name: profile.name || "",
+          username: profile.extension_Username || "",
           email: profile.emails?.[0] || "",
-          givenName: profile.given_name || "",
-          surname: profile.family_name || "",
+          firstName: profile.extension_FirstName || "",
+          surname: profile.extension_LastName || "",
         });
       },
     },
@@ -48,8 +58,9 @@ export const authConfig: NextAuthOptions = {
       if (account && profile) {
         token.accessToken = account.access_token;
         token.objectId = (profile as ExtendedProfile).oid;
-        token.givenName = (profile as ExtendedProfile).given_name;
-        token.surname = (profile as ExtendedProfile).family_name;
+        token.username = (profile as ExtendedProfile).extension_Username;
+        token.firstName = (profile as ExtendedProfile).extension_FirstName;
+        token.lastName = (profile as ExtendedProfile).extension_LastName;
         token.email = user.email; // Use the email from the user object
       }
       return token;
@@ -67,10 +78,10 @@ export const authConfig: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.sub || "",
-          name: token.name as string,
+          username: token.username as string,
           email: token.email as string,
-          givenName: token.givenName as string,
-          surname: token.surname as string,
+          firstName: token.firstName as string,
+          lastName: token.lastName as string,
         },
       };
     },
