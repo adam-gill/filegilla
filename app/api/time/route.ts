@@ -12,7 +12,6 @@ export async function POST(req: Request) {
     const body: body = await req.json();
 
     if (!body.message) {
-        
       return new NextResponse("Message is required", { status: 400 });
     }
 

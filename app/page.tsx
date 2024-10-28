@@ -9,12 +9,13 @@ import Typewriter from "typewriter-effect";
 import { useAuth } from "@/lib/useAuth";
 import { TailSpin } from "react-loading-icons";
 import { useRouter } from "next/navigation";
+import Loading from "@/components/loading";
 
 export default function Home() {
   const [hidden, setHidden] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
-  const { status } = useAuth({ page: "/" });
+  const { status } = useAuth();
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   useEffect(() => {
@@ -26,17 +27,13 @@ export default function Home() {
   }, [hidden]);
 
   useEffect(() => {
-    console.log(status);
+    if (status === "authenticated") {
+      router.push("/dashboard")
+    }
   }, [status]);
 
-  if (status === "authenticated" || status === "loading") {
-    router.push("/dashboard");
-
-    return (
-      <>
-        <div className="flex cc min-h-screen">Redirecting...</div>
-      </>
-    );
+  if (status === "loading") {
+    return <Loading />
   }
 
   return (
@@ -49,7 +46,7 @@ export default function Home() {
               width={40}
               height={40}
               alt="logo"
-              className="mr-4"
+              className="mr-4 h-10 w-10"
             />
             <h1 className="text-2xl font-bold">FileGilla</h1>
           </li>

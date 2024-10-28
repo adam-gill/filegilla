@@ -8,7 +8,9 @@ import { Providers } from "./providers";
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
+  variable: "--font-sg"
 });
+
 
 export const metadata: Metadata = {
   title: {
