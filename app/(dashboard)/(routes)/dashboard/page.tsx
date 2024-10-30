@@ -12,6 +12,7 @@ import Files from "@/components/files";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState<boolean>(false);
+  const [fileName, setFileName] = useState<string | null>("");
   const { session, status } = useAuth();
   const router = useRouter()
 
@@ -19,7 +20,7 @@ const Dashboard = () => {
     if (status === "unauthenticated") {
       router.push("/")
     }
-  }, [status])
+  }, [status, router])
 
   if (status === "loading") {
     return <Loading />
@@ -72,9 +73,9 @@ const Dashboard = () => {
             </Button>
 
           {/* file upload */}
-          <FileUpload label="File Upload" maxWidth={500} className="my-8"/>
+          <FileUpload fileName={fileName} setFileName={setFileName} label="File Upload" maxWidth={500} className="my-8"/>
 
-          <Files />
+          <Files fileName={fileName} />
 
           </div>
         </div>

@@ -8,19 +8,23 @@ import { Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/lib/useAuth";
+import Loading from "./loading";
+import { toast } from "@/hooks/use-toast";
 
 interface Props {
   label: string;
   maxWidth: number;
   className?: string;
+  fileName: string | null;
+  setFileName: (value: string | null) => void;
 }
 
-const FileUpload: React.FC<Props> = ({ label, maxWidth, className }) => {
-  const [fileName, setFileName] = useState<string | null>(null);
+
+const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, setFileName }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData | null>(null);
   const { session } = useAuth();
-  const [message, setMessage] = useState<any>();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,22 +45,31 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className }) => {
     setFileName(null);
   };
 
+  const showToast = (title: string, description: string) => {
+    toast({
+      title: title,
+      description: description,
+      variant: "good"
+    })
+  }
+
   const onUpload = async () => {
     try {
-    if (session?.user) {
-      formData?.append("userId", session.user.id)
-        const response = await axios.post(
-          "api/upload/",
-          formData
-        );
+      setLoading(true);
+      if (session?.user) {
+        formData?.append("userId", session.user.id);
+        await axios.post("api/upload/", formData);
 
-        // const data = response.data;
-        // setMessage(data);
-        console.log(response.data);
+
+        setLoading(false);
+        showToast(`Successfully uploaded ${fileName}`, "")
+        clearFile()
       }
     } catch (error: any) {
-      console.log("Client Error" + error);
-      setMessage("Error L");
+      setLoading(false);
+      showToast(`Failed to upload ${fileName} :(`, "Please try again...")
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,10 +122,14 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className }) => {
           onClick={() => onUpload()}
           className="w-4/5 fg-grad text-black text-lg mt-4"
         >
-          Upload
+          {loading ? (
+            <>
+              <Loading width={24} height={24} stroke={3} />
+            </>
+          ) : (
+            "Upload"
+          )}
         </Button>
-
-        <p>{"message: " + message}</p>
       </div>
     </>
   );

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { Space_Grotesk } from "next/font/google";
 import { Providers } from "./providers";
+import { Toaster } from "@/components/ui/toaster"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn("antialiased", spaceGrotesk.className)}>
         <Providers>{children}</Providers>
+        <Toaster />
       </body>
     </html>
   );
