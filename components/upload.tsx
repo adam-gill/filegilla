@@ -9,8 +9,7 @@ import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/lib/useAuth";
 import Loading from "./loading";
-import { toast } from "@/hooks/use-toast";
-
+import { showToast } from "@/lib/showToast";
 interface Props {
   label: string;
   maxWidth: number;
@@ -45,15 +44,9 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
     setFileName(null);
   };
 
-  const showToast = (title: string, description: string) => {
-    toast({
-      title: title,
-      description: description,
-      variant: "good"
-    })
-  }
-
   const onUpload = async () => {
+    showToast(`Uploading ${fileName}...`, "", "default")
+
     try {
       setLoading(true);
       if (session?.user) {
@@ -62,12 +55,12 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
 
 
         setLoading(false);
-        showToast(`Successfully uploaded ${fileName}`, "")
+        showToast(`Successfully uploaded ${fileName}`, "", "good")
         clearFile()
       }
     } catch (error: any) {
       setLoading(false);
-      showToast(`Failed to upload ${fileName} :(`, "Please try again...")
+      showToast(`Failed to upload ${fileName} :(`, "Please try again...", "destructive")
     } finally {
       setLoading(false);
     }

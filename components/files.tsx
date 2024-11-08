@@ -1,19 +1,19 @@
 import axios from "axios";
 import { file, listResponse } from "filegilla";
-import Loading from "./loading";
 import File from "./file";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
+import { showToast } from "@/lib/showToast";
+import { Skeleton } from "./ui/skeleton";
 
 interface props {
-  fileName: string | null,
+  fileName: string | null;
 }
 
 const Files: React.FC<props> = ({ fileName }) => {
   const { session } = useAuth();
   const userId = session?.user.id;
-  const [files, setFiles] = useState<file[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [files, setFiles] = useState<file[] | undefined>(undefined);
 
   const loadFiles = async () => {
     try {
@@ -22,13 +22,15 @@ const Files: React.FC<props> = ({ fileName }) => {
         const data = response.data as listResponse;
 
         setFiles(data.files);
-        setLoading(false);
       }
     } catch (error) {
       console.log(error);
+      showToast(
+        "Failed to load your files.",
+        "Please try again",
+        "destructive"
+      );
       setFiles([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -36,23 +38,36 @@ const Files: React.FC<props> = ({ fileName }) => {
     if (userId) loadFiles();
   }, [userId, fileName]);
 
-  if (loading) {
-    return <Loading />;
-  }
-
-  if (files.length === 0) {
+  if (!files) {
     return (
       <>
-        <h1>Failed to load files.</h1>
+        <div className="w-full flex flex-row flex-wrap">
+          {new Array(9).fill(0).map((_, index) => (
+            <Skeleton
+              key={index}
+              className="flex w-64 h-24 rounded-lg bg-[#a0a0a0a0] my-2 mx-2"
+            />
+          ))}
+        </div>
       </>
     );
   }
 
   return (
     <>
-      <h1 className="text-lg font-medium">{"Files:"}</h1>
-      <div className="flex flex-col gap-2">
-        {files && files.map((file, index) => <File key={index} {...file} />)}
+      <div className="w-full">
+        <h1 className="text-lg font-medium">{"Files:"}</h1>
+        <div className="flex flex-wrap">
+          {files &&
+            files.map((file, index) => (
+              <File
+                key={index}
+                {...file}
+                userId={userId}
+                loadFiles={loadFiles}
+              />
+            ))}
+        </div>
       </div>
     </>
   );

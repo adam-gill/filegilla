@@ -10,7 +10,6 @@ export async function GET(
 ) {
   try {
     const userId = params.userId;
-    console.log(userId)
 
     if (!userId) {
       return NextResponse.json(
@@ -25,7 +24,6 @@ export async function GET(
     const urlWithUserId = functionUrl.replace("{userId}", userId);
 
     const response = await axios.get(urlWithUserId);
-    console.log(response.data);
 
     return NextResponse.json(response.data as listResponse, { status: 200 });
   } catch (error) {
