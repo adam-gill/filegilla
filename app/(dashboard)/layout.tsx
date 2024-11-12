@@ -1,3 +1,4 @@
+import Navbar from "@/components/navbar";
 import type { Metadata } from "next";
 
 export function metadata(): Metadata {
@@ -17,6 +18,7 @@ export default function DashboardLayout({
 }>) {
   return (
     <>
+      <Navbar />
       <div>{children}</div>
     </>
   );

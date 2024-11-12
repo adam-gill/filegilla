@@ -42,7 +42,7 @@ const Files: React.FC<props> = ({ fileName }) => {
     return (
       <>
         <div className="w-full flex flex-row flex-wrap">
-          {new Array(9).fill(0).map((_, index) => (
+          {new Array(8).fill(0).map((_, index) => (
             <Skeleton
               key={index}
               className="flex w-64 h-24 rounded-lg bg-[#a0a0a0a0] my-2 mx-2"

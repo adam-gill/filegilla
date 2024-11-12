@@ -11,7 +11,8 @@ const config: Config = {
   	extend: {
   		colors: {
   			background: 'var(--background)',
-  			foreground: 'var(--foreground)'
+  			foreground: 'var(--foreground)',
+			grayHover: '#afafaf3f'
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

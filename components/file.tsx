@@ -10,7 +10,11 @@ import {
 } from "react-icons/gr";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { Button } from "./ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import axios from "axios";
 import { useState } from "react";
 import { showToast } from "@/lib/showToast";
@@ -20,8 +24,15 @@ interface fileProps extends file {
   loadFiles: () => Promise<void>;
 }
 
-const File = ({ name, sizeInBytes, lastModified, blobUrl, md5hash, userId, loadFiles }: fileProps) => {
-
+const File = ({
+  name,
+  sizeInBytes,
+  lastModified,
+  blobUrl,
+  md5hash,
+  userId,
+  loadFiles,
+}: fileProps) => {
   const [open, setOpen] = useState<boolean>(false);
 
   const deleteFile = async (fileName: string) => {
@@ -31,16 +42,16 @@ const File = ({ name, sizeInBytes, lastModified, blobUrl, md5hash, userId, loadF
           data: {
             userId: userId,
             blobName: fileName,
-          }
-        })
+          },
+        });
         loadFiles();
 
-        showToast(`Successfully deleted ${fileName}!`, "", "good")
+        showToast(`Successfully deleted ${fileName}!`, "", "good");
       }
     } catch (error) {
-      console.log("File deletion error: " + error)
+      console.log("File deletion error: " + error);
     }
-  }
+  };
 
   const convertSize = (size: number) => {
     const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -51,7 +62,6 @@ const File = ({ name, sizeInBytes, lastModified, blobUrl, md5hash, userId, loadF
     return Math.round(size / Math.pow(1024, i)) + " " + sizes[i];
   };
 
-
   const cleanName = (name: string): string => {
     if (name.length > 17) {
       name = name.slice(0, 16) + "...";
@@ -59,7 +69,6 @@ const File = ({ name, sizeInBytes, lastModified, blobUrl, md5hash, userId, loadF
 
     return name;
   };
-
 
   const cleanDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -116,34 +125,47 @@ const File = ({ name, sizeInBytes, lastModified, blobUrl, md5hash, userId, loadF
       >
         <div className="absolute top-2 left-2">{fileIcons(name)}</div>
         <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="absolute top-2 right-2 p-1 hover:bg-[#a0a0a06f] hover:text-white transition-all duration-300 rounded-full">
-            <BsThreeDotsVertical className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-56 shadow-md z-50" sideOffset={5}>
-          <div className="flex flex-col space-y-1">
-            <Button variant="ghost" className="justify-start" asChild>
-              <Link href={blobUrl} className="w-full">
-                Open
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 p-1 hover:bg-[#a0a0a06f] hover:text-white transition-all duration-300 rounded-full"
+            >
+              <BsThreeDotsVertical className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 shadow-md z-50" sideOffset={5}>
+            <div className="flex flex-col space-y-1">
+              <Button variant="ghost" className="justify-start" asChild>
+                <Link href={"/view/" + name} target="_blank" className="w-full">
+                  Open
+                </Link>
+              </Button>
+              <Link href={blobUrl}>
+                <Button variant="ghost" className="justify-start">
+                  Download
+                </Button>
               </Link>
-            </Button>
-            <Button variant="ghost" className="justify-start">
-              Download
-            </Button>
-            <Button variant="ghost" className="justify-start">
-              Rename
-            </Button>
-            <Button onClick={() => {
-              setOpen(false);
-              deleteFile(name);
-              showToast(`Deleting ${name}...`, "", "default");
-              }} variant="ghost" className="justify-start text-red-600 hover:bg-red-600 hover:text-white">
-              Delete
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
+              <Button
+                variant="ghost"
+                className="justify-start cursor-not-allowed"
+              >
+                Rename
+              </Button>
+              <Button
+                onClick={() => {
+                  setOpen(false);
+                  deleteFile(name);
+                  showToast(`Deleting ${name}...`, "", "default");
+                }}
+                variant="ghost"
+                className="justify-start text-red-600 hover:bg-red-600 hover:text-white"
+              >
+                Delete
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
         <Link href={blobUrl} className="flex flex-col cc py-2 px-4">
           <p>{cleanName(name)}</p>
           <p>{convertSize(sizeInBytes)}</p>
