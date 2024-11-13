@@ -137,7 +137,7 @@ const File = ({
           <PopoverContent className="w-56 shadow-md z-50" sideOffset={5}>
             <div className="flex flex-col space-y-1">
               <Button variant="ghost" className="justify-start" asChild>
-                <Link href={"/view/" + name} target="_blank" className="w-full">
+                <Link href={"/view/" + name} className="w-full">
                   Open
                 </Link>
               </Button>
@@ -166,7 +166,7 @@ const File = ({
             </div>
           </PopoverContent>
         </Popover>
-        <Link href={blobUrl} className="flex flex-col cc py-2 px-4">
+        <Link href={"/view/" + name} className="flex flex-col cc py-2 px-4">
           <p>{cleanName(name)}</p>
           <p>{convertSize(sizeInBytes)}</p>
           <p>{cleanDate(lastModified)}</p>

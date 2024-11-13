@@ -14,8 +14,6 @@ import { useAuth } from "@/lib/useAuth";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-
-
 const baseUrl = "https://filegillablobs.blob.core.windows.net/";
 
 export default function FileViewer({
@@ -29,7 +27,10 @@ export default function FileViewer({
   const { session } = useAuth();
 
   const fileType = params.fileName?.split(".").pop()?.toLowerCase();
-  const fileUrl = baseUrl + session?.user.id + params?.fileName;
+  let fileUrl: string | undefined = undefined;
+  if (session?.user?.id && params?.fileName) {
+    fileUrl = baseUrl + "user-" + session?.user?.id + "/" + params?.fileName;
+  }
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -72,6 +73,7 @@ export default function FileViewer({
       case "mp4":
       case "webm":
       case "ogg":
+      case "mov":
         return (
           <video src={fileUrl} controls style={{ width: `${scale * 100}%` }} />
         );
@@ -95,12 +97,16 @@ export default function FileViewer({
         <Button onClick={zoomOut}>
           <ZoomOut className="h-4 w-4" />
         </Button>
-        <Button asChild>
-          <a href={fileUrl} download={params.fileName}>
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </a>
-        </Button>
+        {fileUrl && (
+          <>
+            <Button asChild>
+              <a href={fileUrl} download={params.fileName}>
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </a>
+            </Button>
+          </>
+        )}
       </div>
       <div className="border rounded-lg p-4 max-w-full overflow-auto">
         {renderFileContent()}
@@ -113,5 +119,3 @@ export default function FileViewer({
     </div>
   );
 }
-
-// const View = ({ params }: { params: { file: string } }) => {
