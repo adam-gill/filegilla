@@ -141,8 +141,8 @@ const File = ({
                   Open
                 </Link>
               </Button>
-              <Link href={blobUrl}>
-                <Button variant="ghost" className="justify-start">
+              <Link href={blobUrl} className="w-full">
+                <Button variant="ghost" className="justify-start w-full">
                   Download
                 </Button>
               </Link>
