@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,8 +10,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/useAuth";
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = 'node_modules/pdfjs-dist/build/pdf.worker.js';
 
 const baseUrl = "https://filegillablobs.blob.core.windows.net/";
 
@@ -21,9 +24,9 @@ export default function FileViewer({
 }: {
   params: { fileName: string };
 }) {
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [numPages, setNumPages] = useState<number | null>(null);
   const { session } = useAuth();
 
   const fileType = params.fileName?.split(".").pop()?.toLowerCase();
@@ -32,20 +35,16 @@ export default function FileViewer({
     fileUrl = baseUrl + "user-" + session?.user?.id + "/" + params?.fileName;
   }
 
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-  }
-
-  const nextPage = () => {
-    if (pageNumber < (numPages || 0)) {
-      setPageNumber(pageNumber + 1);
-    }
   };
 
   const prevPage = () => {
-    if (pageNumber > 1) {
-      setPageNumber(pageNumber - 1);
-    }
+    setPageNumber((prev) => Math.max(1, prev - 1));
+  };
+
+  const nextPage = () => {
+    setPageNumber((prev) => Math.min(numPages || prev, prev + 1));
   };
 
   const zoomIn = () => setScale(scale + 0.1);
@@ -55,9 +54,34 @@ export default function FileViewer({
     switch (fileType) {
       case "pdf":
         return (
-          <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess}>
-            <Page pageNumber={pageNumber} scale={scale} />
+          <Document
+            file={fileUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            className="flex justify-center"
+          >
+            <Page
+              pageNumber={pageNumber}
+              scale={scale}
+              className="shadow-lg"
+              renderTextLayer={true}
+              renderAnnotationLayer={true}
+            />
           </Document>
+        );
+      case "doc":
+      case "docx":
+        return (
+          <iframe
+            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl || '')}`}
+            style={{
+              width: '100%',
+              height: '800px',
+              border: 'none',
+              transform: `scale(${scale})`,
+              transformOrigin: 'top center'
+            }}
+            title="Document Viewer"
+          />
         );
       case "jpg":
       case "jpeg":
@@ -83,7 +107,7 @@ export default function FileViewer({
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full">
       <div className="mb-4 flex space-x-2">
         <Button onClick={prevPage} disabled={pageNumber <= 1}>
           <ChevronLeft className="h-4 w-4" />
