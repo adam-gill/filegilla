@@ -1,28 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/useAuth";
-import Loading from "@/components/loading";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import FileUpload from "@/components/upload";
 import Files from "@/components/files";
 
 const Dashboard = () => {
   const [fileName, setFileName] = useState<string | null>("");
-  const { status } = useAuth();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/");
-    }
-  }, [status, router]);
-
-  if (status === "loading") {
-    return <Loading />;
-  }
-
-  if (status === "authenticated") {
     return (
       <>
         <div className="w-full py-10">
@@ -41,7 +25,6 @@ const Dashboard = () => {
         </div>
       </>
     );
-  }
 };
 
 export default Dashboard;

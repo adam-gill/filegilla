@@ -4,11 +4,18 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const { pathname } = req.nextUrl;
 
-  if (!token) {
+  if (token) {
+    if (pathname === "/") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  } else {
     const protectedPaths = ["/dashboard", "/view", "/portal"];
-    const pathMatches = protectedPaths.some(path => req.nextUrl.pathname.startsWith(path));
-    
+    const pathMatches = protectedPaths.some((path) =>
+      req.nextUrl.pathname.startsWith(path)
+    );
+
     if (pathMatches) {
       return NextResponse.redirect(new URL("/", req.url));
     }

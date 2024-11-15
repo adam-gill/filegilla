@@ -1,12 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ChevronLeft,
-  ZoomIn,
-  ZoomOut,
-  Download,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ZoomIn, ZoomOut, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/useAuth";
 import { useRouter } from "next/navigation";
@@ -22,12 +17,21 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
   const [scale, setScale] = useState(1);
   const { session } = useAuth();
   const router = useRouter();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const fileType = fileName.split(".").pop()?.toLowerCase();
   let fileUrl: string | undefined = undefined;
   if (session?.user?.id && fileName) {
     fileUrl = baseUrl + "user-" + session?.user?.id + "/" + fileName;
   }
+
+  useEffect(() => {
+    if (iframeRef.current) {
+      const width = iframeRef.current.offsetWidth;
+      iframeRef.current.style.height = `${width * 1.29}px`;
+      console.log(width * 1.29)
+    }
+  }, []);
 
   const zoomIn = () => setScale(scale + 0.1);
   const zoomOut = () => setScale(Math.max(0.1, scale - 0.1));
@@ -40,10 +44,14 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
             {fileUrl && (
               <iframe
                 style={{
-                  width: "100%",
-                  height: "80vh",
+                    width: "100%",
+                    height: "127.5vh",
+                    border: "none",
+                    display: "block",
+                    margin: "0 auto", 
+                    objectFit: "cover" 
                 }}
-                src={`${fileUrl}#toolbar=1`}
+                src={`${fileUrl}#toolbar=0`}
               />
             )}
           </>
@@ -91,8 +99,12 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
   return (
     <div className="flex flex-col items-center w-full min-h-screen">
       {fileName && (
-          <h1 className="font-bold text-3xl pb-4 w-full text-center relative">
-            <ChevronLeft onClick={() => router.back()} size={32} className="absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer" />
+        <h1 className="font-bold text-3xl pb-4 w-full text-center relative">
+          <ChevronLeft
+            onClick={() => router.back()}
+            size={32}
+            className="absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer"
+          />
           {decodeURIComponent(fileName)}
         </h1>
       )}
