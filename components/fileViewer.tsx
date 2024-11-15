@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ChevronLeft, ZoomIn, ZoomOut, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Skeleton } from "./ui/skeleton";
 
 type props = {
   fileName: string;
@@ -17,7 +18,6 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
   const [scale, setScale] = useState(1);
   const { session } = useAuth();
   const router = useRouter();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const fileType = fileName.split(".").pop()?.toLowerCase();
   let fileUrl: string | undefined = undefined;
@@ -25,13 +25,8 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
     fileUrl = baseUrl + "user-" + session?.user?.id + "/" + fileName;
   }
 
-  useEffect(() => {
-    if (iframeRef.current) {
-      const width = iframeRef.current.offsetWidth;
-      iframeRef.current.style.height = `${width * 1.29}px`;
-      console.log(width * 1.29)
-    }
-  }, []);
+
+ 
 
   const zoomIn = () => setScale(scale + 0.1);
   const zoomOut = () => setScale(Math.max(0.1, scale - 0.1));
@@ -44,12 +39,12 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
             {fileUrl && (
               <iframe
                 style={{
-                    width: "100%",
-                    height: "127.5vh",
-                    border: "none",
-                    display: "block",
-                    margin: "0 auto", 
-                    objectFit: "cover" 
+                  width: "100%",
+                  height: "127.5vh",
+                  border: "none",
+                  display: "block",
+                  margin: "0 auto",
+                  objectFit: "cover",
                 }}
                 src={`${fileUrl}#toolbar=0`}
               />
@@ -78,11 +73,20 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       case "png":
       case "gif":
         return (
-          <Image
-            src={fileUrl as string}
-            alt={fileName}
-            style={{ transform: `scale(${scale})` }}
-          />
+          <>
+            {fileUrl ? (
+              <Image
+                src={fileUrl}
+                width={400}
+                height={400}
+                alt={fileName}
+                priority
+                style={{ width: "auto", height: "auto"}}
+              />
+            ) : (
+              <Skeleton className="w-[400px] h-[250px] bg-grayHover" />
+            )}
+          </>
         );
       case "mp4":
       case "webm":
@@ -91,6 +95,11 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         return (
           <video src={fileUrl} controls style={{ width: `${scale * 100}%` }} />
         );
+      case "wav":
+      case "mp3":
+        return (
+          <audio src={fileUrl} controls style={{ width: `${scale * 100}%`}} />
+        )
       default:
         return <p>Unsupported file type</p>;
     }
@@ -108,7 +117,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
           {decodeURIComponent(fileName)}
         </h1>
       )}
-      <div className="flex items-center justify-center border rounded-lg p-4 w-full max-w-[80%] overflow-auto">
+      <div className="flex items-center justify-center rounded-lg p-4 w-full max-w-[80%] overflow-auto">
         {renderFileContent()}
       </div>
       <div className="mb-4 flex space-x-2 sticky">
