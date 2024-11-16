@@ -11,6 +11,7 @@ import { useState } from "react";
 import { showToast } from "@/lib/showToast";
 import { deleteFile } from "@/lib/deleteFile";
 import { cleanDate, cleanName, convertSize, getFileIconJSX, handleDownload } from "@/lib/helpers";
+import { AlertDialogComponent } from "./alert";
 
 interface fileProps extends file {
   userId: string | undefined;
@@ -69,17 +70,20 @@ const File = ({
               >
                 Rename
               </Button>
-              <Button
-                onClick={() => {
+              <AlertDialogComponent
+                title="Are you absolutely sure?"
+                variant="destructive"
+                popOver={true}
+                description={`This action cannot be undone. This will permanently delete ${decodeURIComponent(
+                  name
+                )}.`}
+                triggerText="Delete"
+                onConfirm={() => {
+                  showToast(`Deleting ${name}...`, "", "default");
                   setOpen(false);
                   deleteFile(name, userId!, loadFiles);
-                  showToast(`Deleting ${name}...`, "", "default");
                 }}
-                variant="ghost"
-                className="justify-start text-red-600 hover:bg-red-600 hover:text-white"
-              >
-                Delete
-              </Button>
+              />
             </div>
           </PopoverContent>
         </Popover>

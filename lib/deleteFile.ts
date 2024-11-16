@@ -1,7 +1,7 @@
 import axios from "axios";
 import { showToast } from "./showToast";
 
-export async function deleteFile(fileName: string, userId: string, loadFiles: () => Promise<void>) {
+export async function deleteFile(fileName: string, userId: string, loadFiles?: () => Promise<void>) {
     try {
       if (userId && fileName) {
         await axios.delete("/api/deleteFile", {
@@ -10,7 +10,7 @@ export async function deleteFile(fileName: string, userId: string, loadFiles: ()
             blobName: fileName,
           },
         });
-        loadFiles();
+        if (loadFiles) loadFiles();
 
         showToast(`Successfully deleted ${fileName}!`, "", "good");
       }

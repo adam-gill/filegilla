@@ -74,7 +74,7 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
       >
         <Label
           htmlFor="file-upload"
-          className="block text-lg font-medium text-white"
+          className="w-4/5 block text-xl font-medium text-white text-center mb-2"
         >
           {label}
         </Label>

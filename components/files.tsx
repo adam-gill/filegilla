@@ -41,11 +41,11 @@ const Files: React.FC<props> = ({ fileName }) => {
   if (!files) {
     return (
       <>
-        <div className="w-full flex flex-row flex-wrap">
+        <div className="w-full flex flex-row flex-wrap items-center justify-center">
           {new Array(8).fill(0).map((_, index) => (
             <Skeleton
               key={index}
-              className="flex w-64 h-24 rounded-lg bg-[#a0a0a0a0] my-2 mx-2"
+              className="flex w-64 h-28 rounded-lg bg-[#a0a0a0a0] my-2 mx-2"
             />
           ))}
         </div>
@@ -56,8 +56,9 @@ const Files: React.FC<props> = ({ fileName }) => {
   return (
     <>
       <div className="w-full">
-        <h1 className="text-lg font-medium">{"Files:"}</h1>
-        <div className="flex flex-wrap">
+        <h1 className="text-lg font-medium">{files.length !== 0 && session?.user && `Welcome to FileGila, ${session.user.firstName}`}</h1>
+        <div className="flex flex-wrap items-center justify-center">
+          {files.length === 0 && <h1 className="w-full text-center text-2xl ">No files yet. Happy uploading!</h1>}
           {files &&
             files.map((file, index) => (
               <File
