@@ -74,7 +74,7 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
       >
         <Label
           htmlFor="file-upload"
-          className="w-4/5 block text-xl font-medium text-white text-center mb-2"
+          className="w-full block text-xl font-medium text-white text-center mb-2"
         >
           {label}
         </Label>
@@ -91,7 +91,7 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
             <Button
               type="button"
               onClick={handleButtonClick}
-              className="w-4/5 text-lg bg-white text-black border-black hover:bg-gray-100  transition-colors"
+              className="w-full text-lg bg-white text-black border-black hover:bg-gray-100  transition-colors relative"
             >
               {!fileName ? (
                 <>
@@ -105,7 +105,7 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
             {fileName && (
               <X
                 onClick={() => clearFile()}
-                className="ml-2 cursor-pointer hover:scale-110 transition-all duration-300"
+                className="absolute -right-8 cursor-pointer hover:scale-110 transition-all duration-300"
               />
             )}
           </div>
@@ -113,7 +113,7 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
 
         <Button
           onClick={() => onUpload()}
-          className="w-4/5 fg-grad text-black text-lg mt-4"
+          className="w-full fg-grad text-black text-lg mt-4"
         >
           {loading ? (
             <>

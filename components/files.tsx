@@ -56,7 +56,7 @@ const Files: React.FC<props> = ({ fileName }) => {
   return (
     <>
       <div className="w-full">
-        <h1 className="text-lg font-medium">{files.length !== 0 && session?.user && `Welcome to FileGila, ${session.user.firstName}`}</h1>
+        <h1 className="text-lg font-medium">{files.length !== 0 && session?.user && `Welcome to FileGilla, ${session.user.firstName}`}</h1>
         <div className="flex flex-wrap items-center justify-center">
           {files.length === 0 && <h1 className="w-full text-center text-2xl ">No files yet. Happy uploading!</h1>}
           {files &&
