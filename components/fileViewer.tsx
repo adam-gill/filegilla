@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Skeleton } from "./ui/skeleton";
+import { handleDownload } from "@/lib/helpers";
 
 type props = {
   fileName: string;
@@ -24,9 +25,6 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
   if (session?.user?.id && fileName) {
     fileUrl = baseUrl + "user-" + session?.user?.id + "/" + fileName;
   }
-
-
- 
 
   const zoomIn = () => setScale(scale + 0.1);
   const zoomOut = () => setScale(Math.max(0.1, scale - 0.1));
@@ -53,6 +51,8 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         );
       case "doc":
       case "docx":
+      case "ppt":
+      case "pptx":
         return (
           <iframe
             src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
@@ -129,11 +129,9 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         </Button>
         {fileUrl && (
           <>
-            <Button asChild>
-              <a href={fileUrl} download={fileName}>
+            <Button onClick={() => handleDownload(fileUrl, fileName)}>
                 <Download className="h-4 w-4 mr-2" />
                 Download
-              </a>
             </Button>
           </>
         )}
@@ -143,3 +141,6 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
 };
 
 export default FileViewer;
+
+// TODO 
+// Connect GetFile function from API to list info on view page and see about simplifying code with it

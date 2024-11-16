@@ -1,13 +1,5 @@
 import { file } from "filegilla";
 import Link from "next/link";
-import {
-  GrDocumentImage,
-  GrDocumentPdf,
-  GrDocumentWord,
-  GrDocumentVideo,
-  GrDocumentZip,
-  GrDocumentText,
-} from "react-icons/gr";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { Button } from "./ui/button";
 import {
@@ -15,9 +7,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import axios from "axios";
 import { useState } from "react";
 import { showToast } from "@/lib/showToast";
+import { deleteFile } from "@/lib/deleteFile";
+import { cleanDate, cleanName, convertSize, getFileIconJSX, handleDownload } from "@/lib/helpers";
 
 interface fileProps extends file {
   userId: string | undefined;
@@ -35,95 +28,13 @@ const File = ({
 }: fileProps) => {
   const [open, setOpen] = useState<boolean>(false);
 
-  const deleteFile = async (fileName: string) => {
-    try {
-      if (userId && fileName) {
-        await axios.delete("/api/deleteFile", {
-          data: {
-            userId: userId,
-            blobName: fileName,
-          },
-        });
-        loadFiles();
-
-        showToast(`Successfully deleted ${fileName}!`, "", "good");
-      }
-    } catch (error) {
-      console.log("File deletion error: " + error);
-    }
-  };
-
-  const convertSize = (size: number) => {
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-
-    if (size === 0) return "0 Byte";
-
-    const i = Math.floor(Math.log(size) / Math.log(1024));
-    return Math.round(size / Math.pow(1024, i)) + " " + sizes[i];
-  };
-
-  const cleanName = (name: string): string => {
-    if (name.length > 17) {
-      name = name.slice(0, 16) + "...";
-    }
-
-    return name;
-  };
-
-  const cleanDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = {
-      year: "2-digit",
-      month: "numeric",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    };
-
-    return date.toLocaleDateString(undefined, options);
-  };
-
-  const fileIcons = (name: string) => {
-    const lastPeriodIndex = name.lastIndexOf(".");
-    if (lastPeriodIndex === -1) return <GrDocumentText />;
-
-    const fileExtension = name.slice(lastPeriodIndex + 1);
-
-    if (fileExtension === "pdf") {
-      return <GrDocumentPdf />;
-    } else if (fileExtension === "doc" || fileExtension === "docx") {
-      return <GrDocumentWord />;
-    } else if (
-      fileExtension === "png" ||
-      fileExtension === "jpg" ||
-      fileExtension === "jpeg"
-    ) {
-      return <GrDocumentImage />;
-    } else if (
-      fileExtension === "mov" ||
-      fileExtension === "mp4" ||
-      fileExtension == "webm"
-    ) {
-      return <GrDocumentVideo />;
-    } else if (
-      fileExtension === "zip" ||
-      fileExtension === "xz" ||
-      fileExtension === "gz"
-    ) {
-      return <GrDocumentZip />;
-    } else {
-      return <GrDocumentText />;
-    }
-  };
-
   return (
     <>
       <div
         className="flex relative flex-col w-full max-w-64 border-2 border-white rounded-lg p-2 cc my-2 mx-2"
         data-md5={md5hash}
       >
-        <div className="absolute top-2 left-2">{fileIcons(name)}</div>
+        <div className="absolute top-2 left-2">{getFileIconJSX(name)}</div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -141,11 +52,17 @@ const File = ({
                   Open
                 </Link>
               </Button>
-              <Link href={blobUrl} className="w-full">
-                <Button variant="ghost" className="justify-start w-full">
-                  Download
-                </Button>
-              </Link>
+              <Button
+                onClick={() => {
+                  showToast(`Downloading ${name}...`, "", "default");
+                  handleDownload(blobUrl, name);
+                  setOpen(false);
+                }}
+                variant="ghost"
+                className="justify-start w-full"
+              >
+                Download
+              </Button>
               <Button
                 variant="ghost"
                 className="justify-start cursor-not-allowed"
@@ -155,7 +72,7 @@ const File = ({
               <Button
                 onClick={() => {
                   setOpen(false);
-                  deleteFile(name);
+                  deleteFile(name, userId!, loadFiles);
                   showToast(`Deleting ${name}...`, "", "default");
                 }}
                 variant="ghost"
