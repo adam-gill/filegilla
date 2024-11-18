@@ -48,7 +48,7 @@ const File = ({
           </PopoverTrigger>
           <PopoverContent className="w-56 shadow-md z-50" sideOffset={5}>
             <div className="flex flex-col space-y-1">
-              <Button variant="ghost" className="justify-start" asChild>
+              <Button onClick={() => setOpen(false)} variant="ghost" className="justify-start" asChild>
                 <Link href={"/view/" + name} className="w-full">
                   Open
                 </Link>
