@@ -242,7 +242,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         )}
         <div
           ref={containerRef}
-          className="flex cc shadow-[0_0_10px_rgba(255,255,255,0.3)] bg-neutral-700 flex-grow items-start justify-center rounded-lg p-4 w-full max-w-[860px] overflow-hidden"
+          className="flex cc shadow-[0_0_10px_rgba(255,255,255,0.3)] bg-neutral-700 flex-grow items-start justify-center rounded-lg p-4 w-full max-w-[860px] overflow-hidden mb-20"
           style={{ height: calcHeight(fileType) }}
         >
           {loading ? (
