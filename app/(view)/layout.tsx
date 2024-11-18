@@ -18,10 +18,10 @@ export default function DashboardLayout({
 }>) {
   return (
     <>
-      <div>
+      <main>
         <Navbar />
         {children}
-      </div>
+      </main>
     </>
   );
 }

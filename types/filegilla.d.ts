@@ -12,4 +12,15 @@ declare module "filegilla" {
     message: string,
     files: file[],
   }
+
+  interface getFileResponse {
+    success: boolean,
+    message: string,
+    file: file,
+  }
+
+  interface getFileRequest {
+    userId: string;
+    fileName: string;
+  }
 }

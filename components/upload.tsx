@@ -113,7 +113,7 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
 
         <Button
           onClick={() => onUpload()}
-          className="w-full fg-grad text-black text-lg mt-4"
+          className="w-full fg-grad text-black text-lg mt-4 border-none"
         >
           {loading ? (
             <>
