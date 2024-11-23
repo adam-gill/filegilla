@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s",
     default: "FileGilla",
   },
-  description: "Store your stuff on the cloud",
+  description: "Store your stuff in the cloud",
   openGraph: {
     images: "/ogLogo.png",
   },
