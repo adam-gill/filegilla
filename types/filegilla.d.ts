@@ -8,19 +8,31 @@ declare module "filegilla" {
   }
 
   interface listResponse {
-    success: boolean,
-    message: string,
-    files: file[],
+    success: boolean;
+    message: string;
+    files: file[];
   }
 
   interface getFileResponse {
-    success: boolean,
-    message: string,
-    file: file,
+    success: boolean;
+    message: string;
+    file: file;
+    sasToken: string;
   }
 
   interface getFileRequest {
     userId: string;
     fileName: string;
+  }
+
+  interface getSasTokenResponse {
+    success: boolean;
+    message: string;
+    sasToken: {
+      user_id: string;
+      sas_token: string;
+      start_time: string;
+      end_time: string;
+    };
   }
 }

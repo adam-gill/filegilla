@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import axios from "axios";
 import { getFileResponse } from "filegilla";
 import { NextRequest, NextResponse } from "next/server";
@@ -7,10 +8,9 @@ const getFileFunctionUrl = process.env.AZURE_GET_FILE_FUNCTION_URL!;
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
-    const fileName = decodeURIComponent(searchParams.get('fileName') as string);
-    
-    console.log(userId, fileName)
+    const userId = searchParams.get("userId");
+    const fileName = decodeURIComponent(searchParams.get("fileName") as string);
+
 
     if (!userId || !fileName) {
       return NextResponse.json(
@@ -28,13 +28,25 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(response.data as getFileResponse, { status: 200 });
+    const sasToken = await prisma.sas_table.findFirst({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    const data: getFileResponse = {
+      ...response.data,
+      sasToken: sasToken?.sas_token
+    }
+
+
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.log(error);
     return NextResponse.json(
       {
         success: false,
-        message: `Failed to fetch user file.`,
+        message: `Failed to fetch user file. ${error}`,
       },
       { status: 505 }
     );

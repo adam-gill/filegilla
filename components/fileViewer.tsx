@@ -22,6 +22,7 @@ type props = {
 const FileViewer: React.FC<props> = ({ fileName }) => {
   const [scale, setScale] = useState<number>(1);
   const [file, setFile] = useState<file | null>(null);
+  const [fileUrl, setFileUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("100");
@@ -35,7 +36,11 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
     setLoading(true);
     if (userId && fileName) {
       const data: getFileResponse = await getFile(userId, fileName);
-      if (data.file) setFile(data.file);
+      if (data.file) {
+        setFile(data.file);
+        setFileUrl(data.file.blobUrl + data.sasToken)
+      }
+      console.log(data)
       setLoading(false);
     }
     setLoading(false);
@@ -117,9 +122,9 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       case "pdf":
         return (
           <>
-            {file?.blobUrl && (
+            {fileUrl != "" && (
               <iframe
-                src={`${file.blobUrl}#toolbar=0`}
+                src={`${fileUrl}#toolbar=0`}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -138,7 +143,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         return (
           <iframe
             src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-              file?.blobUrl || ""
+              fileUrl || ""
             )}`}
             style={{
               width: "100%",
@@ -156,13 +161,13 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       case "svg":
         return (
           <>
-            {file?.blobUrl ? (
+            {fileUrl != "" ? (
               <div
                 className="flex cc w-full h-full"
                 style={{ overflow: "auto", width: "100%", height: "100%" }}
               >
                 <Image
-                  src={file.blobUrl}
+                  src={fileUrl}
                   width={400}
                   height={400}
                   alt={fileName}
@@ -185,10 +190,10 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       case "webm":
       case "ogg":
       case "mov":
-        return <video src={file?.blobUrl} controls />;
+        return <video src={fileUrl} controls />;
       case "wav":
       case "mp3":
-        return <audio src={file?.blobUrl} controls />;
+        return <audio src={fileUrl} controls />;
       default:
         return <p className="text-2xl font-bold">Unsupported file type</p>;
     }
@@ -255,7 +260,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         </div>
 
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-lg">
-          {file?.blobUrl && (
+          {fileUrl != "" && (
             <>
               {isImage() && (
                 <>
@@ -277,7 +282,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
                   </Button>
                 </>
               )}
-              <Button onClick={() => handleDownload(file.blobUrl, fileName)}>
+              <Button onClick={() => handleDownload(fileUrl, fileName)}>
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </Button>

@@ -17,9 +17,8 @@ export async function POST(req: NextRequest) {
     const azureFormData = new FormData();
     azureFormData.append("file", file);
     azureFormData.append("userId", JSON.stringify({ userId: userId }))
-    console.log(azureFormData)
 
-    const azureResponse = await axios.post(uploadFunctionURL, azureFormData, {
+    await axios.post(uploadFunctionURL, azureFormData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -27,7 +26,6 @@ export async function POST(req: NextRequest) {
       maxContentLength: Infinity,
     });
 
-    console.log(azureResponse.data);
 
     return NextResponse.json({
       success: true,

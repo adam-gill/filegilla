@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model passwords {
+  user_id             String   @id(map: "PK__password__B9BE370F8B26EB58") @db.NVarChar(255)
+  time_created        DateTime @db.DateTime
+  cipher              String   @db.NVarChar(Max)
+  title               String   @db.NVarChar(255)
+  service_url         String   @db.NVarChar(Max)
+  service_description String?  @db.NVarChar(Max)
+  users               users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_password")
+}
+
+model sas_table {
+  user_id    String   @id(map: "PK__sas_tabl__B9BE370F3AC21A83") @db.NVarChar(255)
+  sas_token  String   @db.NVarChar(Max)
+  start_time DateTime @db.DateTime
+  end_time   DateTime @db.DateTime
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+}
+
+model users {
+  user_id       String     @id(map: "PK__users__B9BE370F538140F0") @db.NVarChar(255)
+  creation_date DateTime   @db.DateTime
+  phash         String?    @db.NVarChar(Max)
+  locked        Boolean?
+  passwords     passwords?
+  sas_table     sas_table?
+}
