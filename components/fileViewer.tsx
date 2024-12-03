@@ -40,7 +40,6 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         setFile(data.file);
         setFileUrl(data.file.blobUrl + data.sasToken)
       }
-      console.log(data)
       setLoading(false);
     }
     setLoading(false);

@@ -3,33 +3,33 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model passwords {
-  user_id             String   @id(map: "PK__password__B9BE370F8B26EB58") @db.NVarChar(255)
-  time_created        DateTime @db.DateTime
-  cipher              String   @db.NVarChar(Max)
-  title               String   @db.NVarChar(255)
-  service_url         String   @db.NVarChar(Max)
-  service_description String?  @db.NVarChar(Max)
-  users               users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_password")
+  user_id             String   @id(map: "pk_passwords") @db.VarChar
+  time_created        DateTime @db.Timestamp(6)
+  cipher              String   @db.VarChar
+  title               String   @db.VarChar
+  service_url         String   @db.VarChar
+  service_description String?  @db.VarChar
+  users               users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_passwords_users")
 }
 
 model sas_table {
-  user_id    String   @id(map: "PK__sas_tabl__B9BE370F3AC21A83") @db.NVarChar(255)
-  sas_token  String   @db.NVarChar(Max)
-  start_time DateTime @db.DateTime
-  end_time   DateTime @db.DateTime
-  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+  user_id    String   @id(map: "pk_sas_table") @db.VarChar
+  sas_token  String   @db.VarChar
+  start_time DateTime @db.Timestamp(6)
+  end_time   DateTime @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sas_users")
 }
 
 model users {
-  user_id       String     @id(map: "PK__users__B9BE370F538140F0") @db.NVarChar(255)
-  creation_date DateTime   @db.DateTime
-  phash         String?    @db.NVarChar(Max)
-  locked        Boolean?
+  user_id       String     @id @db.VarChar
+  creation_date DateTime   @db.Timestamp(6)
+  phash         String?    @db.VarChar
+  locked        String?    @db.Bit(1)
   passwords     passwords?
   sas_table     sas_table?
 }
