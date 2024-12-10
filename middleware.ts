@@ -11,7 +11,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   } else {
-    const protectedPaths = ["/dashboard", "/view", "/portal"];
+    const protectedPaths = ["/dashboard", "/view", "/portal", "/passwords"];
     const pathMatches = protectedPaths.some((path) =>
       req.nextUrl.pathname.startsWith(path)
     );

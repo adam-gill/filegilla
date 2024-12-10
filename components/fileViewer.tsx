@@ -38,7 +38,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       const data: getFileResponse = await getFile(userId, fileName);
       if (data.file) {
         setFile(data.file);
-        setFileUrl(data.file.blobUrl + data.sasToken)
+        setFileUrl(data.file.blobUrl + data.sasToken);
       }
       setLoading(false);
     }
@@ -189,7 +189,11 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       case "webm":
       case "ogg":
       case "mov":
-        return <video src={fileUrl} controls />;
+        return (
+          <div className="w-full h-full flex cc">
+            <video className="h-full" src={fileUrl} controls />
+          </div>
+        );
       case "wav":
       case "mp3":
         return <audio src={fileUrl} controls />;

@@ -35,4 +35,48 @@ declare module "filegilla" {
       end_time: string;
     };
   }
+
+  interface checkPassAccResponse {
+    success: boolean;
+    message: string;
+    phash: null | string;
+  }
+
+  interface createPasswordBody {
+    userId: string;
+    password: string;
+  }
+
+  interface password {
+    userId: string;
+    timeCreated: string;
+    cipher: string;
+    title: string;
+    url: string;
+    description: string;
+  }
+
+  interface addPasswordBody {
+    userId: string;
+    data: {
+      cipher: string;
+      title: string;
+      url: string;
+      description?: string | undefined;
+    };
+  }
+
+  interface password {
+    cipher: string;
+    service_url: string;
+    service_description: string;
+    time_created: string;
+    title: string;
+    user_id: string;
+    password_id: number;
+  }
+
+  interface getPasswordsResponse {
+    passwordObject: password[];
+  }
 }

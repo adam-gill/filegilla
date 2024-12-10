@@ -18,8 +18,13 @@ interface Props {
   setFileName: (value: string | null) => void;
 }
 
-
-const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, setFileName }) => {
+const FileUpload: React.FC<Props> = ({
+  label,
+  maxWidth,
+  className,
+  fileName,
+  setFileName,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData | null>(null);
   const { session } = useAuth();
@@ -45,22 +50,26 @@ const FileUpload: React.FC<Props> = ({ label, maxWidth, className, fileName, set
   };
 
   const onUpload = async () => {
-    showToast(`Uploading ${fileName}...`, "", "default")
+    showToast(`Uploading ${fileName}...`, "", "default");
 
     try {
       setLoading(true);
       if (session?.user) {
-        formData?.append("userId", session.user.id);
-        await axios.post("api/upload/", formData);
-
+        const azureFunctionURL = process.env.NEXT_PUBLIC_AZURE_UPLOAD_FUNCTION_URL!;
+        formData?.append("userId", JSON.stringify({ userId: session.user.id }));
+        await axios.post(azureFunctionURL, formData);
 
         setLoading(false);
-        showToast(`Successfully uploaded ${fileName}`, "", "good")
-        clearFile()
+        showToast(`Successfully uploaded ${fileName}`, "", "good");
+        clearFile();
       }
     } catch (error: any) {
       setLoading(false);
-      showToast(`Failed to upload ${fileName} :(`, "Please try again...", "destructive")
+      showToast(
+        `Failed to upload ${fileName} :(`,
+        "Please try again...",
+        "destructive"
+      );
     } finally {
       setLoading(false);
     }

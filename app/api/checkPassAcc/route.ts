@@ -16,18 +16,17 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const passwordsObject = await prisma.passwords.findMany({
+    const userObject = await prisma.users.findFirst({
       where: {
         user_id: userId,
       },
     });
-    console.log(passwordsObject);
 
     return NextResponse.json(
       {
         success: true,
-        message: `Passwords found for user-${userId}`,
-        passwords: passwordsObject,
+        message: `User successfully found (${userId})`,
+        phash: userObject?.phash,
       },
       { status: 200 }
     );

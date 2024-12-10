@@ -139,7 +139,7 @@ export default function AccountCard() {
         <CardFooter>
           <Button
             disabled={loading}
-            className="w-full bg-white text-black hover:text-white hover:bg-black"
+            className="w-full bg-white text-black hover:text-white hover:bg-black border-none"
             onClick={() => {
               setLoading(true);
               if (session) {
