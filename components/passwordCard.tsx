@@ -91,7 +91,7 @@ export default function PasswordCard({
                 />
               )}
 
-              <span className="font-mono text-base">
+              <span className="text-lg text-center">
                 {hidden ? "•••••••••••••" : servicePassword}
               </span>
             </div>

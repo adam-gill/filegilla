@@ -28,7 +28,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 interface passwordEdit {
   password: string;
-  url: string;
+  url?: string;
   description: string;
   time_created: string;
   title: string;
@@ -91,7 +91,7 @@ export function PasswordDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>Title <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Enter title" {...field} />
                   </FormControl>
@@ -104,7 +104,7 @@ export function PasswordDialog({
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -157,7 +157,7 @@ export function PasswordDialog({
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter description (optional)"
+                      placeholder="Enter description"
                       {...field}
                     />
                   </FormControl>

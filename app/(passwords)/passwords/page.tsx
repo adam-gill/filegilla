@@ -130,6 +130,9 @@ const Passwords = () => {
       if (!(data.phash === null || data.phash === "null")) {
         setHasAccount(true);
         setLoading(false);
+      } else {
+        setHasAccount(false);
+        setLoading(false);
       }
     } catch (error) {
       setLoading(false);
@@ -152,7 +155,7 @@ const Passwords = () => {
       const cipher = await handleOperation("encrypt", data.password, password);
 
       const { password: old, ...rest } = data;
-      console.log(old ? "" : "")
+      console.log(old ? "" : "");
       const securedData = {
         ...rest,
         cipher,
@@ -189,6 +192,8 @@ const Passwords = () => {
           userId: session.user.id,
           password: password,
         });
+
+        setHasAccount(true)
       }
     } catch (error) {
       console.log(error);
@@ -272,120 +277,128 @@ const Passwords = () => {
               </>
             ) : (
               <>
-                <div className="w-full flex flex-col cc">
-                  <div className="w-full max-w-3xl flex flex-row items-center justify-start gap-2 mb-4">
-                    <PasswordDialog
-                      onSubmit={handleSubmit}
-                      trigger={
-                        <Button className="w-fit p-0 border-none bg-transparent hover:bg-transparent">
-                          <div className="border-2 border-white bg-white rounded-lg cursor-pointer hover:bg-black transition-all duration-300">
-                            <Plus
-                              size={24}
-                              className="stroke-black hover:stroke-white transition-all duration-300"
+                {!hasAccount ? (
+                  <>
+                    <div className="w-full flex flex-col items-center justify-center">
+                      <h1 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-blue-800 pb-2">
+                        Introducing FileGilla Password Storage
+                      </h1>
+                      <h1 className="text-xl">
+                        Securely Store your Passwords with 256-bit AES
+                        encryption.
+                      </h1>
+                      <p>Just create a password to start.</p>
+                      <Button
+                        onClick={() => setIsOpen(true)}
+                        className="text-2xl py-5 px-6 mt-4 bg-white text-black hover:bg-black hover:text-white"
+                      >
+                        Create Password
+                      </Button>
+                    </div>
+
+                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle className="text-black">
+                            Create Your Password
+                          </DialogTitle>
+                          <DialogDescription>
+                            <div className="flex items-center space-x-2 text-yellow-600 mb-4">
+                              <AlertCircle size={20} stroke="#ef4444" />
+                              <span className="text-red-500">
+                                Warning: This password cannot be recovered.
+                                Please write it down and keep it safe.
+                              </span>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label className="text-black" htmlFor="password">
+                              Password
+                            </Label>
+                            <Input
+                              className="text-black"
+                              id="password"
+                              type="password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
                             />
                           </div>
-                        </Button>
-                      }
-                    />
-                    <h1 className="text-2xl font-semibold">Add New Password</h1>
-                  </div>
-                  {passwords && (
-                    <div className="w-full flex flex-col gap-4 cc">
-                      {passwords.map((passwordData, index) => (
+                          <div>
+                            <Label
+                              className="text-black"
+                              htmlFor="confirmPassword"
+                            >
+                              Confirm Password
+                            </Label>
+                            <Input
+                              className="text-black"
+                              id="confirmPassword"
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) =>
+                                setConfirmPassword(e.target.value)
+                              }
+                            />
+                          </div>
+                          {error && (
+                            <div className="flex flex-row items-center justify-center mt-2">
+                              <p className="text-red-500">{error}</p>
+                              <X
+                                className="hover:scale-110 cursor-pointer"
+                                size={24}
+                                stroke="#ef4444"
+                                strokeWidth={1.5}
+                                onClick={() => setError("")}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            className="border border-black bg-black"
+                            onClick={handleCreatePassword}
+                          >
+                            Create Password
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                ) : (
+                  <div className="w-full flex flex-col cc">
+                    <div className="w-full max-w-3xl flex flex-row items-center justify-start gap-2 mb-4">
+                      <PasswordDialog
+                        onSubmit={handleSubmit}
+                        trigger={
+                          <Button className="w-fit p-0 border-none bg-transparent hover:bg-transparent">
+                            <div className="border-2 border-white bg-white rounded-lg cursor-pointer hover:bg-black transition-all duration-300">
+                              <Plus
+                                size={24}
+                                className="stroke-black hover:stroke-white transition-all duration-300"
+                              />
+                            </div>
+                          </Button>
+                        }
+                      />
+                      <h1 className="text-2xl font-semibold">
+                        Add New Password
+                      </h1>
+                    </div>
+                    {passwords && (
+                      <div className="w-full flex flex-col gap-4 cc">
+                        {passwords.map((passwordData, index) => (
                           <PasswordCard
                             {...passwordData}
                             password={password}
                             key={index}
                           />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {!hasAccount && (
-              <>
-                <div className="w-full flex flex-col items-center justify-center">
-                  <h1 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-blue-800 pb-2">
-                    Introducing FileGilla Password Storage
-                  </h1>
-                  <h1 className="text-xl">
-                    Securely Store your Passwords with 256-bit AES encryption.
-                  </h1>
-                  <p>Just create a password to start.</p>
-                  <Button
-                    onClick={() => setIsOpen(true)}
-                    className="text-2xl py-5 px-6 mt-4 bg-white text-black hover:bg-black hover:text-white"
-                  >
-                    Create Password
-                  </Button>
-                </div>
-
-                <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle className="text-black">
-                        Create Your Password
-                      </DialogTitle>
-                      <DialogDescription>
-                        <div className="flex items-center space-x-2 text-yellow-600 mb-4">
-                          <AlertCircle size={20} stroke="#ef4444" />
-                          <span className="text-red-500">
-                            Warning: This password cannot be recovered. Please
-                            write it down and keep it safe.
-                          </span>
-                        </div>
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-black" htmlFor="password">
-                          Password
-                        </Label>
-                        <Input
-                          className="text-black"
-                          id="password"
-                          type="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
+                        ))}
                       </div>
-                      <div>
-                        <Label className="text-black" htmlFor="confirmPassword">
-                          Confirm Password
-                        </Label>
-                        <Input
-                          className="text-black"
-                          id="confirmPassword"
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                      </div>
-                      {error && (
-                        <div className="flex flex-row items-center justify-center mt-2">
-                          <p className="text-red-500">{error}</p>
-                          <X
-                            className="hover:scale-110 cursor-pointer"
-                            size={24}
-                            stroke="#ef4444"
-                            strokeWidth={1.5}
-                            onClick={() => setError("")}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <DialogFooter>
-                      <Button
-                        className="border border-black bg-black"
-                        onClick={handleCreatePassword}
-                      >
-                        Create Password
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </>
