@@ -54,12 +54,5 @@
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
-  },
-  "overrides": {
-    "@types/react": "19.0.1",
-    "@types/react-dom": "19.0.2",
-    "@azure/msal-react": {
-      "react": "^19.0.0"
-    }
   }
 }
