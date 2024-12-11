@@ -158,6 +158,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       case "png":
       case "gif":
       case "svg":
+      case "webp":
         return (
           <>
             {fileUrl != "" ? (

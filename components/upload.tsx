@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, X } from "lucide-react";
+import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/lib/useAuth";
@@ -19,11 +19,9 @@ interface Props {
 const FileUpload: React.FC<Props> = ({
   maxWidth,
   className,
-  fileName,
   setFileName,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [formData, setFormData] = useState<FormData | null>(null);
   const { session } = useAuth();
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -48,7 +46,6 @@ const FileUpload: React.FC<Props> = ({
       fileInputRef.current.value = "";
     }
     setFileName(null);
-    setFormData(null);
   };
 
   const onUpload = async (newFileName: string, newFormData: FormData) => {
