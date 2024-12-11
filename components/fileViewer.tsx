@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, Dot, Download, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  ChevronLeft,
+  Dot,
+  Download,
+  Pencil,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/useAuth";
 import { useRouter } from "next/navigation";
@@ -14,6 +21,7 @@ import { AlertDialogComponent } from "./alert";
 import { Input } from "./ui/input";
 import { getFile } from "@/lib/getFile";
 import { file, getFileResponse } from "filegilla";
+import { renameFile } from "@/lib/renameFile";
 
 type props = {
   fileName: string;
@@ -25,6 +33,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
   const [fileUrl, setFileUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [textContent, setTextContent] = useState<string>("");
   const [inputValue, setInputValue] = useState("100");
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +109,24 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
     updateScale(Math.round(scale * 100) - 5);
   };
 
+  const fetchTextContent = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const text = await response.text();
+      setTextContent(text);
+    } catch (error) {
+      console.error('Error fetching text content:', error);
+      setTextContent('Error loading text file');
+    }
+  };
+  
+  // Add useEffect to fetch text content when fileUrl changes and type is txt
+  useEffect(() => {
+    if (fileType === 'txt' && fileUrl) {
+      fetchTextContent(fileUrl);
+    }
+  }, [fileUrl, fileType]);
+
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.select();
@@ -134,6 +161,14 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
               />
             )}
           </>
+        );
+      case "txt":
+        return (
+          <div className="w-full h-full overflow-auto p-4">
+            <pre className="whitespace-pre-wrap text-sm">
+              {textContent}
+            </pre>
+          </div>
         );
       case "doc":
       case "docx":
@@ -291,6 +326,37 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
                 Download
               </Button>
               <AlertDialogComponent
+                title="Rename File"
+                description={`Enter a new name for ${decodeURIComponent(
+                  fileName
+                )}`}
+                popOver={true}
+                isRename={true}
+                triggerText={
+                  <>
+                    <Pencil className="h-4 w-4 mr-2" /> Rename
+                  </>
+                }
+                confirmText="Rename"
+                setOpen={() => {}}
+                inputProps={{
+                  defaultValue: decodeURIComponent(fileName),
+                  placeholder: "Enter new filename",
+                }}
+                onConfirm={(newName) => {
+                  if (newName) {
+                    showToast(
+                      `Renaming ${decodeURIComponent(fileName)}...`,
+                      "",
+                      "default"
+                    );
+                    renameFile(userId!, decodeURIComponent(fileName), newName);
+                    router.replace(`/view/${newName}`);
+                  }
+                }}
+              />
+              <AlertDialogComponent
+                setOpen={() => {}}
                 title="Are you absolutely sure?"
                 description={`This action cannot be undone. This will permanently delete ${decodeURIComponent(
                   fileName

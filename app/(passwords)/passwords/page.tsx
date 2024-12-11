@@ -168,7 +168,7 @@ const Passwords = () => {
         });
 
         await loadPasswords();
-        showToast("Successfully Added Password", "", "good");
+        showToast(`Successfully Added Password '${securedData.title}'`, "", "good");
       }
     } catch (error) {
       showToast("Error Adding Password :(", "Please try again.", "destructive");

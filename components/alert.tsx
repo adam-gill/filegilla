@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { ReactNode, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,14 +13,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AlertDialogComponentProps {
   title: string;
   description: string;
-  onConfirm: () => void;
-  triggerText: string;
+  setOpen: (value: boolean) => void;
+  onConfirm: (value?: string) => void; // Modified to accept optional value
+  triggerText: ReactNode;
   confirmText?: string;
   cancelText?: string;
   popOver?: boolean;
@@ -31,6 +32,11 @@ interface AlertDialogComponentProps {
     | "secondary"
     | "ghost"
     | "link";
+  isRename?: boolean; // New prop to determine if it's a rename dialog
+  inputProps?: {
+    defaultValue?: string;
+    placeholder?: string;
+  };
 }
 
 export function AlertDialogComponent({
@@ -42,11 +48,30 @@ export function AlertDialogComponent({
   cancelText = "Cancel",
   variant = "default",
   popOver,
+  isRename,
+  inputProps,
+  setOpen,
 }: AlertDialogComponentProps) {
+  const sliceFileExtension = (file: string | undefined) => {
+    if (file) {
+      return file.substring(0, file.lastIndexOf("."));
+    } else {
+      return file || "";
+    }
+  };
+
   const [isOpen, setIsOpen] = useState(false);
+  const fileExtension = inputProps?.defaultValue?.substring(inputProps?.defaultValue.lastIndexOf("."));
+  const [inputValue, setInputValue] = useState(
+    sliceFileExtension(inputProps?.defaultValue) || ""
+  );
 
   const handleConfirm = () => {
-    onConfirm();
+    if (isRename) {
+      onConfirm(inputValue + fileExtension);
+    } else {
+      onConfirm();
+    }
     setIsOpen(false);
   };
 
@@ -54,12 +79,15 @@ export function AlertDialogComponent({
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <Button
-          className={cn(
-            popOver ? "text-left flex justify-start hover:bg-red-700": ""
-          )}
+          className={cn(popOver ? "text-left flex justify-start" : "")}
           variant={variant}
         >
-          {!popOver && <Trash className="h-4 w-4 mr-2" />}
+          {!popOver &&
+            (isRename ? (
+              <Pencil className="h-4 w-4 mr-2" />
+            ) : (
+              <Trash className="h-4 w-4 mr-2" />
+            ))}
           {triggerText}
         </Button>
       </AlertDialogTrigger>
@@ -69,13 +97,31 @@ export function AlertDialogComponent({
           <AlertDialogDescription className="text-black font-medium">
             {description}
           </AlertDialogDescription>
+          {isRename && inputProps && (
+            <input
+              type="text"
+              autoFocus={true}
+              value={inputValue}
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={inputProps.placeholder}
+              className="w-full px-3 py-2 text-black border border-gray-600 rounded-md focus:outline-none mt-4"
+            />
+          )}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="border-black text-black">
+          <AlertDialogCancel
+            className="border-black text-black"
+            onClick={() => setOpen(false)}
+          >
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-600 hover:bg-red-700"
+            className={cn(
+              !isRename
+                ? "bg-red-500 text-white hover:bg-red-700 hover:text-white"
+                : ""
+            )}
             onClick={handleConfirm}
           >
             {confirmText}

@@ -5,7 +5,7 @@ import { handleOperation } from "@/lib/cryptoUtils";
 import { cleanDate } from "@/lib/helpers";
 import { ExternalLink, EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PasswordDialog } from "./passwordDialog";
 
 interface PasswordCardProps {
@@ -33,6 +33,16 @@ export default function PasswordCard({
   const [servicePassword, setServicePassword] = useState<string | undefined>(
     ""
   );
+  
+  const initialData = useMemo(() => ({
+    password: servicePassword || "",
+    url: service_url || "",
+    description: service_description || "",
+    time_created,
+    title,
+    user_id,
+    password_id,
+  }), [servicePassword, service_url, service_description, time_created, title, user_id, password_id]);
 
   useEffect(() => {
     const getPassword = async () => {
@@ -60,11 +70,10 @@ export default function PasswordCard({
         )}
         <div className="w-full flex items-start justify-between gap-4">
           <PasswordDialog
+            initialData={initialData}
             onSubmit={() => {}}
             trigger={
-              <div
-                className="cursor-pointer flex-1 space-y-1"
-              >
+              <div className="cursor-pointer flex-1 space-y-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-lg">{title}</h3>
                 </div>

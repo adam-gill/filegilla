@@ -10,7 +10,14 @@ import {
 import { useState } from "react";
 import { showToast } from "@/lib/showToast";
 import { deleteFile } from "@/lib/deleteFile";
-import { cleanDate, cleanName, convertSize, getFileIconJSX, handleDownload } from "@/lib/helpers";
+import { renameFile } from "@/lib/renameFile";
+import {
+  cleanDate,
+  cleanName,
+  convertSize,
+  getFileIconJSX,
+  handleDownload,
+} from "@/lib/helpers";
 import { AlertDialogComponent } from "./alert";
 
 interface fileProps extends file {
@@ -48,7 +55,12 @@ const File = ({
           </PopoverTrigger>
           <PopoverContent className="w-56 shadow-md z-50" sideOffset={5}>
             <div className="flex flex-col space-y-1">
-              <Button onClick={() => setOpen(false)} variant="ghost" className="justify-start" asChild>
+              <Button
+                onClick={() => setOpen(false)}
+                variant="ghost"
+                className="justify-start"
+                asChild
+              >
                 <Link href={"/view/" + name} className="w-full">
                   Open
                 </Link>
@@ -64,15 +76,31 @@ const File = ({
               >
                 Download
               </Button>
-              <Button
+              <AlertDialogComponent
+                title="Rename File"
+                description={`Enter a new name for ${decodeURIComponent(name)}`}
                 variant="ghost"
-                className="justify-start cursor-not-allowed"
-              >
-                Rename
-              </Button>
+                popOver={true}
+                isRename={true}
+                triggerText="Rename"
+                confirmText="Rename"
+                setOpen={setOpen}
+                inputProps={{
+                  defaultValue: decodeURIComponent(name),
+                  placeholder: "Enter new filename",
+                }}
+                onConfirm={(newName) => {
+                  if (newName) {
+                    showToast(`Renaming ${name}...`, "", "default");
+                    setOpen(false);
+                    renameFile(userId!, name, newName, loadFiles);
+                  }
+                }}
+              />
               <AlertDialogComponent
                 title="Are you absolutely sure?"
                 variant="destructive"
+                setOpen={setOpen}
                 popOver={true}
                 description={`This action cannot be undone. This will permanently delete ${decodeURIComponent(
                   name
