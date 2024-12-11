@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
@@ -11,7 +10,6 @@ import { useAuth } from "@/lib/useAuth";
 import Loading from "./loading";
 import { showToast } from "@/lib/showToast";
 interface Props {
-  label: string;
   maxWidth: number;
   className?: string;
   fileName: string | null;
@@ -19,7 +17,6 @@ interface Props {
 }
 
 const FileUpload: React.FC<Props> = ({
-  label,
   maxWidth,
   className,
   fileName,
@@ -30,12 +27,16 @@ const FileUpload: React.FC<Props> = ({
   const { session } = useAuth();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log(file);
     const newFormData = new FormData();
-    if (file) newFormData.append("file", file);
-    setFormData(newFormData);
-    setFileName(file ? file.name : null);
+    if (file && session?.user) {
+      newFormData.append("file", file);
+      newFormData.append("userId", JSON.stringify({ userId: session.user.id }));
+
+      onUpload(file.name, newFormData);
+    }
   };
 
   const handleButtonClick = () => {
@@ -47,26 +48,27 @@ const FileUpload: React.FC<Props> = ({
       fileInputRef.current.value = "";
     }
     setFileName(null);
+    setFormData(null);
   };
 
-  const onUpload = async () => {
-    showToast(`Uploading ${fileName}...`, "", "default");
+  const onUpload = async (newFileName: string, newFormData: FormData) => {
+    showToast(`Uploading ${newFileName}...`, "", "default");
 
     try {
       setLoading(true);
-      if (session?.user) {
-        const azureFunctionURL = process.env.NEXT_PUBLIC_AZURE_UPLOAD_FUNCTION_URL!;
-        formData?.append("userId", JSON.stringify({ userId: session.user.id }));
-        await axios.post(azureFunctionURL, formData);
+      console.log(newFormData);
+      const azureFunctionURL =
+        process.env.NEXT_PUBLIC_AZURE_UPLOAD_FUNCTION_URL!;
+      if (newFormData) await axios.post(azureFunctionURL, newFormData);
 
-        setLoading(false);
-        showToast(`Successfully uploaded ${fileName}`, "", "good");
-        clearFile();
-      }
+      setLoading(false);
+      showToast(`Successfully uploaded ${newFileName}`, "", "good");
+      clearFile();
+      setFileName(newFileName);
     } catch (error: any) {
       setLoading(false);
       showToast(
-        `Failed to upload ${fileName} :(`,
+        `Failed to upload ${newFileName} :(`,
         "Please try again...",
         "destructive"
       );
@@ -81,12 +83,6 @@ const FileUpload: React.FC<Props> = ({
         className={cn("w-full", className)}
         style={{ maxWidth: `${maxWidth}px` }}
       >
-        <Label
-          htmlFor="file-upload"
-          className="w-full block text-xl font-medium text-white text-center mb-2"
-        >
-          {label}
-        </Label>
         <div className="relative">
           <Input
             type="file"
@@ -100,38 +96,19 @@ const FileUpload: React.FC<Props> = ({
             <Button
               type="button"
               onClick={handleButtonClick}
-              className="w-full text-lg bg-white text-black border-black hover:bg-gray-100  transition-colors relative"
+              className="w-full py-7 px-7 text-2xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
             >
-              {!fileName ? (
-                <>
-                  <Upload className="w-5 h-5 mr-2" />
-                  Choose file
-                </>
+              {loading ? (
+                <Loading width={24} height={24} stroke={3} />
               ) : (
-                <>{fileName}</>
+                <>
+                  <Upload className="w-5 h-5 mr-2" strokeWidth={2.75} />
+                  Upload
+                </>
               )}
             </Button>
-            {fileName && (
-              <X
-                onClick={() => clearFile()}
-                className="absolute -right-8 cursor-pointer hover:scale-110 transition-all duration-300"
-              />
-            )}
           </div>
         </div>
-
-        <Button
-          onClick={() => onUpload()}
-          className="w-full fg-grad text-black text-lg mt-4 border-none"
-        >
-          {loading ? (
-            <>
-              <Loading width={24} height={24} stroke={3} />
-            </>
-          ) : (
-            "Upload"
-          )}
-        </Button>
       </div>
     </>
   );

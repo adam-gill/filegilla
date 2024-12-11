@@ -13,7 +13,8 @@ export async function generateMetadata({ params }: props): Promise<Metadata> {
   };
 }
 
-export default function Viewer({ params }: { params: { fileName: string } }) {
+export default async function Viewer(props: { params: Promise<{ fileName: string }> }) {
+  const params = await props.params;
   return (
     <>
         <FileViewer fileName={params.fileName} />

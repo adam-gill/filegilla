@@ -4,13 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const functionUrl = process.env.AZURE_LIST_FUNCTION_URL!;
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userId: string } }
-) {
+export async function GET(req: NextRequest) {
   try {
-    const userId = params.userId
-
+    const userId = req.nextUrl.searchParams.get("userId");
     if (!userId) {
       return NextResponse.json(
         {

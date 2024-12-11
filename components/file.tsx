@@ -32,7 +32,7 @@ const File = ({
   return (
     <>
       <div
-        className="flex relative flex-col w-full max-w-64 border-2 border-white rounded-lg p-2 cc my-2 mx-2"
+        className="flex relative flex-col w-full max-w-[256px] border-2 border-white rounded-lg p-2 cc"
         data-md5={md5hash}
       >
         <div className="absolute top-2 left-2">{getFileIconJSX(name)}</div>
