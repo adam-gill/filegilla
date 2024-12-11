@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@azure/msal-browser": "^3.24.0",
-    "@azure/msal-react": "^2.1.0",
+    "@azure/msal-react": "^2.2.0",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-alert-dialog": "^1.1.2",
@@ -57,6 +57,9 @@
   },
   "overrides": {
     "@types/react": "19.0.1",
-    "@types/react-dom": "19.0.2"
+    "@types/react-dom": "19.0.2",
+    "@azure/msal-react": {
+      "react": "^19.0.0"
+    }
   }
 }
