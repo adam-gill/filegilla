@@ -24,7 +24,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { passwordSchema, PasswordFormData } from "@/lib/schemas";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Trash } from "lucide-react";
+import { AlertDialogComponent } from "./alert";
+import { showToast } from "@/lib/showToast";
+import axios from "axios";
 
 interface passwordEdit {
   password: string;
@@ -38,16 +41,19 @@ interface passwordEdit {
 
 interface PasswordDialogProps {
   initialData?: passwordEdit;
-  onSubmit: (data: PasswordFormData) => void;
+  onSubmit: (data: PasswordFormData, isEditing: boolean, password_id?: number) => void;
   trigger: React.ReactNode;
+  loadPasswords: () => Promise<void>;
 }
 
 export function PasswordDialog({
   initialData,
   onSubmit,
   trigger,
+  loadPasswords,
 }: PasswordDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const isEditing = !!initialData;
   const [showPassword, setShowPassword] = useState(false);
 
@@ -62,9 +68,34 @@ export function PasswordDialog({
   });
 
   const handleSubmit = (data: PasswordFormData) => {
-    onSubmit(data);
+    onSubmit(data, isEditing, initialData?.password_id);
     setOpen(false);
     form.reset();
+  };
+
+  const deletePassword = async () => {
+    if (initialData) {
+      try {
+        await axios.post("/api/deletePassword", {
+          user_id: initialData.user_id,
+          password_id: initialData.password_id,
+        });
+        showToast(
+          `Successfully deleted the ${initialData.title} password.`,
+          "",
+          "good"
+        );
+
+        await loadPasswords();
+
+      } catch (error) {
+        showToast(
+          `Failed to delete ${initialData.title} password :(`,
+          "",
+          "good"
+        );
+      }
+    }
   };
 
   return (
@@ -91,7 +122,9 @@ export function PasswordDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    Title <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter title" {...field} />
                   </FormControl>
@@ -104,7 +137,9 @@ export function PasswordDialog({
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    Password <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -156,27 +191,47 @@ export function PasswordDialog({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Enter description"
-                      {...field}
-                    />
+                    <Textarea placeholder="Enter description" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button
-                type="button"
-                onClick={() => setOpen(false)}
-                variant="outline"
-                className="text-black hover:bg-gray-100"
-              >
-                Cancel
-              </Button>
-              <Button type="submit">
-                {isEditing ? "Save Changes" : "Add Password"}
-              </Button>
+              <div className={isEditing ? "flex w-full flex-row justify-between": ""}>
+                {isEditing && (
+                  <AlertDialogComponent
+                    title="Are you absolutely sure?"
+                    variant="destructive"
+                    setOpen={setIsOpen}
+                    popOver={true}
+                    description={`This action cannot be undone. This will permanently delete the ${initialData.title} password. ${isOpen ? "" : ""}`}
+                    triggerText={<Trash className="h-4 w-4 stroke-white" />}
+                    onConfirm={() => {
+                      showToast(
+                        `Deleting ${initialData.title}...`,
+                        "",
+                        "default"
+                      );
+                      setOpen(false);
+                      deletePassword();
+                    }}
+                  />
+                )}
+                <div>
+                  <Button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    variant="outline"
+                    className="text-black hover:bg-gray-100 mr-2"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {isEditing ? "Save Changes" : "Add Password"}
+                  </Button>
+                </div>
+              </div>
             </DialogFooter>
           </form>
         </Form>

@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("loadPasswords", passwords)
 
     return NextResponse.json(
       {

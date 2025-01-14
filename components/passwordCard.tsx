@@ -7,6 +7,8 @@ import { ExternalLink, EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { PasswordDialog } from "./passwordDialog";
+import { Skeleton } from "./ui/skeleton";
+import { PasswordFormData } from "@/lib/schemas";
 
 interface PasswordCardProps {
   user_id: string;
@@ -17,6 +19,8 @@ interface PasswordCardProps {
   service_description: string;
   password_id: number;
   password: string;
+  loadPasswords: () => Promise<void>;
+  onSubmit: (data: PasswordFormData, isEditing: boolean, password_id?: number) => void;
 }
 
 export default function PasswordCard({
@@ -28,21 +32,34 @@ export default function PasswordCard({
   service_description,
   password_id,
   password,
+  loadPasswords,
+  onSubmit,
 }: PasswordCardProps) {
   const [hidden, setHidden] = useState<boolean>(true);
-  const [servicePassword, setServicePassword] = useState<string | undefined>(
-    ""
+  const [servicePassword, setServicePassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const initialData = useMemo(
+    () => ({
+      password: servicePassword || cipher,
+      url: service_url || "",
+      description: service_description || "",
+      time_created,
+      title,
+      user_id,
+      password_id,
+    }),
+    [
+      cipher,
+      servicePassword,
+      service_url,
+      service_description,
+      time_created,
+      title,
+      user_id,
+      password_id,
+    ]
   );
-  
-  const initialData = useMemo(() => ({
-    password: servicePassword || "",
-    url: service_url || "",
-    description: service_description || "",
-    time_created,
-    title,
-    user_id,
-    password_id,
-  }), [servicePassword, service_url, service_description, time_created, title, user_id, password_id]);
 
   useEffect(() => {
     const getPassword = async () => {
@@ -51,7 +68,8 @@ export default function PasswordCard({
         cipher,
         password
       );
-      setServicePassword(p ? p : "Error");
+      p ? setServicePassword(p) : setServicePassword("Error");
+      setLoading(false);
     };
 
     getPassword();
@@ -69,22 +87,32 @@ export default function PasswordCard({
           </Link>
         )}
         <div className="w-full flex items-start justify-between gap-4">
-          <PasswordDialog
-            initialData={initialData}
-            onSubmit={() => {}}
-            trigger={
-              <div className="cursor-pointer flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-lg">{title}</h3>
+          {!loading ? (
+            <PasswordDialog
+              loadPasswords={loadPasswords}
+              initialData={initialData}
+              onSubmit={onSubmit}
+              trigger={
+                <div className="cursor-pointer flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg">{title}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-1">
+                    {service_description === ""
+                      ? "No description provided."
+                      : service_description}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground line-clamp-1">
-                  {service_description === ""
-                    ? "No description provided."
-                    : service_description}
-                </p>
+              }
+            />
+          ) : (
+            <>
+              <div className="flex flex-col gap-2">
+                <Skeleton className="w-[300px] h-[20px] p-4 bg-[#7a7a7a3f]" />
+                <Skeleton className="w-[200px] h-[20px] p-4 bg-[#7a7a7a3f]" />
               </div>
-            }
-          />
+            </>
+          )}
 
           <div className="w-full max-w-48 flex flex-col-reverse items-center gap-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">

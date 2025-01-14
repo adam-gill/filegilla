@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Missing userId or data", { status: 400 });
     }
 
-    console.log(data)
+    console.log(data);
 
     await prisma.passwords.create({
       data: {
@@ -34,9 +34,12 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.log(error);
-    return NextResponse.json({
-      success: false,
-      message: `Failed to add password for user: ${error}`,
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: `Failed to add password for user: ${error}`,
+      },
+      { status: 500 }
+    );
   }
 }

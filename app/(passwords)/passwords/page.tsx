@@ -86,8 +86,10 @@ const Passwords = () => {
         const { data } = await axios.post("/api/loadPasswords", {
           userId: session.user.id,
         });
-
-        setPasswords(data.passwords);
+        setPasswords(null);
+        setTimeout(() => {
+          setPasswords(data.passwords);
+        }, 0);
       }
     } catch (error) {
       showToast("Error Loading Passwords :(", "", "destructive");
@@ -150,7 +152,9 @@ const Passwords = () => {
     }
   }, [session?.user.id]);
 
-  const handleSubmit = async (data: PasswordFormData) => {
+  const handleSubmit = async (data: PasswordFormData, isEditing: boolean, password_id?: number) => {
+
+
     try {
       const cipher = await handleOperation("encrypt", data.password, password);
 
@@ -161,7 +165,7 @@ const Passwords = () => {
         cipher,
       };
 
-      if (session?.user.id) {
+      if (session?.user.id && !isEditing) {
         await axios.post("/api/addPassword", {
           userId: session.user.id,
           data: securedData,
@@ -169,6 +173,19 @@ const Passwords = () => {
 
         await loadPasswords();
         showToast(`Successfully Added Password '${securedData.title}'`, "", "good");
+      } else if (session?.user.id && isEditing) {
+
+        await axios.post("/api/updatePassword", {
+          userId: session.user.id,
+          data: securedData,
+          password_id: password_id,
+        })
+
+        
+
+        await loadPasswords();
+
+        showToast(`Successfully Updated Password '${securedData.title}'`, "", "good");
       }
     } catch (error) {
       showToast("Error Adding Password :(", "Please try again.", "destructive");
@@ -370,6 +387,7 @@ const Passwords = () => {
                   <div className="w-full flex flex-col cc">
                     <div className="w-full max-w-3xl flex flex-row items-center justify-start gap-2 mb-4">
                       <PasswordDialog
+                        loadPasswords={loadPasswords}
                         onSubmit={handleSubmit}
                         trigger={
                           <Button className="w-fit p-0 border-none bg-transparent hover:bg-transparent">
@@ -392,7 +410,9 @@ const Passwords = () => {
                           <PasswordCard
                             {...passwordData}
                             password={password}
-                            key={index}
+                            loadPasswords={loadPasswords}
+                            onSubmit={handleSubmit}
+                            key={`${index}-${passwordData.password_id}`}
                           />
                         ))}
                       </div>
