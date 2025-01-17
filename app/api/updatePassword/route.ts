@@ -12,6 +12,19 @@ interface UpdatePasswordBody {
   };
 }
 
+function getFormattedTimestamp() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body: UpdatePasswordBody = await req.json();
@@ -38,6 +51,8 @@ export async function POST(req: NextRequest) {
         service_description: data.description || "",
       },
     });
+
+    console.log(`*** successfully updated password-${password_id} at ${getFormattedTimestamp()} ***`)
 
     return new NextResponse(`Successfully updated the password ${data.title}`, {
       status: 200,

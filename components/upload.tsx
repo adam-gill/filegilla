@@ -27,12 +27,10 @@ const FileUpload: React.FC<Props> = ({
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    console.log(file);
     const newFormData = new FormData();
     if (file && session?.user) {
       newFormData.append("file", file);
       newFormData.append("userId", JSON.stringify({ userId: session.user.id }));
-
       onUpload(file.name, newFormData);
     }
   };
@@ -53,7 +51,6 @@ const FileUpload: React.FC<Props> = ({
 
     try {
       setLoading(true);
-      console.log(newFormData);
       const azureFunctionURL =
         process.env.NEXT_PUBLIC_AZURE_UPLOAD_FUNCTION_URL!;
       if (newFormData) await axios.post(azureFunctionURL, newFormData);

@@ -5,7 +5,7 @@ import { handleOperation } from "@/lib/cryptoUtils";
 import { cleanDate } from "@/lib/helpers";
 import { ExternalLink, EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { PasswordDialog } from "./passwordDialog";
 import { Skeleton } from "./ui/skeleton";
 import { PasswordFormData } from "@/lib/schemas";
@@ -20,7 +20,11 @@ interface PasswordCardProps {
   password_id: number;
   password: string;
   loadPasswords: () => Promise<void>;
-  onSubmit: (data: PasswordFormData, isEditing: boolean, password_id?: number) => void;
+  onSubmit: (
+    data: PasswordFormData,
+    isEditing: boolean,
+    password_id?: number
+  ) => void;
 }
 
 export default function PasswordCard({
@@ -39,27 +43,15 @@ export default function PasswordCard({
   const [servicePassword, setServicePassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
-  const initialData = useMemo(
-    () => ({
-      password: servicePassword || cipher,
-      url: service_url || "",
-      description: service_description || "",
-      time_created,
-      title,
-      user_id,
-      password_id,
-    }),
-    [
-      cipher,
-      servicePassword,
-      service_url,
-      service_description,
-      time_created,
-      title,
-      user_id,
-      password_id,
-    ]
-  );
+  const initialData = {
+    password: servicePassword || cipher,
+    url: service_url || undefined,
+    description: service_description || "",
+    time_created,
+    title,
+    user_id,
+    password_id,
+  };
 
   useEffect(() => {
     const getPassword = async () => {
@@ -73,7 +65,14 @@ export default function PasswordCard({
     };
 
     getPassword();
-  }, [cipher, password]);
+  }, [
+    cipher,
+    password,
+    initialData.description,
+    initialData.password,
+    initialData.title,
+    initialData.url,
+  ]);
 
   return (
     <>

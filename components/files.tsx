@@ -46,8 +46,6 @@ const Files: React.FC<props> = ({ fileName, search }) => {
         );
 
         search ? setResult(res) : setResult(undefined);
-
-        console.log();
       }
     };
 

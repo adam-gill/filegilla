@@ -31,13 +31,14 @@ import axios from "axios";
 
 interface passwordEdit {
   password: string;
-  url?: string;
+  url?: string | undefined;
   description: string;
   time_created: string;
   title: string;
   user_id: string;
   password_id: number;
 }
+
 
 interface PasswordDialogProps {
   initialData?: passwordEdit;
@@ -67,10 +68,11 @@ export function PasswordDialog({
     },
   });
 
-  const handleSubmit = (data: PasswordFormData) => {
+  const handleSubmit = async (data: PasswordFormData) => {
     onSubmit(data, isEditing, initialData?.password_id);
     setOpen(false);
     form.reset();
+    await loadPasswords();
   };
 
   const deletePassword = async () => {

@@ -31,6 +31,7 @@ import { PasswordDialog } from "@/components/passwordDialog";
 import { PasswordFormData } from "@/lib/schemas";
 import { decrypt, encrypt } from "@/lib/cryptoUtils";
 import PasswordCard from "@/components/passwordCard";
+import SearchBar from "@/components/search";
 
 const Passwords = () => {
   const { session } = useAuth();
@@ -43,7 +44,31 @@ const Passwords = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [locked, setLocked] = useState<boolean>(true);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>("");
+  const [result, setResult] = useState<password[] | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleSearchChange = () => {
+      if (passwords) {
+        const res = passwords.filter((p) => {
+          const searchLower = search.toLowerCase();
+          const descriptionMatch =
+            p.service_description?.toLowerCase().includes(searchLower) || false;
+          const titleMatch =
+            p.title?.toLowerCase().includes(searchLower) || false;
+          const urlMatch =
+            p.service_url?.toLowerCase().includes(searchLower) || false;
+
+          return descriptionMatch || titleMatch || urlMatch;
+        });
+
+        search ? setResult(res) : setResult(null);
+      }
+    };
+
+    handleSearchChange();
+  }, [search, passwords]);
 
   const handleOperation = async (
     operation: "encrypt" | "decrypt",
@@ -152,9 +177,11 @@ const Passwords = () => {
     }
   }, [session?.user.id]);
 
-  const handleSubmit = async (data: PasswordFormData, isEditing: boolean, password_id?: number) => {
-
-
+  const handleSubmit = async (
+    data: PasswordFormData,
+    isEditing: boolean,
+    password_id?: number
+  ) => {
     try {
       const cipher = await handleOperation("encrypt", data.password, password);
 
@@ -172,20 +199,33 @@ const Passwords = () => {
         });
 
         await loadPasswords();
-        showToast(`Successfully Added Password '${securedData.title}'`, "", "good");
+        showToast(
+          `Successfully Added Password '${securedData.title}'`,
+          "",
+          "good"
+        );
       } else if (session?.user.id && isEditing) {
+        try {
+          await axios.post("/api/updatePassword", {
+            userId: session.user.id,
+            data: securedData,
+            password_id: password_id,
+          });
 
-        await axios.post("/api/updatePassword", {
-          userId: session.user.id,
-          data: securedData,
-          password_id: password_id,
-        })
+          await loadPasswords();
 
-        
-
-        await loadPasswords();
-
-        showToast(`Successfully Updated Password '${securedData.title}'`, "", "good");
+          showToast(
+            `Successfully updated the password for ${securedData.title}`,
+            "",
+            "good"
+          );
+        } catch (error) {
+          showToast(
+            `Failed to update the password for ${securedData.title} :(`,
+            "Please try again.",
+            "destructive"
+          );
+        }
       }
     } catch (error) {
       showToast("Error Adding Password :(", "Please try again.", "destructive");
@@ -210,7 +250,7 @@ const Passwords = () => {
           password: password,
         });
 
-        setHasAccount(true)
+        setHasAccount(true);
       }
     } catch (error) {
       console.log(error);
@@ -385,26 +425,29 @@ const Passwords = () => {
                   </>
                 ) : (
                   <div className="w-full flex flex-col cc">
-                    <div className="w-full max-w-3xl flex flex-row items-center justify-start gap-2 mb-4">
-                      <PasswordDialog
-                        loadPasswords={loadPasswords}
-                        onSubmit={handleSubmit}
-                        trigger={
-                          <Button className="w-fit p-0 border-none bg-transparent hover:bg-transparent">
-                            <div className="border-2 border-white bg-white rounded-lg cursor-pointer hover:bg-black transition-all duration-300">
-                              <Plus
-                                size={24}
-                                className="stroke-black hover:stroke-white transition-all duration-300"
-                              />
-                            </div>
-                          </Button>
-                        }
-                      />
-                      <h1 className="text-2xl font-semibold">
-                        Add New Password
-                      </h1>
+                    <div className="w-full max-w-3xl flex flex-row items-center justify-between gap-2 mb-4">
+                      <div className="flex flex-row items-center gap-3">
+                        <PasswordDialog
+                          loadPasswords={loadPasswords}
+                          onSubmit={handleSubmit}
+                          trigger={
+                            <Button className="w-fit p-0 border-none bg-transparent hover:bg-transparent">
+                              <div className="border-2 border-white bg-white rounded-lg cursor-pointer hover:bg-black transition-all duration-300">
+                                <Plus
+                                  size={24}
+                                  className="stroke-black hover:stroke-white transition-all duration-300"
+                                />
+                              </div>
+                            </Button>
+                          }
+                        />
+                        <h1 className="text-2xl font-semibold">
+                          Add New Password
+                        </h1>
+                      </div>
+                      <SearchBar search={search} setSearch={setSearch} />
                     </div>
-                    {passwords && (
+                    {passwords && !result ? (
                       <div className="w-full flex flex-col gap-4 cc">
                         {passwords.map((passwordData, index) => (
                           <PasswordCard
@@ -416,6 +459,26 @@ const Passwords = () => {
                           />
                         ))}
                       </div>
+                    ) : (
+                      <>
+                        <div className="w-full flex flex-col gap-4 cc">
+                          {result && result.length !== 0 ? (
+                            result.map((passwordData, index) => (
+                              <PasswordCard
+                                {...passwordData}
+                                password={password}
+                                loadPasswords={loadPasswords}
+                                onSubmit={handleSubmit}
+                                key={`${index}-${passwordData.password_id}`}
+                              />
+                            ))
+                          ) : (
+                            <div className="text-center text-white text-xl font-bold">
+                              No passwords found for &#34;{search}&#34;
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
