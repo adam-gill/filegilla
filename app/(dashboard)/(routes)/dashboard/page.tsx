@@ -13,11 +13,11 @@ const Dashboard = () => {
     <>
       <div className="w-full py-10">
         <div className="w-full max-w-6xl px-6 mx-auto flex flex-col cc">
-          <div className="flex w-full h-fit flex-row items-center justify-between mb-6">
+          <div className="flex w-full h-fit flex-row items-center justify-between sm:justify-center mb-6">
             <FileUpload
               fileName={fileName}
               setFileName={setFileName}
-              maxWidth={200}
+              className="max-w-[200px] sm:max-w-[50%] mr-2"
             />
             <SearchBar search={search} setSearch={setSearch} />
           </div>

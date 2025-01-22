@@ -115,14 +115,14 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
       const text = await response.text();
       setTextContent(text);
     } catch (error) {
-      console.error('Error fetching text content:', error);
-      setTextContent('Error loading text file');
+      console.error("Error fetching text content:", error);
+      setTextContent("Error loading text file");
     }
   };
-  
+
   // Add useEffect to fetch text content when fileUrl changes and type is txt
   useEffect(() => {
-    if (fileType === 'txt' && fileUrl) {
+    if (fileType === "txt" && fileUrl) {
       fetchTextContent(fileUrl);
     }
   }, [fileUrl, fileType]);
@@ -164,11 +164,13 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
         );
       case "txt":
         return (
-          <div className="w-full h-full overflow-auto p-4">
-            <pre className="whitespace-pre-wrap text-sm">
-              {textContent}
-            </pre>
-          </div>
+          <>
+            <textarea
+              className="w-full h-full p-2 bg-neutral-700 text-sm focus:outline-none font-mono rounded-md resize-none"
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+            />
+          </>
         );
       case "doc":
       case "docx":

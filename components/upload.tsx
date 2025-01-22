@@ -10,14 +10,12 @@ import { useAuth } from "@/lib/useAuth";
 import Loading from "./loading";
 import { showToast } from "@/lib/showToast";
 interface Props {
-  maxWidth: number;
   className?: string;
   fileName: string | null;
   setFileName: (value: string | null) => void;
 }
 
 const FileUpload: React.FC<Props> = ({
-  maxWidth,
   className,
   setFileName,
 }) => {
@@ -75,7 +73,6 @@ const FileUpload: React.FC<Props> = ({
     <>
       <div
         className={cn("w-full", className)}
-        style={{ maxWidth: `${maxWidth}px` }}
       >
         <div className="relative">
           <Input
@@ -90,7 +87,7 @@ const FileUpload: React.FC<Props> = ({
             <Button
               type="button"
               onClick={handleButtonClick}
-              className="w-full py-7 px-7 text-2xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
+              className="w-full py-7 px-7 sm:py-5 sm:px-4 sm:text-xl text-2xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
             >
               {loading ? (
                 <Loading width={24} height={24} stroke={3} />

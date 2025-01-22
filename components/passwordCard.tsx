@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { handleOperation } from "@/lib/cryptoUtils";
 import { cleanDate } from "@/lib/helpers";
-import { ExternalLink, EyeIcon, EyeOffIcon } from "lucide-react";
+import { Check, Copy, ExternalLink, EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PasswordDialog } from "./passwordDialog";
@@ -42,6 +42,23 @@ export default function PasswordCard({
   const [hidden, setHidden] = useState<boolean>(true);
   const [servicePassword, setServicePassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [showAnimation, setShowAnimation] = useState<boolean>(false);
+
+  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+  const copyToClipboard = async (text: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
+
+  const clipboardAnimation = async () => {
+    setShowAnimation(true);
+    await delay(1000);
+    setShowAnimation(false);
+  };
 
   const initialData = {
     password: servicePassword || cipher,
@@ -115,14 +132,34 @@ export default function PasswordCard({
 
           <div className="w-full max-w-48 flex flex-col-reverse items-center gap-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
+              <Copy
+                size={24}
+                onClick={() => {
+                  copyToClipboard(servicePassword);
+                  clipboardAnimation();
+                }}
+                className={`stroke-black h-4 w-4 cursor-pointer
+          ${showAnimation || !servicePassword ? "hidden" : "block"}
+          hover:stroke-[3]
+          transition-all duration-500
+            `}
+              />
+              <Check
+                size={24}
+                className={`stroke-green-400 stroke-[3] h-4 w-4 cursor-pointer
+          hover:stroke-[3]
+          transition-all duration-500 ${showAnimation ? "block" : "hidden"}
+          `}
+              />
+
               {hidden ? (
                 <EyeIcon
-                  className="h-4 w-4 cursor-pointer"
+                  className="h-4 w-4 cursor-pointer hover:stroke-[3] transition-all duration-300"
                   onClick={() => setHidden(!hidden)}
                 />
               ) : (
                 <EyeOffIcon
-                  className="h-4 w-4 cursor-pointer"
+                  className="h-4 w-4 cursor-pointer hover:stroke-[3] transition-all duration-300"
                   onClick={() => setHidden(!hidden)}
                 />
               )}

@@ -8,7 +8,7 @@ interface searchProps {
 
 const SearchBar: React.FC<searchProps> = ({ search, setSearch }) => {
   return (
-    <div className="w-fit flex flex-row items-center ml-4">
+    <div className="w-fit flex flex-row items-center ml-4 sm:ml-2 sm:w-1/2">
       <div className="relative block">
         {search === "" ? (
           <Search
