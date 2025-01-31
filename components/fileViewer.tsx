@@ -22,12 +22,14 @@ import { Input } from "./ui/input";
 import { getFile } from "@/lib/getFile";
 import { file, getFileResponse } from "filegilla";
 import { renameFile } from "@/lib/renameFile";
+import { getPublicFileResponse } from "@/app/api/getPublicFile/route";
 
 type props = {
   fileName: string;
+  publicFileData?: getPublicFileResponse;
 };
 
-const FileViewer: React.FC<props> = ({ fileName }) => {
+const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const [scale, setScale] = useState<number>(1);
   const [file, setFile] = useState<file | null>(null);
   const [fileUrl, setFileUrl] = useState<string>("");
@@ -43,6 +45,7 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
 
   const fetchFile = async () => {
     setLoading(true);
+
     if (userId && fileName) {
       const data: getFileResponse = await getFile(userId, fileName);
       if (data.file) {
@@ -55,10 +58,17 @@ const FileViewer: React.FC<props> = ({ fileName }) => {
   };
 
   useEffect(() => {
-    fetchFile();
+    setLoading(true);
+    if (publicFileData) {
+      setFile(publicFileData.file);
+      setFileUrl(publicFileData.url);
+      setLoading(false);
+    } else {
+      fetchFile();
+    }
   }, [userId, fileName]);
 
-  const fileType = fileName.split(".").pop()?.toLowerCase();
+  const fileType = publicFileData ? file?.name.split(".").pop()?.toLowerCase() : fileName.split(".").pop()?.toLowerCase();
 
   const updateScale = (value: number) => {
     const newScale = Math.max(0.1, Math.min(10, value / 100));

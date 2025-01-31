@@ -25,6 +25,7 @@ interface AlertDialogComponentProps {
   confirmText?: string;
   cancelText?: string;
   popOver?: boolean;
+  type?: "share" | "rename" | "delete";
   variant?:
     | "default"
     | "destructive"
@@ -47,6 +48,7 @@ export function AlertDialogComponent({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "default",
+  // type,
   popOver,
   isRename,
   inputProps,
@@ -61,7 +63,9 @@ export function AlertDialogComponent({
   };
 
   const [isOpen, setIsOpen] = useState(false);
-  const fileExtension = inputProps?.defaultValue?.substring(inputProps?.defaultValue.lastIndexOf("."));
+  const fileExtension = inputProps?.defaultValue?.substring(
+    inputProps?.defaultValue.lastIndexOf(".")
+  );
   const [inputValue, setInputValue] = useState(
     sliceFileExtension(inputProps?.defaultValue) || ""
   );

@@ -1,14 +1,14 @@
-import React, { JSX } from 'react';
-import { FC } from 'react';
+import React, { JSX } from "react";
+import { FC } from "react";
 import {
   GrDocumentText,
   GrDocumentPdf,
   GrDocumentWord,
   GrDocumentImage,
   GrDocumentVideo,
-  GrDocumentZip
-} from 'react-icons/gr';
-import { showToast } from './showToast';
+  GrDocumentZip,
+} from "react-icons/gr";
+import { showToast } from "./showToast";
 
 const getFileIcon = (name: string): FC => {
   const lastPeriodIndex = name.lastIndexOf(".");
@@ -77,35 +77,52 @@ export function cleanDate(dateString: string): string {
 }
 
 export async function handleDownload(blobUrl: string, name: string) {
-    try {
-      const response = await fetch(blobUrl, {
-        method: "GET",
-        mode: "cors",
-        credentials: "omit",
-        headers: {
-          Accept: "*/*",
-        },
-      });
-      if (!response.ok) throw new Error("Download failed");
+  try {
+    const response = await fetch(blobUrl, {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
+      headers: {
+        Accept: "*/*",
+      },
+    });
+    if (!response.ok) throw new Error("Download failed");
 
-      const blob = await response.blob();
+    const blob = await response.blob();
 
-      const blobDownloadUrl = window.URL.createObjectURL(blob);
-      name = decodeURIComponent(name)
+    const blobDownloadUrl = window.URL.createObjectURL(blob);
+    name = decodeURIComponent(name);
 
-      const link = document.createElement("a");
-      link.href = blobDownloadUrl;
-      link.download = name;
-      document.body.appendChild(link);
-      link.click();
+    const link = document.createElement("a");
+    link.href = blobDownloadUrl;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
 
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobDownloadUrl);
-      showToast(`Successfully downloaded ${name}`, "", "good");
-    } catch (error) {
-      console.error("Download error:", error);
-      showToast(`Failed to download ${name} :(`, "", "destructive");
-    } finally {
-    }
-  };
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobDownloadUrl);
+    showToast(`Successfully downloaded ${name}`, "", "good");
+  } catch (error) {
+    console.error("Download error:", error);
+    showToast(`Failed to download ${name} :(`, "", "destructive");
+  } finally {
+  }
+}
+
+export function ag_uuid() {
+  
+  const numbers = "0123456789";
+  const lowerCase = "abcdefghijklmnopqrstuvwxyz";
+  const upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const allChars = numbers + lowerCase + upperCase;
+
+  // Create Uint32Array for true randomness using crypto
+  const randomValues = new Uint32Array(24);
+  crypto.getRandomValues(randomValues);
+
+  // Generate the random string
+  return Array.from(randomValues)
+    .map((val) => allChars[val % allChars.length])
+    .join("");
+}

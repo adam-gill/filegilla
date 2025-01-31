@@ -34,3 +34,11 @@ model users {
   passwords     passwords[]
   sas_table     sas_table?
 }
+
+model shares {
+  name          String   @id @db.VarChar
+  publicBlobURL String   @db.VarChar
+  uuid          String   @db.VarChar
+  owner         String   @db.VarChar
+  time_created  DateTime @db.Timestamp(6)
+}
