@@ -29,8 +29,6 @@ export async function generateMetadata({ params }: props): Promise<Metadata> {
 
       data = response.data;
     } catch (error: any) {
-      console.log(`Error fetching public file "${params.shareName}"`, error);
-
       if (error.status && error.status === 404) {
         data = {
           status: 404,

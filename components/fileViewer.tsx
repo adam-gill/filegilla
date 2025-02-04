@@ -90,7 +90,11 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
 
   useEffect(() => {
     setLoading(true);
-    setIsOwner(publicFileData?.owner === userId || !publicFileData);
+    setIsOwner((publicFileData?.owner && userId && publicFileData?.owner === userId) || !publicFileData);
+    console.log("isOwner: ", publicFileData?.owner === userId || publicFileData?.status !== 200)
+    console.log("owner statement truthy:", publicFileData?.owner === userId)
+    console.log("publicFileData truthy:", publicFileData?.status !== 200)
+    console.log(publicFileData?.owner, userId)
     if (publicFileData) {
       if (publicFileData.status === 200) {
         setFile(publicFileData.file);
@@ -350,11 +354,6 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
           </>
         ) : (
           <div className="flex flex-col cc font-bold text-3xl pb-2 w-full text-center relative">
-            <ChevronLeft
-              onClick={() => router.back()}
-              size={32}
-              className="absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer"
-            />
             <Skeleton className="w-72 h-9 bg-grayHover" />
             <div className="flex items-center justify-between gap-8 mt-2">
               <Skeleton className="w-36 h-7 bg-grayHover mb-2" />
