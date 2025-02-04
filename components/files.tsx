@@ -95,7 +95,7 @@ const Files: React.FC<props> = ({ fileName, search }) => {
             </>
           ) : (
             <>
-              {result &&
+              {result && result.length > 0 ? (
                 result.map((file, index) => (
                   <File
                     key={index}
@@ -103,7 +103,12 @@ const Files: React.FC<props> = ({ fileName, search }) => {
                     userId={userId}
                     loadFiles={loadFiles}
                   />
-                ))}
+                ))
+              ) : (
+                <h1 className="w-full text-center text-xl text-white font-bold">
+                  {`No results for "${search}"`}
+                </h1>
+              )}
             </>
           )}
         </div>
