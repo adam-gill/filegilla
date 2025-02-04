@@ -25,5 +25,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/view/:path*", "/view"], // Protects /dashboard, /view and all subpaths, /portal
+  matcher: ["/dashboard", "/view/:path*", "/view", "/passwords"], // Protects /dashboard, /view and all subpaths, /portal
 };

@@ -10,9 +10,13 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
+import SignInButton from "./signInBtn";
+import { useState } from "react";
+import { LogIn } from "lucide-react";
 
 const Navbar = () => {
   const { session } = useAuth();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const getInitials = (): string => {
     if (session?.user) {
@@ -61,7 +65,8 @@ const Navbar = () => {
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link href="/account" legacyBehavior passHref>
+              {session?.user ? (
+                <Link href="/account" legacyBehavior passHref>
                 <NavigationMenuLink className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
                   <Avatar color="#ffffff">
                     <AvatarImage src="/circle.png" alt="User avatar" />
@@ -72,6 +77,10 @@ const Navbar = () => {
                   </Avatar>
                 </NavigationMenuLink>
               </Link>
+              ) : (
+                <SignInButton loading={loading} setLoading={setLoading} tabIndex={0} content={<LogIn className="absolute w-5 h-5" />} className={"rounded-full w-10 h-10"} />
+              )}
+              
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>

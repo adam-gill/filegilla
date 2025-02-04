@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/useAuth";
 import { TailSpin } from "react-loading-icons";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/loading";
+import SignInButton from "@/components/signInBtn";
 
 export default function Home() {
   const [hidden, setHidden] = useState<boolean>(true);
@@ -52,27 +53,7 @@ export default function Home() {
               <h1 className="text-2xl font-bold">FileGilla</h1>
             </li>
             <li className="flex cc">
-              <Button
-                className="w-24"
-                disabled={loading}
-                onClick={() => {
-                  setLoading(true);
-                  signIn("azure-ad-b2c");
-                }}
-                variant={"white"}
-              >
-                {loading ? (
-                  <TailSpin
-                    stroke="#000"
-                    strokeWidth={2.5}
-                    width={24}
-                    height={24}
-                    speed={2.5}
-                  />
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
+              <SignInButton loading={loading} setLoading={setLoading} tabIndex={0} content={"Sign In"} />
             </li>
           </ul>
         </nav>
@@ -146,6 +127,3 @@ export default function Home() {
     </>
   );
 }
-
-
-// lebron

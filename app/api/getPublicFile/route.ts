@@ -11,6 +11,7 @@ const extractFileName = (url: string): string => {
 export type getPublicFileResponse = {
   file: file,
   name: string;
+  owner: string;
   url: string;
   timeCreated: Date;
   uuid: string;
@@ -61,10 +62,10 @@ export async function GET(req: NextRequest) {
         url: shareObject.publicBlobURL,
         timeCreated: shareObject.time_created,
         uuid: shareObject.uuid,
+        owner: shareObject.owner,
         fileName: extractFileName(shareObject.publicBlobURL),
       };
 
-      console.log(response);
       return NextResponse.json(response);
     } else {
       return new NextResponse("Error fetching data from database", {
@@ -77,3 +78,6 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+// add sourceETag value to shares table to associate shared files with their source file
+// will also need to add etag field to file component and types

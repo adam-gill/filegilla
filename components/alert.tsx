@@ -48,7 +48,7 @@ export function AlertDialogComponent({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "default",
-  // type,
+  type,
   popOver,
   isRename,
   inputProps,
@@ -61,6 +61,12 @@ export function AlertDialogComponent({
       return file || "";
     }
   };
+
+  const btnClasses = cn(
+    type === "rename" ? "text-left flex justify-start" :
+    type === "delete" ? "w-[50px]" :
+    "text-left flex justify-start"
+  );
 
   const [isOpen, setIsOpen] = useState(false);
   const fileExtension = inputProps?.defaultValue?.substring(
@@ -83,14 +89,14 @@ export function AlertDialogComponent({
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <Button
-          className={cn(popOver ? "text-left flex justify-start" : "")}
+          className={btnClasses}
           variant={variant}
         >
           {!popOver &&
             (isRename ? (
-              <Pencil className="h-4 w-4 mr-2" />
+              <Pencil className="h-4 w-4" />
             ) : (
-              <Trash className="h-4 w-4 mr-2" />
+              <Trash className="h-4 w-4" />
             ))}
           {triggerText}
         </Button>

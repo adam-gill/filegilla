@@ -6,6 +6,7 @@ import {
   Dot,
   Download,
   Pencil,
+  Share,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -14,7 +15,7 @@ import { useAuth } from "@/lib/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Skeleton } from "./ui/skeleton";
-import { cleanDate, convertSize, handleDownload } from "@/lib/helpers";
+import { ag_uuid, cleanDate, convertSize, extractFileExtension, handleDownload, stripFileExtension, stripToken } from "@/lib/helpers";
 import { deleteFile } from "@/lib/deleteFile";
 import { showToast } from "@/lib/showToast";
 import { AlertDialogComponent } from "./alert";
@@ -23,6 +24,7 @@ import { getFile } from "@/lib/getFile";
 import { file, getFileResponse } from "filegilla";
 import { renameFile } from "@/lib/renameFile";
 import { getPublicFileResponse } from "@/app/api/getPublicFile/route";
+import { shareFileOp } from "@/lib/shareFileOp";
 
 type props = {
   fileName: string;
@@ -37,11 +39,17 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [textContent, setTextContent] = useState<string>("");
   const [inputValue, setInputValue] = useState("100");
+  const [open, setOpen] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { session } = useAuth();
   const userId = session?.user.id;
+  const [isOwner] = useState(
+    (publicFileData?.owner && publicFileData?.owner === userId) ||
+      !publicFileData
+  );
   const router = useRouter();
+  const uuid = ag_uuid();
 
   const fetchFile = async () => {
     setLoading(true);
@@ -68,7 +76,9 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
     }
   }, [userId, fileName]);
 
-  const fileType = publicFileData ? file?.name.split(".").pop()?.toLowerCase() : fileName.split(".").pop()?.toLowerCase();
+  const fileType = publicFileData
+    ? file?.name.split(".").pop()?.toLowerCase()
+    : fileName.split(".").pop()?.toLowerCase();
 
   const updateScale = (value: number) => {
     const newScale = Math.max(0.1, Math.min(10, value / 100));
@@ -125,7 +135,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       const text = await response.text();
       setTextContent(text);
     } catch (error) {
-      console.error("Error fetching text content:", error);
+      console.error(`Error fetching text content: ${open ? "" : ""}`, error);
       setTextContent("Error loading text file");
     }
   };
@@ -270,12 +280,16 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
         {fileName && file?.lastModified && file.sizeInBytes ? (
           <>
             <h1 className="flex cc font-bold text-3xl w-full text-center relative">
-              <ChevronLeft
-                onClick={() => router.back()}
-                size={32}
-                className="absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer"
-              />
-              {decodeURIComponent(fileName)}
+              {isOwner && (
+                <ChevronLeft
+                  onClick={() => router.back()}
+                  size={32}
+                  className="absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer"
+                />
+              )}
+              {publicFileData
+                ? decodeURIComponent(fileName) + "." + fileType
+                : decodeURIComponent(fileName)}
             </h1>
             <div className="text-lg flex cc mb-2">
               {cleanDate(file?.lastModified)}
@@ -311,7 +325,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
         </div>
 
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-lg">
-          {fileUrl != "" && (
+          {fileUrl != "" && isOwner && (
             <>
               {isImage() && (
                 <>
@@ -334,8 +348,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 </>
               )}
               <Button onClick={() => handleDownload(fileUrl, fileName)}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
+                <Download className="h-4 w-4" />
               </Button>
               <AlertDialogComponent
                 title="Rename File"
@@ -346,7 +359,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 isRename={true}
                 triggerText={
                   <>
-                    <Pencil className="h-4 w-4 mr-2" /> Rename
+                    <Pencil className="h-4 w-4" />
                   </>
                 }
                 confirmText="Rename"
@@ -368,12 +381,49 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 }}
               />
               <AlertDialogComponent
+                title="Share"
+                description={`Select a name to share ${decodeURIComponent(
+                  fileName
+                )} as, or leave it random. This value must be unique amongst all users.`}
+                popOver={true}
+                type="share"
+                isRename={true}
+                triggerText={<Share className="h-4 w-4" />}
+                confirmText="Share"
+                setOpen={setOpen}
+                inputProps={{
+                  defaultValue: ag_uuid() + extractFileExtension(fileName),
+                  placeholder: "Enter new filename",
+                }}
+                onConfirm={(shareName) => {
+                  if (shareName) {
+                    shareFileOp(
+                      userId!,
+                      stripToken(fileUrl),
+                      stripFileExtension(shareName),
+                      "create",
+                      uuid
+                    );
+                    showToast(
+                      `Making ${name} public as filegilla.com/s/${encodeURIComponent(
+                        shareName
+                      )}`,
+                      "",
+                      "default"
+                    );
+                    setOpen(false);
+                  }
+                }}
+              />
+              <AlertDialogComponent
                 setOpen={() => {}}
+                variant={"destructive"}
                 title="Are you absolutely sure?"
                 description={`This action cannot be undone. This will permanently delete ${decodeURIComponent(
                   fileName
                 )}.`}
-                triggerText="Delete"
+                triggerText=""
+                type="delete"
                 onConfirm={() => {
                   showToast(`Deleting ${fileName}...`, "", "default");
                   if (session?.user.id)

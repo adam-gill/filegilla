@@ -126,3 +126,19 @@ export function ag_uuid() {
     .map((val) => allChars[val % allChars.length])
     .join("");
 }
+
+export function extractFileExtension(fullFileName: string): string {
+  const lastDotIndex = fullFileName.lastIndexOf(".");
+  if (lastDotIndex === -1) return "";
+  return fullFileName.slice(lastDotIndex);
+};
+
+export function stripToken(fullURL: string): string {
+  return fullURL.split("?")[0];
+};
+
+export function stripFileExtension(file: string): string {
+  const lastDotIndex = file.lastIndexOf('.');
+  if (lastDotIndex === -1) return file;
+  return file.slice(0, lastDotIndex);
+}
