@@ -9,13 +9,14 @@ const extractFileName = (url: string): string => {
 };
 
 export type getPublicFileResponse = {
-  file: file,
-  name: string;
-  owner: string;
-  url: string;
-  timeCreated: Date;
-  uuid: string;
-  fileName: string;
+  file?: file,
+  name?: string;
+  owner?: string;
+  url?: string;
+  timeCreated?: Date;
+  uuid?: string;
+  fileName?: string;
+  status: number;
 };
 
 export async function GET(req: NextRequest) {
@@ -64,6 +65,7 @@ export async function GET(req: NextRequest) {
         uuid: shareObject.uuid,
         owner: shareObject.owner,
         fileName: extractFileName(shareObject.publicBlobURL),
+        status: 200,
       };
 
       return NextResponse.json(response);

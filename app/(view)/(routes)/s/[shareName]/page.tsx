@@ -18,15 +18,30 @@ export async function generateMetadata({ params }: props): Promise<Metadata> {
 
   export default async function Viewer(props: { params: Promise<{ shareName: string }> }) {
     const params = await props.params;
+    let data: getPublicFileResponse;
 
-    console.log(`${process.env.NEXT_PUBLIC_APP_URL}/api/getPublicFile`)
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/getPublicFile`, {
-        params: {
-            shareName: params.shareName
-        }
-    });
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/getPublicFile`, {
+          params: {
+              shareName: params.shareName
+          }
+      });
 
-    const data = response.data as getPublicFileResponse
+      data = response.data;
+    } catch (error: any) {
+      console.log(`Error fetching public file "${params.shareName}"`, error);
+
+      if (error.status && error.status === 404) {
+        data = {
+          status: 404,
+        };
+      } else {
+        data = {
+          status: 500
+        };
+      }
+    }
+
     return (
       <>
           <FileViewer fileName={params.shareName} publicFileData={data} />

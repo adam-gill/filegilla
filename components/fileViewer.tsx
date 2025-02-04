@@ -15,7 +15,15 @@ import { useAuth } from "@/lib/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Skeleton } from "./ui/skeleton";
-import { ag_uuid, cleanDate, convertSize, extractFileExtension, handleDownload, stripFileExtension, stripToken } from "@/lib/helpers";
+import {
+  ag_uuid,
+  cleanDate,
+  convertSize,
+  extractFileExtension,
+  handleDownload,
+  stripFileExtension,
+  stripToken,
+} from "@/lib/helpers";
 import { deleteFile } from "@/lib/deleteFile";
 import { showToast } from "@/lib/showToast";
 import { AlertDialogComponent } from "./alert";
@@ -25,6 +33,7 @@ import { file, getFileResponse } from "filegilla";
 import { renameFile } from "@/lib/renameFile";
 import { getPublicFileResponse } from "@/app/api/getPublicFile/route";
 import { shareFileOp } from "@/lib/shareFileOp";
+import { cn } from "@/lib/utils";
 
 type props = {
   fileName: string;
@@ -33,8 +42,8 @@ type props = {
 
 const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const [scale, setScale] = useState<number>(1);
-  const [file, setFile] = useState<file | null>(null);
-  const [fileUrl, setFileUrl] = useState<string>("");
+  const [file, setFile] = useState<file | undefined>(undefined);
+  const [fileUrl, setFileUrl] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditing, setIsEditing] = useState(false);
   const [textContent, setTextContent] = useState<string>("");
@@ -44,10 +53,8 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { session } = useAuth();
   const userId = session?.user.id;
-  const [isOwner] = useState(
-    (publicFileData?.owner && publicFileData?.owner === userId) ||
-      !publicFileData
-  );
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+
   const router = useRouter();
   const uuid = ag_uuid();
 
@@ -65,20 +72,52 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
     setLoading(false);
   };
 
+  const file404: file = {
+    name: `Could not find file "${fileName}"`,
+    blobUrl: "",
+    lastModified: "",
+    md5hash: "",
+    sizeInBytes: 0,
+  };
+
+  const file500: file = {
+    name: `Server error fetching file "${fileName}"`,
+    blobUrl: "",
+    lastModified: "",
+    md5hash: "",
+    sizeInBytes: 0,
+  };
+
   useEffect(() => {
     setLoading(true);
+    setIsOwner(publicFileData?.owner === userId || !publicFileData);
     if (publicFileData) {
-      setFile(publicFileData.file);
-      setFileUrl(publicFileData.url);
+      if (publicFileData.status === 200) {
+        setFile(publicFileData.file);
+        setFileUrl(publicFileData.url);
+      } else if (publicFileData.status === 404) {
+        setFile(file404);
+        setFileUrl("");
+      } else if (publicFileData.status === 500) {
+        setFile(file500);
+        setFileUrl("");
+      }
       setLoading(false);
     } else {
       fetchFile();
     }
-  }, [userId, fileName]);
+    setLoading(false);
+  }, [userId, fileName, publicFileData]);
 
   const fileType = publicFileData
     ? file?.name.split(".").pop()?.toLowerCase()
     : fileName.split(".").pop()?.toLowerCase();
+
+  const fileTitle = !publicFileData
+    ? decodeURIComponent(fileName)
+    : publicFileData.status === 200
+    ? decodeURIComponent(fileName) + "." + fileType
+    : decodeURIComponent(fileName);
 
   const updateScale = (value: number) => {
     const newScale = Math.max(0.1, Math.min(10, value / 100));
@@ -164,6 +203,14 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   };
 
   const renderFileContent = () => {
+    if (publicFileData) {
+      if (publicFileData.status === 404) {
+        return <p className="text-2xl font-bold">{"404 - File not found"}</p>;
+      } else if (publicFileData.status === 500) {
+        return <p className="text-2xl font-bold">{"500 - Server error"}</p>;
+      }
+    }
+
     switch (fileType) {
       case "pdf":
         return (
@@ -224,7 +271,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 style={{ overflow: "auto", width: "100%", height: "100%" }}
               >
                 <Image
-                  src={fileUrl}
+                  src={fileUrl!}
                   width={400}
                   height={400}
                   alt={fileName}
@@ -277,9 +324,11 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   return (
     <div className="w-full h-full flex relative">
       <div className="flex flex-grow flex-col items-center justify-center w-full h-full px-4">
-        {fileName && file?.lastModified && file.sizeInBytes ? (
+        {(fileName && file?.sizeInBytes && file.lastModified) ||
+        publicFileData?.status === 404 ||
+        publicFileData?.status === 500 ? (
           <>
-            <h1 className="flex cc font-bold text-3xl w-full text-center relative">
+            <h1 className={cn("flex cc font-bold text-3xl w-full text-center relative", !file?.lastModified && !file?.sizeInBytes ? "mb-4": "")}>
               {isOwner && (
                 <ChevronLeft
                   onClick={() => router.back()}
@@ -287,14 +336,16 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                   className="absolute left-8 top-1/2 -translate-y-1/2 cursor-pointer"
                 />
               )}
-              {publicFileData
-                ? decodeURIComponent(fileName) + "." + fileType
-                : decodeURIComponent(fileName)}
+              {fileTitle}
             </h1>
             <div className="text-lg flex cc mb-2">
-              {cleanDate(file?.lastModified)}
-              <Dot />
-              {convertSize(file?.sizeInBytes)}
+              {file?.lastModified && file.sizeInBytes && (
+                <>
+                  {cleanDate(file?.lastModified)}
+                  <Dot />
+                  {convertSize(file?.sizeInBytes)}
+                </>
+              )}
             </div>
           </>
         ) : (
@@ -347,7 +398,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                   </Button>
                 </>
               )}
-              <Button onClick={() => handleDownload(fileUrl, fileName)}>
+              <Button onClick={() => handleDownload(fileUrl!, fileName)}>
                 <Download className="h-4 w-4" />
               </Button>
               <AlertDialogComponent
@@ -392,14 +443,14 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 confirmText="Share"
                 setOpen={setOpen}
                 inputProps={{
-                  defaultValue: ag_uuid() + extractFileExtension(fileName),
+                  defaultValue: uuid + extractFileExtension(fileName),
                   placeholder: "Enter new filename",
                 }}
                 onConfirm={(shareName) => {
                   if (shareName) {
                     shareFileOp(
                       userId!,
-                      stripToken(fileUrl),
+                      stripToken(fileUrl!),
                       stripFileExtension(shareName),
                       "create",
                       uuid

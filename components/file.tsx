@@ -16,8 +16,11 @@ import {
   cleanDate,
   cleanName,
   convertSize,
+  extractFileExtension,
   getFileIconJSX,
   handleDownload,
+  stripFileExtension,
+  stripToken,
 } from "@/lib/helpers";
 import { AlertDialogComponent } from "./alert";
 import { shareFileOp } from "@/lib/shareFileOp";
@@ -37,22 +40,6 @@ const File = ({
   loadFiles,
 }: fileProps) => {
   const [open, setOpen] = useState<boolean>(false);
-
-  const extractFileExtension = (fullFileName: string): string => {
-    const lastDotIndex = fullFileName.lastIndexOf(".");
-    if (lastDotIndex === -1) return "";
-    return fullFileName.slice(lastDotIndex);
-  };
-
-  const stripToken = (fullURL: string): string => {
-    return fullURL.split("?")[0];
-  };
-
-  const stripFileExtension = (file: string): string => {
-    const lastDotIndex = file.lastIndexOf('.');
-    if (lastDotIndex === -1) return file;
-    return file.slice(0, lastDotIndex);
-  }
 
   const uuid = ag_uuid();
 
@@ -130,7 +117,7 @@ const File = ({
                 confirmText="Share"
                 setOpen={setOpen}
                 inputProps={{
-                  defaultValue: ag_uuid() + extractFileExtension(name),
+                  defaultValue: uuid + extractFileExtension(name),
                   placeholder: "Enter new filename",
                 }}
                 onConfirm={(shareName) => {
