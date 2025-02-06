@@ -317,7 +317,13 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       case "mov":
         return (
           <div className="w-full h-full flex cc">
-            <video className="h-full" src={fileUrl} controls playsInline preload="metadata" />
+            <video
+              className="h-full"
+              src={fileUrl}
+              controls
+              playsInline
+              preload="auto"
+            />
           </div>
         );
       case "wav":
@@ -355,7 +361,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 !file?.lastModified && !file?.sizeInBytes ? "mb-4" : ""
               )}
             >
-              {isOwner && (
+              {publicFileData && (
                 <ChevronLeft
                   onClick={() => router.back()}
                   size={32}
@@ -397,7 +403,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
         </div>
 
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-lg">
-          {fileUrl != "" && isOwner && (
+          {fileUrl != "" && (
             <>
               {isImage() && (
                 <>
@@ -422,36 +428,42 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
               <Button onClick={() => handleDownload(fileUrl!, fileName)}>
                 <Download className="h-4 w-4" />
               </Button>
-              <AlertDialogComponent
-                title="Rename File"
-                description={`Enter a new name for ${decodeURIComponent(
-                  fileName
-                )}`}
-                popOver={true}
-                isRename={true}
-                triggerText={
-                  <>
-                    <Pencil className="h-4 w-4" />
-                  </>
-                }
-                confirmText="Rename"
-                setOpen={() => {}}
-                inputProps={{
-                  defaultValue: decodeURIComponent(fileName),
-                  placeholder: "Enter new filename",
-                }}
-                onConfirm={(newName) => {
-                  if (newName) {
-                    showToast(
-                      `Renaming ${decodeURIComponent(fileName)}...`,
-                      "",
-                      "default"
-                    );
-                    renameFile(userId!, decodeURIComponent(fileName), newName);
-                    router.replace(`/view/${newName}`);
+              {isOwner && (
+                <AlertDialogComponent
+                  title="Rename File"
+                  description={`Enter a new name for ${decodeURIComponent(
+                    fileName
+                  )}`}
+                  popOver={true}
+                  isRename={true}
+                  triggerText={
+                    <>
+                      <Pencil className="h-4 w-4" />
+                    </>
                   }
-                }}
-              />
+                  confirmText="Rename"
+                  setOpen={() => {}}
+                  inputProps={{
+                    defaultValue: decodeURIComponent(fileName),
+                    placeholder: "Enter new filename",
+                  }}
+                  onConfirm={(newName) => {
+                    if (newName) {
+                      showToast(
+                        `Renaming ${decodeURIComponent(fileName)}...`,
+                        "",
+                        "default"
+                      );
+                      renameFile(
+                        userId!,
+                        decodeURIComponent(fileName),
+                        newName
+                      );
+                      router.replace(`/view/${newName}`);
+                    }
+                  }}
+                />
+              )}
               {!publicFileData && (
                 <AlertDialogComponent
                   title="Share"
@@ -490,14 +502,19 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 />
               )}
               {publicFileData && (
-                <Button className="">
+                <Button
+                  onClick={() => {
+                    copyToClipboard(window.location.href);
+                    clipboardAnimation();
+                    showToast(
+                      "Link Copied!",
+                      `${window.location.href}`,
+                      "good"
+                    );
+                  }}
+                >
                   <Copy
                     size={24}
-                    onClick={() => {
-                      copyToClipboard(window.location.href);
-                      clipboardAnimation();
-                      showToast("Link Copied!", `${window.location.href}`, "good");
-                    }}
                     className={`h-4 w-4 cursor-pointer
           ${showAnimation || !window.location.href ? "hidden" : "block"}
           
@@ -511,22 +528,24 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                   />
                 </Button>
               )}
-              <AlertDialogComponent
-                setOpen={() => {}}
-                variant={"destructive"}
-                title="Are you absolutely sure?"
-                description={`This action cannot be undone. This will permanently delete ${decodeURIComponent(
-                  fileName
-                )}.`}
-                triggerText=""
-                type="delete"
-                onConfirm={() => {
-                  showToast(`Deleting ${fileName}...`, "", "default");
-                  if (session?.user.id)
-                    deleteFile(decodeURIComponent(fileName), session.user.id);
-                  router.push("/dashboard");
-                }}
-              />
+              {isOwner && (
+                <AlertDialogComponent
+                  setOpen={() => {}}
+                  variant={"destructive"}
+                  title="Are you absolutely sure?"
+                  description={`This action cannot be undone. This will permanently delete ${decodeURIComponent(
+                    fileName
+                  )}.`}
+                  triggerText=""
+                  type="delete"
+                  onConfirm={() => {
+                    showToast(`Deleting ${fileName}...`, "", "default");
+                    if (session?.user.id)
+                      deleteFile(decodeURIComponent(fileName), session.user.id);
+                    router.push("/dashboard");
+                  }}
+                />
+              )}
             </>
           )}
         </div>
