@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { handleOperation } from "@/lib/cryptoUtils";
-import { cleanDate } from "@/lib/helpers";
+import { cleanDate, copyToClipboard, delay } from "@/lib/helpers";
 import { Check, Copy, ExternalLink, EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -44,15 +44,6 @@ export default function PasswordCard({
   const [loading, setLoading] = useState<boolean>(true);
   const [showAnimation, setShowAnimation] = useState<boolean>(false);
 
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
-  const copyToClipboard = async (text: string): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
-    }
-  };
 
   const clipboardAnimation = async () => {
     setShowAnimation(true);

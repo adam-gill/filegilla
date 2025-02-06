@@ -142,3 +142,13 @@ export function stripFileExtension(file: string): string {
   if (lastDotIndex === -1) return file;
   return file.slice(0, lastDotIndex);
 }
+
+export const copyToClipboard = async (text: string): Promise<void> => {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    console.error("Failed to copy text: ", err);
+  }
+};
+
+export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));

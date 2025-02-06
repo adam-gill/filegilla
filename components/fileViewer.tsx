@@ -2,7 +2,9 @@
 
 import { useRef, useState, useEffect } from "react";
 import {
+  Check,
   ChevronLeft,
+  Copy,
   Dot,
   Download,
   Pencil,
@@ -19,6 +21,8 @@ import {
   ag_uuid,
   cleanDate,
   convertSize,
+  copyToClipboard,
+  delay,
   extractFileExtension,
   handleDownload,
   stripFileExtension,
@@ -54,6 +58,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const { session } = useAuth();
   const userId = session?.user.id;
   const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [showAnimation, setShowAnimation] = useState<boolean>(false);
 
   const router = useRouter();
   const uuid = ag_uuid();
@@ -90,11 +95,17 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
 
   useEffect(() => {
     setLoading(true);
-    setIsOwner((publicFileData?.owner && userId && publicFileData?.owner === userId) || !publicFileData);
-    console.log("isOwner: ", publicFileData?.owner === userId || publicFileData?.status !== 200)
-    console.log("owner statement truthy:", publicFileData?.owner === userId)
-    console.log("publicFileData truthy:", publicFileData?.status !== 200)
-    console.log(publicFileData?.owner, userId)
+    setIsOwner(
+      (publicFileData?.owner && userId && publicFileData?.owner === userId) ||
+        !publicFileData
+    );
+    console.log(
+      "isOwner: ",
+      publicFileData?.owner === userId || publicFileData?.status !== 200
+    );
+    console.log("owner statement truthy:", publicFileData?.owner === userId);
+    console.log("publicFileData truthy:", publicFileData?.status !== 200);
+    console.log(publicFileData?.owner, userId);
     if (publicFileData) {
       if (publicFileData.status === 200) {
         setFile(publicFileData.file);
@@ -181,6 +192,12 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       console.error(`Error fetching text content: ${open ? "" : ""}`, error);
       setTextContent("Error loading text file");
     }
+  };
+
+  const clipboardAnimation = async () => {
+    setShowAnimation(true);
+    await delay(1000);
+    setShowAnimation(false);
   };
 
   // Add useEffect to fetch text content when fileUrl changes and type is txt
@@ -300,7 +317,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       case "mov":
         return (
           <div className="w-full h-full flex cc">
-            <video className="h-full" src={fileUrl} controls />
+            <video className="h-full" src={fileUrl} controls playsInline muted />
           </div>
         );
       case "wav":
@@ -332,7 +349,12 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
         publicFileData?.status === 404 ||
         publicFileData?.status === 500 ? (
           <>
-            <h1 className={cn("flex cc font-bold text-3xl w-full text-center relative", !file?.lastModified && !file?.sizeInBytes ? "mb-4": "")}>
+            <h1
+              className={cn(
+                "flex cc font-bold text-3xl w-full text-center relative",
+                !file?.lastModified && !file?.sizeInBytes ? "mb-4" : ""
+              )}
+            >
               {isOwner && (
                 <ChevronLeft
                   onClick={() => router.back()}
@@ -430,41 +452,65 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                   }
                 }}
               />
-              <AlertDialogComponent
-                title="Share"
-                description={`Select a name to share ${decodeURIComponent(
-                  fileName
-                )} as, or leave it random. This value must be unique amongst all users.`}
-                popOver={true}
-                type="share"
-                isRename={true}
-                triggerText={<Share className="h-4 w-4" />}
-                confirmText="Share"
-                setOpen={setOpen}
-                inputProps={{
-                  defaultValue: uuid + extractFileExtension(fileName),
-                  placeholder: "Enter new filename",
-                }}
-                onConfirm={(shareName) => {
-                  if (shareName) {
-                    shareFileOp(
-                      userId!,
-                      stripToken(fileUrl!),
-                      stripFileExtension(shareName),
-                      "create",
-                      uuid
-                    );
-                    showToast(
-                      `Making ${name} public as filegilla.com/s/${encodeURIComponent(
-                        shareName
-                      )}`,
-                      "",
-                      "default"
-                    );
-                    setOpen(false);
-                  }
-                }}
-              />
+              {!publicFileData && (
+                <AlertDialogComponent
+                  title="Share"
+                  description={`Select a name to share ${decodeURIComponent(
+                    fileName
+                  )} as, or leave it random. This value must be unique amongst all users.`}
+                  popOver={true}
+                  type="share"
+                  isRename={true}
+                  triggerText={<Share className="h-4 w-4" />}
+                  confirmText="Share"
+                  setOpen={setOpen}
+                  inputProps={{
+                    defaultValue: uuid + extractFileExtension(fileName),
+                    placeholder: "Enter new filename",
+                  }}
+                  onConfirm={(shareName) => {
+                    if (shareName) {
+                      shareFileOp(
+                        userId!,
+                        stripToken(fileUrl!),
+                        stripFileExtension(shareName),
+                        "create",
+                        uuid
+                      );
+                      showToast(
+                        `Making ${name} public as filegilla.com/s/${encodeURIComponent(
+                          shareName
+                        )}`,
+                        "",
+                        "default"
+                      );
+                      setOpen(false);
+                    }
+                  }}
+                />
+              )}
+              {publicFileData && (
+                <Button className="">
+                  <Copy
+                    size={24}
+                    onClick={() => {
+                      copyToClipboard(window.location.href);
+                      clipboardAnimation();
+                      showToast("Link Copied!", `${window.location.href}`, "good");
+                    }}
+                    className={`h-4 w-4 cursor-pointer
+          ${showAnimation || !window.location.href ? "hidden" : "block"}
+          
+            `}
+                  />
+                  <Check
+                    size={24}
+                    className={`stroke-green-400 stroke-[3] h-4 w-4 cursor-pointer
+           ${showAnimation ? "block" : "hidden"}
+          `}
+                  />
+                </Button>
+              )}
               <AlertDialogComponent
                 setOpen={() => {}}
                 variant={"destructive"}
