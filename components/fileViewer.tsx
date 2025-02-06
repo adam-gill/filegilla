@@ -516,7 +516,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                   <Copy
                     size={24}
                     className={`h-4 w-4 cursor-pointer
-          ${showAnimation || !window.location.href ? "hidden" : "block"}
+          ${showAnimation ? "hidden" : "block"}
           
             `}
                   />
