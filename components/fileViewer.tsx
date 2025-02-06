@@ -317,7 +317,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       case "mov":
         return (
           <div className="w-full h-full flex cc">
-            <video className="h-full" src={fileUrl} controls playsInline muted />
+            <video className="h-full" src={fileUrl} controls playsInline />
           </div>
         );
       case "wav":
