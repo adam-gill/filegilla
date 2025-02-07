@@ -203,6 +203,7 @@ export function PasswordDialog({
               <div className={isEditing ? "flex w-full flex-row justify-between": ""}>
                 {isEditing && (
                   <AlertDialogComponent
+                    type="delete"
                     title="Are you absolutely sure?"
                     variant="destructive"
                     setOpen={setIsOpen}
