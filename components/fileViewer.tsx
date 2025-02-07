@@ -99,13 +99,6 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       (publicFileData?.owner && userId && publicFileData?.owner === userId) ||
         !publicFileData
     );
-    console.log(
-      "isOwner: ",
-      publicFileData?.owner === userId || publicFileData?.status !== 200
-    );
-    console.log("owner statement truthy:", publicFileData?.owner === userId);
-    console.log("publicFileData truthy:", publicFileData?.status !== 200);
-    console.log(publicFileData?.owner, userId);
     if (publicFileData) {
       if (publicFileData.status === 200) {
         setFile(publicFileData.file);
@@ -232,105 +225,108 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       }
     }
 
-    switch (fileType) {
-      case "pdf":
-        return (
-          <>
-            {fileUrl != "" && (
-              <iframe
-                src={`${fileUrl}#toolbar=0`}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  border: "none",
-                  display: "block",
-                }}
-                title="PDF Viewer"
-              />
-            )}
-          </>
-        );
-      case "txt":
-        return (
-          <>
-            <textarea
-              className="w-full h-full p-2 bg-neutral-700 text-sm focus:outline-none font-mono rounded-md resize-none"
-              value={textContent}
-              onChange={(e) => setTextContent(e.target.value)}
-            />
-          </>
-        );
-      case "doc":
-      case "docx":
-      case "ppt":
-      case "pptx":
-        return (
-          <iframe
-            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-              fileUrl || ""
-            )}`}
-            style={{
-              width: "100%",
-              height: "100%",
-              border: "none",
-              transformOrigin: "top center",
-            }}
-            title="Document Viewer"
-          />
-        );
-      case "jpg":
-      case "jpeg":
-      case "png":
-      case "gif":
-      case "svg":
-      case "webp":
-        return (
-          <>
-            {fileUrl != "" ? (
-              <div
-                className="flex cc w-full h-full"
-                style={{ overflow: "auto", width: "100%", height: "100%" }}
-              >
-                <Image
-                  src={fileUrl!}
-                  width={400}
-                  height={400}
-                  alt={fileName}
-                  priority
+    if (fileUrl) {
+      switch (fileType) {
+        case "pdf":
+          return (
+            <>
+              {fileUrl != "" && (
+                <iframe
+                  src={`${fileUrl}#toolbar=0`}
                   style={{
-                    width: "fit",
-                    height: "fit",
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    transform: `scale(${scale})`,
+                    width: "100%",
+                    height: "100%",
+                    border: "none",
+                    display: "block",
                   }}
+                  title="PDF Viewer"
                 />
-              </div>
-            ) : (
-              <Skeleton className="w-full h-full p-4 bg-grayHover" />
-            )}
-          </>
-        );
-      case "mp4":
-      case "webm":
-      case "ogg":
-      case "mov":
-        return (
-          <div className="w-full h-full flex cc">
-            <video
-              className="h-full"
-              src={fileUrl}
-              controls
-              playsInline
-              preload="auto"
+              )}
+            </>
+          );
+        case "txt":
+          return (
+            <>
+              <textarea
+                className="w-full h-full p-2 bg-neutral-700 text-sm focus:outline-none font-mono rounded-md resize-none"
+                value={textContent}
+                onChange={(e) => setTextContent(e.target.value)}
+              />
+            </>
+          );
+        case "doc":
+        case "docx":
+        case "ppt":
+        case "pptx":
+          return (
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+                fileUrl || ""
+              )}`}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                transformOrigin: "top center",
+              }}
+              title="Document Viewer"
             />
-          </div>
-        );
-      case "wav":
-      case "mp3":
-        return <audio src={fileUrl} controls />;
-      default:
-        return <p className="text-2xl font-bold">Unsupported file type</p>;
+          );
+        case "jpg":
+        case "jpeg":
+        case "png":
+        case "gif":
+        case "svg":
+        case "webp":
+          return (
+            <>
+              {fileUrl != "" ? (
+                <div
+                  className="flex cc w-full h-full"
+                  style={{ overflow: "auto", width: "100%", height: "100%" }}
+                >
+                  <Image
+                    src={fileUrl!}
+                    width={400}
+                    height={400}
+                    alt={fileName}
+                    priority
+                    className="w-auto h-auto"
+                    style={{
+                      width: "fit",
+                      height: "fit",
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      transform: `scale(${scale})`,
+                    }}
+                  />
+                </div>
+              ) : (
+                <Skeleton className="w-full h-full p-4 bg-grayHover" />
+              )}
+            </>
+          );
+        case "mp4":
+        case "webm":
+        case "ogg":
+        case "mov":
+          return (
+            <div className="w-full h-full flex cc">
+              <video
+                className="h-full"
+                src={fileUrl}
+                controls
+                playsInline
+                preload="metadata"
+              />
+            </div>
+          );
+        case "wav":
+        case "mp3":
+          return <audio src={fileUrl} controls />;
+        default:
+          return <p className="text-2xl font-bold">Unsupported file type</p>;
+      }
     }
   };
 
@@ -361,7 +357,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 !file?.lastModified && !file?.sizeInBytes ? "mb-4" : ""
               )}
             >
-              {publicFileData && (
+              {(!publicFileData || (publicFileData && isOwner)) && (
                 <ChevronLeft
                   onClick={() => router.back()}
                   size={32}
@@ -393,7 +389,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
           className="flex cc shadow-[0_0_10px_rgba(255,255,255,0.3)] bg-neutral-700 flex-grow items-start justify-center rounded-lg p-4 w-full max-w-[860px] overflow-hidden mb-20"
           style={{ height: calcHeight(fileType) }}
         >
-          {loading ? (
+          {loading && !fileName && !fileUrl ? (
             <>
               <Skeleton className="w-full h-full bg-grayHover" />
             </>
@@ -431,6 +427,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
               {isOwner && (
                 <AlertDialogComponent
                   title="Rename File"
+                  type="rename"
                   description={`Enter a new name for ${decodeURIComponent(
                     fileName
                   )}`}

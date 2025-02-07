@@ -15,7 +15,7 @@ const Files: React.FC<props> = ({ fileName, search }) => {
   const { session } = useAuth();
   const userId = session?.user.id;
   const [files, setFiles] = useState<file[] | undefined>(undefined);
-  const [result, setResult] = useState<file[] | undefined>([]);
+  const [result, setResult] = useState<file[] | undefined>(undefined);
 
   const loadFiles = async () => {
     try {

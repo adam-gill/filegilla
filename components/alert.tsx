@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AlertDialogComponentProps {
@@ -25,7 +25,7 @@ interface AlertDialogComponentProps {
   confirmText?: string;
   cancelText?: string;
   popOver?: boolean;
-  type?: "share" | "rename" | "delete";
+  type: "share" | "rename" | "delete";
   variant?:
     | "default"
     | "destructive"
@@ -54,6 +54,7 @@ export function AlertDialogComponent({
   inputProps,
   setOpen,
 }: AlertDialogComponentProps) {
+  const [error, setError] = useState<string | null>(null);
   const sliceFileExtension = (file: string | undefined) => {
     if (file) {
       return file.substring(0, file.lastIndexOf("."));
@@ -63,9 +64,11 @@ export function AlertDialogComponent({
   };
 
   const btnClasses = cn(
-    type === "rename" ? "text-left flex justify-start" :
-    type === "delete" ? "w-[50px]" :
-    "text-left flex justify-start"
+    type === "rename"
+      ? "text-left flex justify-start"
+      : type === "delete"
+      ? "w-[50px]"
+      : "text-left flex justify-start"
   );
 
   const [isOpen, setIsOpen] = useState(false);
@@ -76,7 +79,16 @@ export function AlertDialogComponent({
     sliceFileExtension(inputProps?.defaultValue) || ""
   );
 
+  const handleInputChange = (str: string) => {
+    const regex = /^[a-zA-Z0-9._-]+$/; // Allowable characters: letters, numbers, ., _, -
+    regex.test(str) ? setError(null) : setError("Invalid input.");
+    setInputValue(str);
+  }
+
   const handleConfirm = () => {
+    if (error) {
+      return;
+    }
     if (isRename) {
       onConfirm(inputValue + fileExtension);
     } else {
@@ -88,10 +100,7 @@ export function AlertDialogComponent({
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button
-          className={btnClasses}
-          variant={variant}
-        >
+        <Button className={btnClasses} variant={variant}>
           {!popOver &&
             (isRename ? (
               <Pencil className="h-4 w-4" />
@@ -108,15 +117,23 @@ export function AlertDialogComponent({
             {description}
           </AlertDialogDescription>
           {isRename && inputProps && (
-            <input
-              type="text"
-              autoFocus={true}
-              value={inputValue}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={inputProps.placeholder}
-              className="w-full px-3 py-2 text-black border border-gray-600 rounded-md focus:outline-none mt-4"
-            />
+            <>
+              <input
+                type="text"
+                autoFocus={true}
+                value={inputValue}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder={inputProps.placeholder}
+                className="w-full px-3 py-2 text-black border border-gray-600 rounded-md focus:outline-none mt-4"
+              />
+              {error && (
+                <div className="flex w-full cc">
+                  <X className="w-4 h-4 stroke-red-500 stroke-[3]" />
+                  <p className="text-red-500 font-semibold">{error}</p>
+                </div>
+              )}
+            </>
           )}
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -127,6 +144,7 @@ export function AlertDialogComponent({
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
+            disabled={!!error}
             className={cn(
               !isRename
                 ? "bg-red-500 text-white hover:bg-red-700 hover:text-white"

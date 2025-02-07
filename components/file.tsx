@@ -84,6 +84,7 @@ const File = ({
                 Download
               </Button>
               <AlertDialogComponent
+                type="rename"
                 title="Rename File"
                 description={`Enter a new name for ${decodeURIComponent(name)}`}
                 variant="ghost"
@@ -142,6 +143,7 @@ const File = ({
               />
               <AlertDialogComponent
                 title="Are you absolutely sure?"
+                type="delete"
                 variant="destructive"
                 setOpen={setOpen}
                 popOver={true}
