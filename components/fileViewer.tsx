@@ -2,9 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import {
-  Check,
   ChevronLeft,
-  Copy,
   Dot,
   Download,
   Pencil,
@@ -21,8 +19,6 @@ import {
   ag_uuid,
   cleanDate,
   convertSize,
-  copyToClipboard,
-  delay,
   extractFileExtension,
   handleDownload,
   stripFileExtension,
@@ -38,6 +34,7 @@ import { renameFile } from "@/lib/renameFile";
 import { getPublicFileResponse } from "@/app/api/getPublicFile/route";
 import { shareFileOp } from "@/lib/shareFileOp";
 import { cn } from "@/lib/utils";
+import CopyButton from "./copyBtn";
 
 type props = {
   fileName: string;
@@ -58,7 +55,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const { session } = useAuth();
   const userId = session?.user.id;
   const [isOwner, setIsOwner] = useState<boolean>(false);
-  const [showAnimation, setShowAnimation] = useState<boolean>(false);
+
 
   const router = useRouter();
   const uuid = ag_uuid();
@@ -68,7 +65,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
 
     if (userId && fileName) {
       const data: getFileResponse = await getFile(userId, fileName);
-      if (data.file) {
+      if (data && data.file) {
         setFile(data.file);
         setFileUrl(data.file.blobUrl + data.sasToken);
       }
@@ -101,7 +98,9 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
     );
     if (publicFileData) {
       if (publicFileData.status === 200) {
+        console.log("etag: ", publicFileData.file?.etag);
         setFile(publicFileData.file);
+
         setFileUrl(publicFileData.url);
       } else if (publicFileData.status === 404) {
         setFile(file404);
@@ -185,12 +184,6 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       console.error(`Error fetching text content: ${open ? "" : ""}`, error);
       setTextContent("Error loading text file");
     }
-  };
-
-  const clipboardAnimation = async () => {
-    setShowAnimation(true);
-    await delay(1000);
-    setShowAnimation(false);
   };
 
   // Add useEffect to fetch text content when fileUrl changes and type is txt
@@ -403,10 +396,11 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
             <>
               {isImage() && (
                 <>
-                  <Button onClick={handleZoomOut} aria-label="Zoom out">
+                  <Button disabled={loading} onClick={handleZoomOut} aria-label="Zoom out">
                     <ZoomOut className="flex cc h-4 w-4" />
                   </Button>
                   <Input
+                    disabled={loading}
                     ref={inputRef}
                     className="flex bg-neutral-900 border border-white focus-visible:ring-0 outline-none active:outline-none cc text-center w-20 py-2 h-9 text-md text-white"
                     value={isEditing ? inputValue : `${inputValue}%`}
@@ -416,18 +410,21 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                     onKeyDown={handleInputKeyDown}
                     aria-label="Zoom level"
                   />
-                  <Button onClick={handleZoomIn} aria-label="Zoom in">
+                  <Button disabled={loading} onClick={handleZoomIn} aria-label="Zoom in">
                     <ZoomIn className="flex cc h-4 w-4" />
                   </Button>
                 </>
               )}
-              <Button onClick={() => handleDownload(fileUrl!, fileName)}>
+              <Button disabled={loading} onClick={() => handleDownload(fileUrl!, fileName)}>
                 <Download className="h-4 w-4" />
               </Button>
               {isOwner && (
                 <AlertDialogComponent
+                  disabled={loading}
+                  userId={userId}
+                  etag={file?.etag}
                   title="Rename File"
-                  type="rename"
+                  type={publicFileData ? "share" : "rename"}
                   description={`Enter a new name for ${decodeURIComponent(
                     fileName
                   )}`}
@@ -441,7 +438,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                   confirmText="Rename"
                   setOpen={() => {}}
                   inputProps={{
-                    defaultValue: decodeURIComponent(fileName),
+                    defaultValue: publicFileData ? decodeURIComponent(fileName) : uuid + extractFileExtension(fileName),
                     placeholder: "Enter new filename",
                   }}
                   onConfirm={(newName) => {
@@ -463,6 +460,9 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
               )}
               {!publicFileData && (
                 <AlertDialogComponent
+                  disabled={loading}
+                  userId={userId}
+                  etag={file?.etag}
                   title="Share"
                   description={`Select a name to share ${decodeURIComponent(
                     fileName
@@ -477,18 +477,18 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                     defaultValue: uuid + extractFileExtension(fileName),
                     placeholder: "Enter new filename",
                   }}
-                  onConfirm={(shareName) => {
-                    if (shareName) {
+                  onConfirm={(shareNameAndExtension) => {
+                    if (shareNameAndExtension) {
                       shareFileOp(
                         userId!,
                         stripToken(fileUrl!),
-                        stripFileExtension(shareName),
+                        stripFileExtension(shareNameAndExtension),
                         "create",
-                        uuid
+                        uuid,
                       );
                       showToast(
-                        `Making ${name} public as filegilla.com/s/${encodeURIComponent(
-                          shareName
+                        `Making ${stripFileExtension(decodeURIComponent(fileName))} public as filegilla.com/s/${encodeURIComponent(
+                          shareNameAndExtension
                         )}`,
                         "",
                         "default"
@@ -499,34 +499,18 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 />
               )}
               {publicFileData && (
-                <Button
-                  onClick={() => {
-                    copyToClipboard(window.location.href);
-                    clipboardAnimation();
-                    showToast(
-                      "Link Copied!",
-                      `${window.location.href}`,
-                      "good"
-                    );
+                <CopyButton
+                  toastInfo={{
+                    title: "Link Copied!",
+                    description: `${window.location.href}`,
+                    variant: "good",
                   }}
-                >
-                  <Copy
-                    size={24}
-                    className={`h-4 w-4 cursor-pointer
-          ${showAnimation ? "hidden" : "block"}
-          
-            `}
-                  />
-                  <Check
-                    size={24}
-                    className={`stroke-green-400 stroke-[3] h-4 w-4 cursor-pointer
-           ${showAnimation ? "block" : "hidden"}
-          `}
-                  />
-                </Button>
+                  copyText={window.location.href}
+                />
               )}
               {isOwner && (
                 <AlertDialogComponent
+                  disabled={loading}
                   setOpen={() => {}}
                   variant={"destructive"}
                   title="Are you absolutely sure?"
@@ -534,7 +518,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                     fileName
                   )}.`}
                   triggerText=""
-                  type="delete"
+                  type="deleteSM"
                   onConfirm={() => {
                     showToast(`Deleting ${fileName}...`, "", "default");
                     if (session?.user.id)

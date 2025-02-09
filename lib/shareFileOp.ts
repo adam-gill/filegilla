@@ -5,8 +5,9 @@ export async function shareFileOp(
   userId: string,
   blobURL: string,
   shareName: string,
-  operation: string,
-  uuid: string
+  operation: "rename" | "create" | "delete",
+  uuid: string,
+  etag?: string
 ) {
   try {
     await axios.post("/api/shareFileOperation", {
@@ -15,13 +16,28 @@ export async function shareFileOp(
       shareName: shareName,
       operation: operation,
       uuid: uuid,
+      etag: etag,
     });
 
-    showToast(
-      `Successfully shared file at filegilla.com/s/${shareName}`,
-      "",
-      "good"
-    );
+    if (operation === "create") {
+      showToast(
+        `Successfully shared file at filegilla.com/s/${shareName}`,
+        "",
+        "good"
+      );
+    } else if (operation === "rename") {
+      showToast(
+        `Successfully renamed file at filegilla.com/s/${shareName}`,
+        "",
+        "good"
+      );
+    } else if (operation === "delete") {
+      showToast(
+        `Successfully deleted file at filegilla.com/s/${shareName}`,
+        "",
+        "good"
+      );
+    }
   } catch (error: any) {
     if (error.status && error.status === 409) {
       showToast(

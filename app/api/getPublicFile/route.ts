@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
         md5hash: properties.contentMD5
           ? Buffer.from(properties.contentMD5).toString("base64")
           : "",
+          etag: shareObject.source_etag,
       };
 
       const response: getPublicFileResponse = {
@@ -81,5 +82,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// add sourceETag value to shares table to associate shared files with their source file
-// will also need to add etag field to file component and types
+// api call to get if file is in shares blob container in alert dialog
+// if it's found, change UI to have user rename their public file and give them the option to copy and delete in same window
+// if not found, just to original thing
+
+// write script on db machine to automatically back up db to azure

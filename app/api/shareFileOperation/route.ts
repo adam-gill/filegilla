@@ -8,6 +8,7 @@ interface shareFileOperationBody {
   operation: "create" | "edit";
   uuid: string;
   shareName: string;
+  etag?: string,
 }
 
 const azureShareOperationURL = process.env.AZURE_SHARE_FILE_FUNCTION_URL!;
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
     const operation = body.operation;
     const uuid = body.uuid;
     const shareName = body.shareName;
+    const etag = body.etag;
 
     if (!userId || !blobURL || !operation || !uuid || !shareName) {
       return new NextResponse("Missing required fields", { status: 400 });
@@ -41,6 +43,7 @@ export async function POST(req: NextRequest) {
       shareName: shareName,
       operation: operation,
       uuid: uuid,
+      etag: etag,
     });
 
     return new NextResponse(`Successfully shared file as ${shareName}.`, {

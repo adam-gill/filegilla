@@ -5,6 +5,7 @@ declare module "filegilla" {
     lastModified: string;
     blobUrl: string;
     md5hash: string;
+    etag?: string;
   }
 
   interface listResponse {

@@ -41,4 +41,5 @@ model shares {
   uuid          String   @db.VarChar
   owner         String   @db.VarChar
   time_created  DateTime @db.Timestamp(6)
+  source_etag   String   @default("") @db.VarChar(255)
 }

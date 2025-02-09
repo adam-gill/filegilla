@@ -38,6 +38,7 @@ const File = ({
   md5hash,
   userId,
   loadFiles,
+  etag,
 }: fileProps) => {
   const [open, setOpen] = useState<boolean>(false);
 
@@ -106,6 +107,8 @@ const File = ({
                 }}
               />
               <AlertDialogComponent
+                userId={userId}
+                etag={etag}
                 title="Share"
                 description={`Select a name to share ${decodeURIComponent(
                   name
