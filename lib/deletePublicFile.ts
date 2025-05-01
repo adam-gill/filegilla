@@ -1,11 +1,10 @@
 import axios from "axios";
-import { NextResponse } from "next/server";
 import { showToast } from "./showToast";
 
-interface deletePublicFileRequest {
-  name: string;
-  etag: string;
-}
+// interface deletePublicFileRequest {
+//   name: string;
+//   etag: string;
+// }
 
 export async function deletePublicFile(name: string, etag: string,) {
   try {
