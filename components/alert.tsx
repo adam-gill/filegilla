@@ -18,12 +18,13 @@ import { cn } from "@/lib/utils";
 import { showToast } from "@/lib/showToast";
 import CopyButton from "./copyBtn";
 import { checkShare } from "@/lib/checkShare";
+import { deletePublicFile } from "@/lib/deletePublicFile";
 
 interface AlertDialogComponentProps {
   title: string;
   description: string;
   setOpen: (value: boolean) => void;
-  onConfirm: (value?: string) => void; // Modified to accept optional value
+  onConfirm: (value?: string, operation?: string) => void; // Modified to accept optional value
   triggerText: ReactNode;
   confirmText?: string;
   cancelText?: string;
@@ -36,7 +37,7 @@ interface AlertDialogComponentProps {
     | "secondary"
     | "ghost"
     | "link";
-  isRename?: boolean; // New prop to determine if it's a rename dialog
+  isRename?: boolean;
   inputProps?: {
     defaultValue?: string;
     placeholder?: string;
@@ -121,6 +122,7 @@ export function AlertDialogComponent({
 
   useEffect(() => {
     if (type === "share" && userId && etag) {
+      console.log({ userId: userId, etag: etag });
       checkShare(userId, etag, setShareName);
     }
   }, [userId, etag, setShareName]);
@@ -157,8 +159,14 @@ export function AlertDialogComponent({
               triggerText=""
               type="deleteSM"
               onConfirm={() => {
-                showToast(`Deleting ${shareName}...`, "", "default");
-                // shareFileOp();
+                showToast(`Deleting public file '${shareName}'...`, "", "default");
+                if (etag) {
+                  deletePublicFile(shareName, etag);
+                  setTimeout(() => {
+                    checkShare(userId, etag, setShareName);
+                  }, 100);
+                  setOpen(false);
+                }
               }}
             />
           </div>

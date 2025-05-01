@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 interface shareFileOperationBody {
   userId: string;
   blobURL: string;
-  operation: "create" | "edit";
+  operation: "create" | "edit" | "delete";
   uuid: string;
   shareName: string;
   etag?: string,

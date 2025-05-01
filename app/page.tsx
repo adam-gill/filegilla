@@ -106,7 +106,7 @@ export default function Home() {
 
         <footer className="mt-auto py-4">
           <h1 className="text-center">
-            Copyright © {new Date().getFullYear()} FileGilla
+            FileGilla {new Date().getFullYear()}
             <span className="mx-2">&#x2022;</span>
             <Link href={"/privacy"}>
               <span className="underline">Privacy Policy</span>

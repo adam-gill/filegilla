@@ -487,7 +487,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                         uuid,
                       );
                       showToast(
-                        `Making ${stripFileExtension(decodeURIComponent(fileName))} public as filegilla.com/s/${encodeURIComponent(
+                        `Making ${stripFileExtension(decodeURIComponent(fileName))} public at https://filegilla.com/s/${encodeURIComponent(
                           shareNameAndExtension
                         )}`,
                         "",

@@ -21,19 +21,7 @@ export async function shareFileOp(
 
     if (operation === "create") {
       showToast(
-        `Successfully shared file at filegilla.com/s/${shareName}`,
-        "",
-        "good"
-      );
-    } else if (operation === "rename") {
-      showToast(
-        `Successfully renamed file at filegilla.com/s/${shareName}`,
-        "",
-        "good"
-      );
-    } else if (operation === "delete") {
-      showToast(
-        `Successfully deleted file at filegilla.com/s/${shareName}`,
+        `Successfully shared file at https://filegilla.com/s/${shareName}`,
         "",
         "good"
       );
@@ -46,7 +34,7 @@ export async function shareFileOp(
         "destructive"
       );
     } else {
-      showToast("Error sharing file :(", "", "destructive");
+      showToast("Error sharing file :(", "Please try again.", "destructive");
     }
   }
 }

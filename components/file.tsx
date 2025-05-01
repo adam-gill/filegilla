@@ -134,7 +134,7 @@ const File = ({
                       uuid
                     );
                     showToast(
-                      `Making ${name} public as filegilla.com/s/${encodeURIComponent(
+                      `Making ${name} public at https://filegilla.com/s/${encodeURIComponent(
                         shareName
                       )}`,
                       "",
