@@ -32,8 +32,8 @@ const Navbar = () => {
       <div className="flex h-16 items-center justify-between w-full max-w-6xl px-6 mx-auto">
         <NavigationMenu>
           <NavigationMenuList className="flex items-center gap-3 sm:gap-1">
-            <Link href="/" legacyBehavior passHref>
               <NavigationMenuItem className="flex items-center gap-2 cursor-pointer">
+                <NavigationMenuLink href="/" className="flex gap-2">
                 <Image
                   src="/navLogo.png"
                   alt="FileGilla Logo"
@@ -44,21 +44,17 @@ const Navbar = () => {
                 <span className="text-xl font-semibold sm:hidden">
                   FileGilla
                 </span>
+                </NavigationMenuLink>
               </NavigationMenuItem>
-            </Link>
             <NavigationMenuItem>
-              <Link href="/dashboard" legacyBehavior passHref>
-                <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
+                <NavigationMenuLink href="/dashboard" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
                   Dashboard
                 </NavigationMenuLink>
-              </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/passwords" legacyBehavior passHref>
-                <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
+                <NavigationMenuLink href="/passwords" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
                   Passwords
                 </NavigationMenuLink>
-              </Link>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
@@ -66,8 +62,7 @@ const Navbar = () => {
           <NavigationMenuList>
             <NavigationMenuItem>
               {session?.user ? (
-                <Link href="/account" legacyBehavior passHref>
-                <NavigationMenuLink className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
+                <NavigationMenuLink href="/account" className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
                   <Avatar color="#ffffff">
                     <AvatarImage src="/circle.png" alt="User avatar" />
                     <AvatarFallback className="">
@@ -76,7 +71,6 @@ const Navbar = () => {
                     <p className="text-black z-10 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">{getInitials()}</p>
                   </Avatar>
                 </NavigationMenuLink>
-              </Link>
               ) : (
                 <SignInButton loading={loading} setLoading={setLoading} tabIndex={0} content={<LogIn className="absolute w-5 h-5" />} className={"rounded-full w-10 h-10"} />
               )}

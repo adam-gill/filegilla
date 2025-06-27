@@ -22,6 +22,7 @@ const FileUpload: React.FC<Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { session } = useAuth();
   const [loading, setLoading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -29,7 +30,8 @@ const FileUpload: React.FC<Props> = ({
     if (file && session?.user) {
       newFormData.append("file", file);
       newFormData.append("userId", JSON.stringify({ userId: session.user.id }));
-      onUpload(file.name, newFormData);
+      // onUpload(file.name, newFormData);
+      onUpload();
     }
   };
 
@@ -44,30 +46,60 @@ const FileUpload: React.FC<Props> = ({
     setFileName(null);
   };
 
-  const onUpload = async (newFileName: string, newFormData: FormData) => {
-    showToast(`Uploading ${newFileName}...`, "", "default");
+  const onUpload = async () => {
+    // Get the file from the input
+    const file = fileInputRef.current?.files?.[0];
+    if (!file || !session?.user) {
+      showToast("No file selected or user not authenticated", "", "destructive");
+      return;
+    }
+
+    const userId = session?.user.id;
+
+    showToast(`Uploading ${file.name}...`, "", "default");
+    setLoading(true);
 
     try {
-      setLoading(true);
-      const azureFunctionURL =
-        process.env.NEXT_PUBLIC_AZURE_UPLOAD_FUNCTION_URL!;
-      if (newFormData) await axios.post(azureFunctionURL, newFormData);
+      const { data } = await axios.post("/api/getPresignedUrl", {
+        userId: userId,
+        fileName: file.name,
+      });
+      
+      if (!data.success || !data.url) {
+        throw new Error("Failed to get presigned URL");
+      }
+      
+      const presignedUrl = data.url;
 
-      setLoading(false);
-      showToast(`Successfully uploaded ${newFileName}`, "", "good");
+      await axios.put(presignedUrl, file, {
+        headers: {
+          'x-ms-blob-type': 'BlockBlob',
+          'Content-Type': file.type,
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percentCompleted);
+          }
+        },
+      });
+
+      showToast(`Successfully uploaded ${file.name}`, "", "good");
       clearFile();
-      setFileName(newFileName);
+      setFileName(file.name);
+      setUploadProgress(0);
     } catch (error: any) {
-      setLoading(false);
+      console.error("Upload error:", error);
       showToast(
-        `Failed to upload ${newFileName} :(`,
-        "Please try again...",
+        `Failed to upload ${file?.name ?? "file"} :(`,
+        error.message || "Please try again...",
         "destructive"
       );
+      setUploadProgress(0);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <>
@@ -90,7 +122,7 @@ const FileUpload: React.FC<Props> = ({
               className="w-full py-7 px-7 sm:py-5 sm:px-4 sm:text-xl text-2xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
             >
               {loading ? (
-                <Loading width={24} height={24} stroke={3} />
+                <span className="text-white text-lg">{uploadProgress}%</span>
               ) : (
                 <>
                   <Upload className="w-5 h-5 mr-2" strokeWidth={2.75} />
