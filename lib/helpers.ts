@@ -53,13 +53,16 @@ export function cleanName(name: string): string {
   return name;
 }
 
-export function convertSize(size: number) {
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-
-  if (size === 0) return "0 Byte";
-
-  const i = Math.floor(Math.log(size) / Math.log(1024));
-  return Math.round(size / Math.pow(1024, i)) + " " + sizes[i];
+export function convertSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  } else if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  } else if (bytes < 1024 * 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  } else {
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  }
 }
 
 export function cleanDate(dateString: string): string {

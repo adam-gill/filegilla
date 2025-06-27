@@ -55,7 +55,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const { session } = useAuth();
   const userId = session?.user.id;
   const [isOwner, setIsOwner] = useState<boolean>(false);
-
+  const [currentUrl, setCurrentUrl] = useState<string>("");
 
   const router = useRouter();
   const uuid = ag_uuid();
@@ -198,6 +198,12 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       inputRef.current.select();
     }
   }, [isEditing]);
+
+  useEffect(() => {
+    if (typeof window != "undefined") {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
 
   const isImage = () => {
     return (
@@ -396,7 +402,11 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
             <>
               {isImage() && (
                 <>
-                  <Button disabled={loading} onClick={handleZoomOut} aria-label="Zoom out">
+                  <Button
+                    disabled={loading}
+                    onClick={handleZoomOut}
+                    aria-label="Zoom out"
+                  >
                     <ZoomOut className="flex cc h-4 w-4" />
                   </Button>
                   <Input
@@ -410,12 +420,19 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                     onKeyDown={handleInputKeyDown}
                     aria-label="Zoom level"
                   />
-                  <Button disabled={loading} onClick={handleZoomIn} aria-label="Zoom in">
+                  <Button
+                    disabled={loading}
+                    onClick={handleZoomIn}
+                    aria-label="Zoom in"
+                  >
                     <ZoomIn className="flex cc h-4 w-4" />
                   </Button>
                 </>
               )}
-              <Button disabled={loading} onClick={() => handleDownload(fileUrl!, fileName)}>
+              <Button
+                disabled={loading}
+                onClick={() => handleDownload(fileUrl!, fileName)}
+              >
                 <Download className="h-4 w-4" />
               </Button>
               {isOwner && (
@@ -438,7 +455,9 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                   confirmText="Rename"
                   setOpen={() => {}}
                   inputProps={{
-                    defaultValue: publicFileData ? decodeURIComponent(fileName) : uuid + extractFileExtension(fileName),
+                    defaultValue: publicFileData
+                      ? decodeURIComponent(fileName)
+                      : uuid + extractFileExtension(fileName),
                     placeholder: "Enter new filename",
                   }}
                   onConfirm={(newName) => {
@@ -484,10 +503,12 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                         stripToken(fileUrl!),
                         stripFileExtension(shareNameAndExtension),
                         "create",
-                        uuid,
+                        uuid
                       );
                       showToast(
-                        `Making ${stripFileExtension(decodeURIComponent(fileName))} public at https://filegilla.com/s/${encodeURIComponent(
+                        `Making ${stripFileExtension(
+                          decodeURIComponent(fileName)
+                        )} public at https://filegilla.com/s/${encodeURIComponent(
                           shareNameAndExtension
                         )}`,
                         "",
@@ -502,10 +523,10 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
                 <CopyButton
                   toastInfo={{
                     title: "Link Copied!",
-                    description: `${window.location.href}`,
+                    description: currentUrl,
                     variant: "good",
                   }}
-                  copyText={window.location.href}
+                  copyText={currentUrl}
                 />
               )}
               {isOwner && (
