@@ -8,7 +8,6 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import Image from "next/image";
-import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
 import SignInButton from "./signInBtn";
 import { useState } from "react";

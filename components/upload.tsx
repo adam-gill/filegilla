@@ -7,7 +7,6 @@ import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/lib/useAuth";
-import Loading from "./loading";
 import { showToast } from "@/lib/showToast";
 interface Props {
   className?: string;
