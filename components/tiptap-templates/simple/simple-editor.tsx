@@ -19,6 +19,7 @@ import { Underline } from "@tiptap/extension-underline";
 import { Link } from "@/components/tiptap-extension/link-extension";
 import { Selection } from "@/components/tiptap-extension/selection-extension";
 import { TrailingNode } from "@/components/tiptap-extension/trailing-node-extension";
+import { FontSizeExtension } from "@/components/tiptap-extension/font-size-extension";
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button";
@@ -74,6 +75,7 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss";
+import { FontSizeInput } from "@/components/tiptap-ui/font-size-input";
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -100,6 +102,12 @@ const MainToolbarContent = ({
         <ListDropdownMenu types={["bulletList", "orderedList", "taskList"]} />
         <BlockquoteButton />
         <CodeBlockButton />
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <FontSizeInput />
       </ToolbarGroup>
 
       <ToolbarSeparator />
@@ -215,6 +223,7 @@ export function SimpleEditor({
       Typography,
       Superscript,
       Subscript,
+      FontSizeExtension,
 
       Selection,
       ImageUploadNode.configure({
@@ -229,6 +238,7 @@ export function SimpleEditor({
     ],
     onUpdate: ({ editor }) => {
       console.log(editor.getHTML());
+      setContent(editor.getHTML());
     },
     content: content,
   });

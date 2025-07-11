@@ -1,0 +1,47 @@
+.tiptap-font-size-input {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  border: 1px solid var(--tiptap-border-color);
+  border-radius: 4px;
+  font-size: 15px;
+  min-width: 20px;
+
+  &:focus-within {
+    border-color: var(--tiptap-primary-color);
+    outline: none;
+  }
+
+  .tiptap-font-size-input-field {
+    border: none;
+    background: transparent;
+    color: rgba(36, 39, 46, 0.78);
+    font-size: inherit;
+    width: 100%;
+    height: 100%;
+    max-width: 30px;
+    max-height: 30px;
+    min-width: 0;
+    outline: none;
+    text-align: center;
+    padding: 0;
+
+    &::placeholder {
+      color: rgba(36, 39, 46, 0.78);
+      opacity: 0.6;
+    }
+  }
+
+  /* Dark mode */
+  .dark & {
+    .tiptap-font-size-input-field {
+      color: rgba(247, 247, 253, 0.64);
+
+      &::placeholder {
+        color: rgba(247, 247, 253, 0.64);
+        opacity: 0.6;
+      }
+    }
+  }
+} 
