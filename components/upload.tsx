@@ -3,18 +3,19 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/lib/useAuth";
 import { showToast } from "@/lib/showToast";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 interface Props {
   className?: string;
   fileName: string | null;
   setFileName: (value: string | null) => void;
 }
 
-const FileUpload: React.FC<Props> = ({
+const AddContent: React.FC<Props> = ({
   className,
   setFileName,
 }) => {
@@ -22,6 +23,7 @@ const FileUpload: React.FC<Props> = ({
   const { session } = useAuth();
   const [loading, setLoading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [open, setOpen] = useState(false);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,26 +116,54 @@ const FileUpload: React.FC<Props> = ({
             ref={fileInputRef}
             aria-describedby="file-description"
           />
-          <div className="flex flex-row items-center">
-            <Button
-              type="button"
-              onClick={handleButtonClick}
-              className="w-full py-7 px-7 sm:py-5 sm:px-4 sm:text-xl text-2xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
-            >
-              {loading ? (
-                <span className="text-white text-lg">{uploadProgress}%</span>
-              ) : (
-                <>
-                  <Upload className="w-5 h-5 mr-2" strokeWidth={2.75} />
-                  Upload
-                </>
-              )}
-            </Button>
-          </div>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                className="w-full py-7 px-7 sm:py-5 sm:px-4 sm:text-xl text-2xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
+              >
+                {loading ? (
+                  <span className="text-white text-lg">{uploadProgress}%</span>
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5 mr-2" strokeWidth={2.75} />
+                    New
+                  </>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-0">
+              <div className="flex flex-col">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="justify-start rounded-none rounded-t-md"
+                  onClick={() => {
+                    setOpen(false);
+                    handleButtonClick();
+                  }}
+                  disabled={loading}
+                >
+                  File
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="justify-start rounded-none rounded-b-md"
+                  onClick={() => {
+                    setOpen(false);
+                    alert("Note option selected!");
+                  }}
+                >
+                  Note
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </>
   );
 };
 
-export default FileUpload;
+export default AddContent;
