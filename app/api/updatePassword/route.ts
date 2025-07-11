@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
     return new NextResponse(`Successfully updated the password ${data.title}`, {
       status: 200,
     });
-  } catch (error) {
+  } catch (_error) {
+    console.log(_error);
     return new NextResponse("Failed to Update Password", { status: 505 });
   }
 }

@@ -16,8 +16,8 @@ export async function deletePublicFile(name: string, etag: string,) {
     showToast(`Successfully deleted public file '${name}'`, "", "good");
 
 
-  } catch (error: any) {
-    console.log("Error deleting public file.");
+  } catch (_error: any) {
+    console.log("Error deleting public file.", _error);
     showToast(`Failed to delete public file '${name}'`, "Please try again.", "destructive");
   }
 }

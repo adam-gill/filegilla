@@ -68,11 +68,15 @@ export default function PasswordCard({
         cipher,
         password
       );
-      p ? setServicePassword(p) : setServicePassword("Error");
+      if (p) {
+        setServicePassword(p);
+      } else {
+        setServicePassword("Error");
+      }
       setLoading(false);
     };
 
-    getPassword();
+    void getPassword();
   }, [
     cipher,
     password,

@@ -114,7 +114,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       fetchFile();
     }
     setLoading(false);
-  }, [userId, fileName, publicFileData]);
+  }, [userId, fileName, publicFileData, fetchFile, file404, file500]);
 
   const fileType = publicFileData
     ? file?.name.split(".").pop()?.toLowerCase()
@@ -191,7 +191,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
     if (fileType === "txt" && fileUrl) {
       fetchTextContent(fileUrl);
     }
-  }, [fileUrl, fileType]);
+  }, [fileUrl, fileType, fetchTextContent]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {

@@ -75,7 +75,8 @@ export async function GET(req: NextRequest) {
         status: 404,
       });
     }
-  } catch (error) {
+  } catch (_error) {
+    console.log(_error);
     return new NextResponse("Server error fetching public file", {
       status: 500,
     });

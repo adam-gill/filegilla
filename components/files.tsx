@@ -45,16 +45,20 @@ const Files: React.FC<props> = ({ fileName, search }) => {
           f.name.toLowerCase().includes(search.toLowerCase())
         );
 
-        search ? setResult(res) : setResult(undefined);
+        if (search) {
+          setResult(res);
+        } else {
+          setResult(undefined);
+        }
       }
     };
 
-    handleSearchChange();
+    void handleSearchChange();
   }, [search, files]);
 
   useEffect(() => {
     if (userId) loadFiles();
-  }, [userId, fileName]);
+  }, [userId, fileName, loadFiles]);
 
   if (!files) {
     return (

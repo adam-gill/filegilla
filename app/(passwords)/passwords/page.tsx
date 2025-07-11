@@ -63,11 +63,15 @@ const Passwords = () => {
           return descriptionMatch || titleMatch || urlMatch;
         });
 
-        search ? setResult(res) : setResult(null);
+        if (search) {
+          setResult(res);
+        } else {
+          setResult(null);
+        }
       }
     };
 
-    handleSearchChange();
+    void handleSearchChange();
   }, [search, passwords]);
 
   const handleOperation = async (
@@ -116,7 +120,8 @@ const Passwords = () => {
           setPasswords(data.passwords);
         }, 0);
       }
-    } catch (error) {
+    } catch (_error) {
+      console.log(_error);
       showToast("Error Loading Passwords :(", "", "destructive");
     }
   };
@@ -140,7 +145,8 @@ const Passwords = () => {
         setLocked(false);
       }
       setLoading(false);
-    } catch (error) {
+    } catch (_error) {
+      console.log(_error);
       setError("Authentication failed");
       setLoading(false);
     }
@@ -161,7 +167,8 @@ const Passwords = () => {
         setHasAccount(false);
         setLoading(false);
       }
-    } catch (error) {
+    } catch (_error) {
+      console.log(_error);
       setLoading(false);
       showToast(
         "An error occurred checking your passwords :(",
@@ -175,7 +182,7 @@ const Passwords = () => {
     if (session?.user.id) {
       checkUserAcc();
     }
-  }, [session?.user.id]);
+  }, [session?.user.id, checkUserAcc]);
 
   const handleSubmit = async (
     data: PasswordFormData,
@@ -219,7 +226,9 @@ const Passwords = () => {
             "",
             "good"
           );
-        } catch (error) {
+        } catch (_error) {
+          console.log(_error);
+          console.log(securedData);
           showToast(
             `Failed to update the password for ${securedData.title} :(`,
             "Please try again.",
@@ -227,7 +236,7 @@ const Passwords = () => {
           );
         }
       }
-    } catch (error) {
+    } catch {
       showToast("Error Adding Password :(", "Please try again.", "destructive");
     }
   };
@@ -252,8 +261,8 @@ const Passwords = () => {
 
         setHasAccount(true);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (_error) {
+      console.log(_error);
       showToast("Error when creating your password :(", "", "default");
     }
   };

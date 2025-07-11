@@ -97,7 +97,12 @@ export function AlertDialogComponent({
 
   const handleInputChange = (str: string) => {
     const regex = /^[a-zA-Z0-9._-]+$/; // Allowable characters: letters, numbers, ., _, -
-    regex.test(str) ? setError(null) : setError("Invalid input.");
+    const inputChanged = regex.test(str);
+    if (inputChanged) {
+      setError(null);
+    } else {
+      setError("Invalid input.");
+    }
     setInputValue(str);
   };
 
@@ -125,7 +130,7 @@ export function AlertDialogComponent({
       console.log({ userId: userId, etag: etag });
       checkShare(userId, etag, setShareName);
     }
-  }, [userId, etag, setShareName]);
+  }, [userId, etag, setShareName, type]);
 
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>

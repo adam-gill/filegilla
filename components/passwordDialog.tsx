@@ -90,7 +90,7 @@ export function PasswordDialog({
 
         await loadPasswords();
 
-      } catch (error) {
+      } catch {
         showToast(
           `Failed to delete ${initialData.title} password :(`,
           "",
