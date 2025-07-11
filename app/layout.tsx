@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "./globals.scss";
 import { cn } from "@/lib/utils";
 
 import { Space_Grotesk } from "next/font/google";

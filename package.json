@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@azure/msal-browser": "^3.24.0",
-    "@azure/msal-react": "^2.2.0",
+    "@azure/msal-react": "^3.0.15",
     "@azure/storage-blob": "^12.27.0",
     "@floating-ui/react": "^0.27.13",
     "@hookform/resolvers": "^3.9.1",
