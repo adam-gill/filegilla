@@ -13,6 +13,30 @@
     outline: none;
   }
 
+  .tiptap-font-size-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: rgba(36, 39, 46, 0.78);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--tiptap-primary-color);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
   .tiptap-font-size-input-field {
     border: none;
     background: transparent;
@@ -35,6 +59,14 @@
 
   /* Dark mode */
   .dark & {
+    .tiptap-font-size-button {
+      color: rgba(247, 247, 253, 0.64);
+
+      &:hover {
+        color: var(--tiptap-primary-color);
+      }
+    }
+
     .tiptap-font-size-input-field {
       color: rgba(247, 247, 253, 0.64);
 

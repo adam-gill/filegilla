@@ -46,8 +46,35 @@ export function FontSizeInput() {
     }
   };
 
+  const handleDecrement = () => {
+    const numValue = parseInt(inputValue, 10);
+    if (!isNaN(numValue) && numValue > 1) {
+      const newValue = (numValue - 1).toString();
+      setInputValue(newValue);
+      editor.commands.setFontSize(newValue);
+    }
+  };
+
+  const handleIncrement = () => {
+    const numValue = parseInt(inputValue, 10);
+    if (!isNaN(numValue) && numValue < 200) {
+      const newValue = (numValue + 1).toString();
+      setInputValue(newValue);
+      editor.commands.setFontSize(newValue);
+    }
+  };
+
   return (
     <div className="tiptap-font-size-input">
+      <button
+        type="button"
+        onClick={handleDecrement}
+        className="tiptap-font-size-button tiptap-button-text"
+        aria-label="Decrease font size"
+        title="Decrease font size"
+      >
+        −
+      </button>
       <input
         type="text"
         value={inputValue}
@@ -59,6 +86,15 @@ export function FontSizeInput() {
         aria-label="Font size"
         title="Font size"
       />
+      <button
+        type="button"
+        onClick={handleIncrement}
+        className="tiptap-font-size-button tiptap-button-text"
+        aria-label="Increase font size"
+        title="Increase font size"
+      >
+        +
+      </button>
     </div>
   );
 } 
