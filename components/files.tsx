@@ -1,7 +1,7 @@
 import axios from "axios";
 import { file, listResponse } from "filegilla";
 import File from "./file";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/useAuth";
 import { showToast } from "@/lib/showToast";
 import { Skeleton } from "./ui/skeleton";
@@ -11,13 +11,13 @@ interface props {
   search: string;
 }
 
-const Files: React.FC<props> = ({ fileName, search }) => {
+const Files = ({ fileName, search }: props) => {
   const { session } = useAuth();
   const userId = session?.user.id;
   const [files, setFiles] = useState<file[] | undefined>(undefined);
   const [result, setResult] = useState<file[] | undefined>(undefined);
 
-  const loadFiles = async () => {
+  const loadFiles = useCallback(async () => {
     try {
       if (userId) {
         const response = await axios.get("/api/list", {
@@ -36,7 +36,7 @@ const Files: React.FC<props> = ({ fileName, search }) => {
       );
       setFiles([]);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     const handleSearchChange = () => {
@@ -57,7 +57,9 @@ const Files: React.FC<props> = ({ fileName, search }) => {
   }, [search, files]);
 
   useEffect(() => {
-    if (userId) loadFiles();
+    if (userId) {
+      loadFiles();
+    }
   }, [userId, fileName, loadFiles]);
 
   if (!files) {

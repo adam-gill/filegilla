@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
 import axios from "axios";
 import { useAuth } from "@/lib/useAuth";
 import { showToast } from "@/lib/showToast";
@@ -15,10 +14,10 @@ interface Props {
   setFileName: (value: string | null) => void;
 }
 
-const AddContent: React.FC<Props> = ({
+const AddContent = ({
   className,
   setFileName,
-}) => {
+}: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { session } = useAuth();
   const [loading, setLoading] = useState<boolean>(false);
@@ -31,7 +30,6 @@ const AddContent: React.FC<Props> = ({
     if (file && session?.user) {
       newFormData.append("file", file);
       newFormData.append("userId", JSON.stringify({ userId: session.user.id }));
-      // onUpload(file.name, newFormData);
       onUpload();
     }
   };
@@ -65,11 +63,11 @@ const AddContent: React.FC<Props> = ({
         userId: userId,
         fileName: file.name,
       });
-      
+
       if (!data.success || !data.url) {
         throw new Error("Failed to get presigned URL");
       }
-      
+
       const presignedUrl = data.url;
 
       await axios.put(presignedUrl, file, {
@@ -105,7 +103,7 @@ const AddContent: React.FC<Props> = ({
   return (
     <>
       <div
-        className={cn("w-full", className)}
+        className={className}
       >
         <div className="relative">
           <Input
@@ -120,14 +118,14 @@ const AddContent: React.FC<Props> = ({
             <PopoverTrigger asChild>
               <Button
                 type="button"
-                className="w-full py-7 px-7 sm:py-5 sm:px-4 sm:text-xl text-2xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
+                className="w-full h-12 px-4 py-4 text-2xl max-sm:text-xl fg-grad text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300"
               >
                 {loading ? (
                   <span className="text-white text-lg">{uploadProgress}%</span>
                 ) : (
                   <>
-                    <Plus className="w-5 h-5 mr-2" strokeWidth={2.75} />
-                    New
+                    <Plus className="w-6 h-6 mr-2" strokeWidth={2} />
+                    Add
                   </>
                 )}
               </Button>

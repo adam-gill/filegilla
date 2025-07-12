@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import {
   ChevronLeft,
   Dot,
@@ -60,7 +60,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
   const router = useRouter();
   const uuid = ag_uuid();
 
-  const fetchFile = async () => {
+  const fetchFile = useCallback(async () => {
     setLoading(true);
 
     if (userId && fileName) {
@@ -72,23 +72,23 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       setLoading(false);
     }
     setLoading(false);
-  };
+  }, [userId, fileName]);
 
-  const file404: file = {
+  const file404: file = useMemo(() => ({
     name: `Could not find file "${fileName}"`,
     blobUrl: "",
     lastModified: "",
     md5hash: "",
     sizeInBytes: 0,
-  };
+  }), [fileName]);
 
-  const file500: file = {
+  const file500: file = useMemo(() => ({
     name: `Server error fetching file "${fileName}"`,
     blobUrl: "",
     lastModified: "",
     md5hash: "",
     sizeInBytes: 0,
-  };
+  }), [fileName]);
 
   useEffect(() => {
     setLoading(true);
@@ -114,7 +114,7 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
       fetchFile();
     }
     setLoading(false);
-  }, [userId, fileName, publicFileData, fetchFile, file404, file500]);
+  }, [userId, fileName, publicFileData, file404, file500, fetchFile]);
 
   const fileType = publicFileData
     ? file?.name.split(".").pop()?.toLowerCase()
@@ -175,23 +175,22 @@ const FileViewer: React.FC<props> = ({ fileName, publicFileData }) => {
     updateScale(Math.round(scale * 100) - 5);
   };
 
-  const fetchTextContent = async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const text = await response.text();
-      setTextContent(text);
-    } catch (error) {
-      console.error(`Error fetching text content: ${open ? "" : ""}`, error);
-      setTextContent("Error loading text file");
-    }
-  };
-
   // Add useEffect to fetch text content when fileUrl changes and type is txt
   useEffect(() => {
     if (fileType === "txt" && fileUrl) {
+      const fetchTextContent = async (url: string) => {
+        try {
+          const response = await fetch(url);
+          const text = await response.text();
+          setTextContent(text);
+        } catch (error) {
+          console.error(`Error fetching text content: ${open ? "" : ""}`, error);
+          setTextContent("Error loading text file");
+        }
+      };
       fetchTextContent(fileUrl);
     }
-  }, [fileUrl, fileType, fetchTextContent]);
+  }, [fileUrl, fileType, open]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {

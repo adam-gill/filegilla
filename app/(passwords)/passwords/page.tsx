@@ -152,37 +152,36 @@ const Passwords = () => {
     }
   };
 
-  const checkUserAcc = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get("/api/checkPassAcc", {
-        params: { userId: session?.user.id },
-      });
-
-      const data = res.data as checkPassAccResponse;
-      if (!(data.phash === null || data.phash === "null")) {
-        setHasAccount(true);
-        setLoading(false);
-      } else {
-        setHasAccount(false);
-        setLoading(false);
-      }
-    } catch (_error) {
-      console.log(_error);
-      setLoading(false);
-      showToast(
-        "An error occurred checking your passwords :(",
-        "",
-        "destructive"
-      );
-    }
-  };
-
   useEffect(() => {
     if (session?.user.id) {
+      const checkUserAcc = async () => {
+        setLoading(true);
+        try {
+          const res = await axios.get("/api/checkPassAcc", {
+            params: { userId: session?.user.id },
+          });
+
+          const data = res.data as checkPassAccResponse;
+          if (!(data.phash === null || data.phash === "null")) {
+            setHasAccount(true);
+            setLoading(false);
+          } else {
+            setHasAccount(false);
+            setLoading(false);
+          }
+        } catch (_error) {
+          console.log(_error);
+          setLoading(false);
+          showToast(
+            "An error occurred checking your passwords :(",
+            "",
+            "destructive"
+          );
+        }
+      };
       checkUserAcc();
     }
-  }, [session?.user.id, checkUserAcc]);
+  }, [session?.user.id]);
 
   const handleSubmit = async (
     data: PasswordFormData,
@@ -346,7 +345,7 @@ const Passwords = () => {
                 {!hasAccount ? (
                   <>
                     <div className="w-full flex flex-col items-center justify-center">
-                      <h1 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-blue-800 pb-2">
+                      <h1 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-2">
                         Introducing FileGilla Password Storage
                       </h1>
                       <h1 className="text-xl">

@@ -59,7 +59,7 @@ export default function Home() {
         </nav>
 
         <main className="flex-grow flex flex-col items-center">
-          <div className="w-full h-[165px] max-w-[900px] mx-auto flex flex-col mt-16 text-7xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-400 to-blue-800 pb-4">
+          <div className="w-full h-[165px] max-w-[900px] mx-auto flex flex-col mt-16 text-7xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">
             Storage in the Cloud with Privacy and Security
           </div>
           <div

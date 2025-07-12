@@ -1,8 +1,4 @@
-@import '../styles/_variables.scss';
-@import '../styles/_keyframe-animations.scss';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --background: #0a0a0a;
@@ -35,13 +31,14 @@ body {
 }
 
 .cc {
-  @apply items-center justify-center
+  align-items: center;
+  justify-content: center;
 }
 
 .fg-grad {
-  @apply bg-gradient-to-r from-white via-blue-400 to-blue-800
+  background: linear-gradient(to right, #f3f4f6, #60a5fa, #1d4ed8);
 }
 
 .fg-grad-r {
-  @apply bg-gradient-to-r from-blue-800 via-blue-400 to-white
+  background: linear-gradient(to right, #1d4ed8, #60a5fa, #f3f4f6);
 }

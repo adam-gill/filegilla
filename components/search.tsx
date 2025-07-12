@@ -26,8 +26,8 @@ const SearchBar: React.FC<searchProps> = ({ search, setSearch }) => {
   }, []);
 
   return (
-    <div className="w-fit flex flex-row items-center ml-4 sm:ml-2 sm:w-1/2">
-      <div className="relative block">
+    <div className="max-w-[256px] flex flex-row items-center ml-4 sm:ml-2 sm:w-1/2">
+      <div className="w-full relative block">
         {search === "" ? (
           <Search
             size={24}
@@ -42,7 +42,7 @@ const SearchBar: React.FC<searchProps> = ({ search, setSearch }) => {
         )}
         <Input
           ref={inputRef}
-          className="max-w-[256px]"
+          className="w-full"
           value={search}
           placeholder={`Press "/" to search`}
           onChange={(e) => {
