@@ -4,6 +4,7 @@ import { getMarkRange } from "@tiptap/react"
 import { Plugin, TextSelection } from "@tiptap/pm/state"
 
 export const Link = TiptapLink.extend({
+  name: 'customLink',
   inclusive: false,
 
   parseHTML() {
@@ -14,10 +15,12 @@ export const Link = TiptapLink.extend({
     ]
   },
 
-  addProseMirrorPlugins() {
+  addProseMirrorPlugins(): Plugin[] {
+    // @ts-expect-error - Tiptap types are not fully compatible with TypeScript
     const { editor } = this
 
     return [
+      // @ts-expect-error - Tiptap types are not fully compatible with TypeScript
       ...(this.parent?.() || []),
       new Plugin({
         props: {

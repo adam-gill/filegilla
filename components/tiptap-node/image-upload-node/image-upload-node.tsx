@@ -255,7 +255,7 @@ interface ImageUploadPreviewProps {
 
 const ImageUploadPreview: React.FC<ImageUploadPreviewProps> = ({
   file,
-  progress,
+  progress = 0,
   status,
   onRemove,
 }) => {
@@ -272,7 +272,7 @@ const ImageUploadPreview: React.FC<ImageUploadPreviewProps> = ({
       {status === "uploading" && (
         <div
           className="tiptap-image-upload-progress"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${progress || 0}%` }}
         />
       )}
 
@@ -360,6 +360,10 @@ export const ImageUploadNode: React.FC<NodeViewProps> = (props) => {
 
     if (url) {
       const pos = props.getPos()
+      if (pos === undefined) {
+        console.error('Position is undefined, cannot insert image')
+        return
+      }
       const filename = files[0]?.name.replace(/\.[^/.]+$/, "") || "unknown"
 
       props.editor

@@ -24,7 +24,7 @@ export interface TrailingNodeOptions {
 }
 
 export const TrailingNode = Extension.create<TrailingNodeOptions>({
-  name: "trailingNode",
+  name: "customTrailingNode",
 
   addOptions() {
     return {

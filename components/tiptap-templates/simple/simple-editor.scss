@@ -59,7 +59,7 @@ body {
 }
 
 .simple-editor-content {
-  max-width: 640px;
+  max-width: 1000px;
   width: 100%;
   margin: 0 auto;
 }
@@ -71,5 +71,60 @@ body {
 @media screen and (max-width: 480px) {
   .simple-editor-content .tiptap.ProseMirror {
     padding: 1rem 1.5rem;
+  }
+}
+
+/* Replace existing .mention-suggestions styles with light/dark mode support */
+.mention-suggestions {
+  background-color: white;
+  border-radius: 8px;
+  padding: 8px;
+
+  .dark & {
+    background-color: #333;
+    color: white;
+  }
+}
+
+.mention-suggestions ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mention-suggestions li {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+
+  &.selected {
+    background-color: #add8e6;
+  }
+
+  .dark & {
+    &:hover {
+      background-color: #444;
+    }
+
+    &.selected {
+      background-color: #4a90e2;
+    }
+  }
+}
+
+/* Add styles for rendered mentions */
+.mention {
+  color: blue;
+  background-color: #e6f7ff;
+  border-radius: 4px;
+  padding: 2px 4px;
+
+  .dark & {
+    color: #87cefa; /* brighter blue text for more contrast */
+    background-color: rgba(42, 77, 105, 0.3); /* semi-transparent lighter blue */
   }
 }

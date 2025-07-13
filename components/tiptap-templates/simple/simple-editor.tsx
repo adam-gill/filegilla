@@ -16,13 +16,17 @@ import { Typography } from "@tiptap/extension-typography";
 import { Highlight } from "@tiptap/extension-highlight";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
-import { Underline } from "@tiptap/extension-underline";
+import Mention from "@tiptap/extension-mention";
+import tippy from "tippy.js";
+import "tippy.js/dist/tippy.css";
+import userData from "./data/users.json";
 
 // --- Custom Extensions ---
 import { Link } from "@/components/tiptap-extension/link-extension";
 import { Selection } from "@/components/tiptap-extension/selection-extension";
 import { TrailingNode } from "@/components/tiptap-extension/trailing-node-extension";
 import { FontSizeExtension } from "@/components/tiptap-extension/font-size-extension";
+import { CustomUnderline } from "@/components/tiptap-extension/underline-extension";
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button";
@@ -67,8 +71,6 @@ import { LinkIcon } from "@/components/tiptap-icons/link-icon";
 
 // --- Hooks ---
 import { useMobile } from "@/hooks/use-mobile";
-import { useWindowSize } from "@/hooks/use-window-size";
-import { useCursorVisibility } from "@/hooks/use-cursor-visibility";
 
 // --- Components ---
 import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle";
@@ -79,6 +81,124 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss";
 import { FontSizeInput } from "@/components/tiptap-ui/font-size-input";
+
+import { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion";
+import { Instance } from "tippy.js";
+import { mergeAttributes } from "@tiptap/react";
+
+// Add type for User after imports
+type User = { id: number; name: string; email: string };
+
+const users = userData.users;
+
+const mentionSuggestion = {
+  items: ({ query }: { query: string }) => {
+    return users
+      .filter((user: User) =>
+        user.name.toLowerCase().startsWith(query.toLowerCase())
+      )
+      .slice(0, 5);
+  },
+  render: () => {
+    let component: HTMLDivElement;
+    let popup: Instance;
+    let selectedIndex: number = 0;
+    let currentItems: User[] = [];
+    let currentCommand: (attrs: { id: number; label: string }) => void = () => {};
+
+    return {
+      onStart: (props: SuggestionProps<User>) => {
+        component = document.createElement("div");
+        component.classList.add("mention-suggestions");
+
+        if (!props.clientRect) {
+          return;
+        }
+
+        popup = tippy(document.body, {
+          getReferenceClientRect: () => props.clientRect?.() ?? new DOMRect(),
+          appendTo: () => document.body,
+          content: component,
+          showOnCreate: true,
+          interactive: true,
+          trigger: "manual",
+          placement: "bottom-start",
+        }) as Instance;
+
+        currentItems = props.items;
+        currentCommand = props.command as any; // Adjust for type
+        selectedIndex = 0;
+        renderItems();
+      },
+
+      onUpdate: (props: SuggestionProps<User>) => {
+        currentItems = props.items;
+        currentCommand = props.command as any;
+        selectedIndex = 0;
+        renderItems();
+      },
+
+      onKeyDown: (props: SuggestionKeyDownProps) => {
+        if (props.event.key === "Escape") {
+          popup.hide();
+          return true;
+        }
+
+        if (props.event.key === "ArrowDown") {
+          selectedIndex = (selectedIndex + 1) % currentItems.length;
+          renderItems();
+          return true;
+        }
+
+        if (props.event.key === "ArrowUp") {
+          selectedIndex = (selectedIndex + currentItems.length - 1) % currentItems.length;
+          renderItems();
+          return true;
+        }
+
+        if (props.event.key === "Enter" || props.event.key === "Tab") {
+          const item = currentItems[selectedIndex];
+          if (item) {
+            currentCommand({ id: item.id, label: item.name });
+          }
+          return true;
+        }
+
+        return false;
+      },
+
+      onExit: () => {
+        popup.destroy();
+        component.remove();
+      },
+    };
+
+    function renderItems() {
+      component.innerHTML = "";
+
+      if (currentItems.length === 0) {
+        component.innerHTML = "<div>No results</div>";
+        return;
+      }
+
+      const list = document.createElement("ul");
+
+      currentItems.forEach((item: User, index: number) => {
+        const listItem = document.createElement("li");
+        listItem.textContent = item.name;
+        listItem.addEventListener("click", () => {
+          currentCommand({ id: item.id, label: item.name });
+        });
+        if (index === selectedIndex) {
+          listItem.classList.add("selected");
+        }
+        list.appendChild(listItem);
+      });
+
+      component.appendChild(list);
+    }
+  },
+};
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -199,7 +319,6 @@ export function SimpleEditor({
   setContent: (content: string) => void;
 }) {
   const isMobile = useMobile();
-  const windowSize = useWindowSize();
   const [mobileView, setMobileView] = React.useState<
     "main" | "highlighter" | "link"
   >("main");
@@ -218,7 +337,7 @@ export function SimpleEditor({
     extensions: [
       StarterKit,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Underline,
+      CustomUnderline,
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
@@ -227,6 +346,19 @@ export function SimpleEditor({
       Superscript,
       Subscript,
       FontSizeExtension,
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: mentionSuggestion,
+        renderHTML: ({ options, node }) => {
+          return [
+            "span",
+            mergeAttributes(options.HTMLAttributes, { "data-id": node.attrs.id }),
+            `@${node.attrs.label ?? node.attrs.id}`,
+          ];
+        },
+      }),
 
       Selection,
       ImageUploadNode.configure({
@@ -240,16 +372,16 @@ export function SimpleEditor({
       Link.configure({ openOnClick: false }),
     ],
     onUpdate: ({ editor }) => {
-      console.log(editor.getHTML());
       setContent(editor.getHTML());
     },
     content: content,
   });
 
-  const bodyRect = useCursorVisibility({
-    editor,
-    overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
-  });
+  React.useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content, { emitUpdate: false });
+    }
+  }, [editor, content]);
 
   React.useEffect(() => {
     if (!isMobile && mobileView !== "main") {
@@ -264,7 +396,7 @@ export function SimpleEditor({
         style={
           isMobile
             ? {
-                bottom: `calc(100% - ${windowSize.height - bodyRect.y}px)`,
+                bottom: `0px`,
               }
             : {}
         }

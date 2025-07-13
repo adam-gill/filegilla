@@ -1,0 +1,104 @@
+{
+    "users": [
+        {
+            "id": 2847592863,
+            "name": "LeBron James",
+            "email": "lebron.james@example.com"
+        },
+        {
+            "id": 5729384610,
+            "name": "Stephen Curry",
+            "email": "stephen.curry@example.com"
+        },
+        {
+            "id": 9183746520,
+            "name": "Giannis Antetokounmpo",
+            "email": "giannis.antetokounmpo@example.com"
+        },
+        {
+            "id": 4567283940,
+            "name": "Luka Doncic",
+            "email": "luka.doncic@example.com"
+        },
+        {
+            "id": 8294756381,
+            "name": "Jayson Tatum",
+            "email": "jayson.tatum@example.com"
+        },
+        {
+            "id": 3758294016,
+            "name": "Nikola Jokic",
+            "email": "nikola.jokic@example.com"
+        },
+        {
+            "id": 6194837526,
+            "name": "Joel Embiid",
+            "email": "joel.embiid@example.com"
+        },
+        {
+            "id": 7482639150,
+            "name": "Kevin Durant",
+            "email": "kevin.durant@example.com"
+        },
+        {
+            "id": 1639485720,
+            "name": "Kawhi Leonard",
+            "email": "kawhi.leonard@example.com"
+        },
+        {
+            "id": 5927384610,
+            "name": "Anthony Davis",
+            "email": "anthony.davis@example.com"
+        },
+        {
+            "id": 8394756281,
+            "name": "Damian Lillard",
+            "email": "damian.lillard@example.com"
+        },
+        {
+            "id": 4729583640,
+            "name": "Jimmy Butler",
+            "email": "jimmy.butler@example.com"
+        },
+        {
+            "id": 9283746510,
+            "name": "Ja Morant",
+            "email": "ja.morant@example.com"
+        },
+        {
+            "id": 3648295170,
+            "name": "Devin Booker",
+            "email": "devin.booker@example.com"
+        },
+        {
+            "id": 7194836520,
+            "name": "Donovan Mitchell",
+            "email": "donovan.mitchell@example.com"
+        },
+        {
+            "id": 5847392640,
+            "name": "Zion Williamson",
+            "email": "zion.williamson@example.com"
+        },
+        {
+            "id": 8392847510,
+            "name": "Trae Young",
+            "email": "trae.young@example.com"
+        },
+        {
+            "id": 2946785320,
+            "name": "Shai Gilgeous-Alexander",
+            "email": "shai.gilgeous-alexander@example.com"
+        },
+        {
+            "id": 6749382650,
+            "name": "De'Aaron Fox",
+            "email": "deaaron.fox@example.com"
+        },
+        {
+            "id": 1583946720,
+            "name": "Anthony Edwards",
+            "email": "anthony.edwards@example.com"
+        }
+    ]
+}
