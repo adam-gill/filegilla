@@ -47,5 +47,9 @@ export default function Note() {
     debouncedSave(newContent);
   };
 
-  return <SimpleEditor content={content} setContent={handleContentChange} />;
+  return (
+    <div style={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+      <SimpleEditor content={content} setContent={handleContentChange} />
+    </div>
+  );
 }
