@@ -7,40 +7,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model passwords {
-  user_id             String?  @db.VarChar
-  time_created        DateTime @db.Timestamp(6)
-  cipher              String   @db.VarChar
-  title               String   @db.VarChar
-  service_url         String   @db.VarChar
-  service_description String?  @db.VarChar
-  password_id         Int      @id @default(autoincrement())
-  users               users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_passwords_users")
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  username      String?   @unique
+  createdAt     DateTime
+  updatedAt     DateTime
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("user")
 }
 
-model sas_table {
-  user_id    String   @id(map: "pk_sas_table") @db.VarChar
-  sas_token  String   @db.VarChar
-  start_time DateTime @db.Timestamp(6)
-  end_time   DateTime @db.Timestamp(6)
-  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sas_users")
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
 }
 
-model users {
-  user_id       String      @id @db.VarChar
-  creation_date DateTime    @db.Timestamp(6)
-  phash         String?     @db.VarChar
-  locked        String?     @db.Bit(1)
-  note_data     String?
-  passwords     passwords[]
-  sas_table     sas_table?
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
 }
 
-model shares {
-  name          String   @id @db.VarChar
-  publicBlobURL String   @db.VarChar
-  uuid          String   @db.VarChar
-  owner         String   @db.VarChar
-  time_created  DateTime @db.Timestamp(6)
-  source_etag   String   @default("") @db.VarChar(255)
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model WebKey {
+  id         String   @id
+  publicKey  String
+  privateKey String
+  createdAt  DateTime
+
+  @@map("web_key")
+}
+
+model Jwks {
+  id         String   @id
+  publicKey  String
+  privateKey String
+  createdAt  DateTime
+
+  @@map("jwks")
 }

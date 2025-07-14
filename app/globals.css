@@ -42,3 +42,28 @@ body {
 .fg-grad-r {
   background: linear-gradient(to right, #1d4ed8, #60a5fa, #f3f4f6);
 }
+
+/* Remove browser autofill background and keep your custom styles */
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0a0a0a inset !important;
+  box-shadow: 0 0 0 1000px #0a0a0a inset !important;
+  -webkit-text-fill-color: #ededed !important;
+  caret-color: #ededed !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* For dark mode, adjust colors accordingly */
+@media (prefers-color-scheme: dark) {
+  input:-webkit-autofill,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #0a0a0a inset !important;
+    box-shadow: 0 0 0 1000px #0a0a0a inset !important;
+    -webkit-text-fill-color: #ededed !important;
+    caret-color: #ededed !important;
+  }
+}
