@@ -1,12 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import Typewriter from "typewriter-effect";
 import { TailSpin } from "react-loading-icons";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/navbar";
 
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -15,23 +15,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen w-full px-8 mx-auto max-w-7xl">
-      <nav className="w-full px-8 py-4 h-20 flex items-center justify-center">
-        <ul className="w-full flex justify-between">
-          <li className="flex items-center justify-center cursor-pointer">
-            <Image
-              src="/navLogo.png"
-              width={40}
-              height={32}
-              alt="logo"
-              className="mr-4 h-8 w-12"
-            />
-            <h1 className="text-2xl font-bold">FileGilla</h1>
-          </li>
-          <li className="flex cc">
-            Sign In
-          </li>
-        </ul>
-      </nav>
+      <Navbar />
 
       <main className="flex-grow flex flex-col items-center">
         <div className="w-full h-[165px] max-w-[900px] mx-auto flex flex-col mt-16 text-7xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { Space_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster"
+import Navbar from "@/components/navbar";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
