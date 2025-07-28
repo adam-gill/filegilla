@@ -1,31 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import Files from "@/components/files";
-import SearchBar from "@/components/search";
-import AddContent from "@/components/addContent";
+import { useAuth } from "@/components/auth/auth-wrapper";
+import ProtectedRoute from "@/components/auth/protected-route";
 
-const Dashboard = () => {
-  const [fileName, setFileName] = useState<string | null>("");
-  const [search, setSearch] = useState<string>("");
+export default function Dashboard() {
+  return (
+    <ProtectedRoute>
+      <div className="flex flex-col min-h-screen w-full px-8 mx-auto max-w-7xl">
+        <div>Account Info:</div>
+        <AccountInfo />
+      </div>
+    </ProtectedRoute>
+  );
+}
+function AccountInfo() {
+  const { userData } = useAuth()
 
   return (
     <>
-      <div className="w-full py-10">
-        <div className="w-full max-w-6xl px-6 mx-auto flex flex-col cc">
-          <div className="flex w-full h-fit flex-row items-center justify-between max-sm:justify-center mb-6">
-            <AddContent
-              fileName={fileName}
-              setFileName={setFileName}
-              className="sm:max-w-[50%] mr-2"
-            />
-            <SearchBar search={search} setSearch={setSearch} />
-          </div>
-          <Files fileName={fileName} search={search} />
+      {userData && (
+        <div>
+          <div>Name: {userData.name}</div>
+          <div>Email: {userData.email}</div>
+          <div>Username: {userData.username}</div>
         </div>
-      </div>
+      )}
     </>
   );
-};
-
-export default Dashboard;
+}

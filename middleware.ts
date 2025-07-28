@@ -1,19 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
-const SESSION_COOKIE_NAME = "better-auth.session_token";
+const protectedRoutes = [
+  '/dashboard',
+  '/account',
+  '/passwords',
+  '/view'
+];
+
+const publicRoutes = [
+  '/',
+  '/landing',
+  '/signin',
+  '/signup',
+  '/privacy',
+  '/terms'
+];
 
 export function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname === "/") {
-    const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const { pathname } = request.nextUrl;
+  
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+  
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
 
-    if (!sessionToken) {
-      return NextResponse.redirect(new URL("/landing", request.url));
-    }
+  if (isProtectedRoute) {
     return NextResponse.next();
   }
+
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/"],
-};
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
+}; 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import { authClient } from '@/lib/auth/auth-client';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { TailSpin } from 'react-loading-icons';
 import { FiXCircle } from 'react-icons/fi';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const signInSchema = z.object({
   email: z.email(),
@@ -37,6 +38,9 @@ export default function SignInForm() {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
 
   const signInForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -52,9 +56,9 @@ export default function SignInForm() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const { error, data } = await authClient.signIn.email({
+      const { error } = await authClient.signIn.email({
         ...values,
-        callbackURL: "/"
+        callbackURL: "/dashboard"
       });
       if (error) {
         setErrorMsg(error.message || 'Sign in failed.');
@@ -70,9 +74,9 @@ export default function SignInForm() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const { error, data } = await authClient.signUp.email({
+      const { error } = await authClient.signUp.email({
         ...values,
-        callbackURL: "/"
+        callbackURL: "/dashboard"
       });
       if (error) {
         setErrorMsg(error.message || 'Sign up failed.');
@@ -90,7 +94,7 @@ export default function SignInForm() {
     try {
       const { error } = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: "/"
+        callbackURL: "/dashboard"
       });
       if (error) {
         setErrorMsg(error.message || 'Google sign in failed.');
@@ -106,7 +110,7 @@ export default function SignInForm() {
     try {
       const { error } = await authClient.signIn.social({
         provider: 'github',
-        callbackURL: "/"
+        callbackURL: "/dashboard"
       });
       if (error) {
         setErrorMsg(error.message || 'GitHub sign in failed.');
@@ -115,6 +119,18 @@ export default function SignInForm() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const modeFromUrl = searchParams.get("signUp");
+
+    if (modeFromUrl === "1") {
+      setMode("signup");
+    } else {
+      setMode("signin");
+    }
+
+    router.replace("/auth");
+  }, [])
 
   return (
     <Card className="w-[500px]">
@@ -248,9 +264,9 @@ export default function SignInForm() {
         )}
         <p className="text-center text-base mt-4">
           {mode === 'signin' ? (
-            <>Don't have an account? <button type="button" className="text-white hover:underline font-bold" onClick={() => setMode('signup')} disabled={loading}>Sign up</button></>
+            <>Don't have an account? <button type="button" className="text-white hover:underline font-bold cursor-pointer" onClick={() => setMode('signup')} disabled={loading}>Sign up</button></>
           ) : (
-            <>Already have an account? <button type="button" className="text-white hover:underline font-bold" onClick={() => setMode('signin')} disabled={loading}>Sign in</button></>
+            <>Already have an account? <button type="button" className="text-white hover:underline font-bold cursor-pointer" onClick={() => setMode('signin')} disabled={loading}>Sign in</button></>
           )}
         </p>
       </CardContent>

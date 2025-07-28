@@ -1,4 +1,4 @@
-"use server";
+"use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -7,13 +7,18 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import { getInitials, getUserData } from "@/lib/auth/userData";
+import { getInitials } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "./auth/auth-wrapper";
 
-export default async function Navbar() {
+interface NavbarProps {
+  isLanding?: boolean;
+}
 
-  const userData = await getUserData();
+export default function Navbar({ isLanding }: NavbarProps) {
+
+  const { userData } = useAuth();
 
   return (
     <header className="w-full py-2">
@@ -34,22 +39,25 @@ export default async function Navbar() {
                 </span>
               </NavigationMenuLink>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink href="/dashboard" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                Dashboard
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink href="/passwords" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                Passwords
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+            {!isLanding && <>
+              <NavigationMenuItem>
+                <NavigationMenuLink href="/dashboard" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
+                  Dashboard
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink href="/passwords" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
+                  Passwords
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+            </>}
           </NavigationMenuList>
         </NavigationMenu>
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
-              {userData ? (
+              {userData && !isLanding ? (
                 <NavigationMenuLink href={"/account"} className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
                   <Avatar>
                     <AvatarImage src={userData.image || ""} alt="User avatar" />
@@ -59,7 +67,7 @@ export default async function Navbar() {
                   </Avatar>
                 </NavigationMenuLink>
               ) : (
-                <Link href={"/signin"}>Sign In</Link>
+                <Link className="border-white border-2 px-4 py-2 rounded-xl text-lg font-bold hover:bg-white hover:text-black trans" href={"/auth"}>Sign In</Link>
               )}
             </NavigationMenuItem>
           </NavigationMenuList>

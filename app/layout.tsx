@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { Space_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster"
-import Navbar from "@/components/navbar";
+import ServerAuthProvider from "@/components/auth/server-auth-provider";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -34,7 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn("antialiased", spaceGrotesk.className)}>
-        {children}
+        <ServerAuthProvider>
+          {children}
+        </ServerAuthProvider>
         <Toaster />
       </body>
     </html>
