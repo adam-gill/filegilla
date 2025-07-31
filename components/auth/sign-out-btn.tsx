@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 
-export default function SignInBtn() {
+export default function SignOutBtn() {
     const [loading, setLoading] = useState<boolean>(false);
     const router = useRouter();
 
@@ -17,7 +17,6 @@ export default function SignInBtn() {
             console.log("Failed to sign user out", error);
         } finally {
             setLoading(false);
-            router.push("/");
         }
     }
 

@@ -50,3 +50,5 @@ export const auth = betterAuth({
   },
   plugins: [jwt()],
 });
+
+type Session = typeof auth.$Infer.Session

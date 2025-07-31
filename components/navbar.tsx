@@ -7,18 +7,18 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
+import { authClient } from "@/lib/auth/auth-client";
 import { getInitials } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuth } from "./auth/auth-wrapper";
 
 interface NavbarProps {
   isLanding?: boolean;
 }
 
 export default function Navbar({ isLanding }: NavbarProps) {
-
-  const { userData } = useAuth();
+  const { data: session } = authClient.useSession();
+  const userData = session?.user;
 
   return (
     <header className="w-full py-2">
@@ -57,18 +57,27 @@ export default function Navbar({ isLanding }: NavbarProps) {
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
-              {userData && !isLanding ? (
+              {!isLanding && (
                 <NavigationMenuLink href={"/account"} className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                  <Avatar>
-                    <AvatarImage src={userData.image || ""} alt="User avatar" />
-                    <AvatarFallback className="!bg-white">
-                      {getInitials(userData.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                                     {userData ? (
+                     <Avatar>
+                       <AvatarImage src={userData.image || ""} alt="User avatar" />
+                       <AvatarFallback className="text-white">
+                         {getInitials(userData.name)}
+                       </AvatarFallback>
+                     </Avatar>
+
+                   ) : (
+                     <Avatar>
+                       <AvatarFallback className="!bg-black text-transparent">
+                         {"XX"}
+                       </AvatarFallback>
+                     </Avatar>
+                   )}
                 </NavigationMenuLink>
-              ) : (
-                <Link className="border-white border-2 px-4 py-2 rounded-xl text-lg font-bold hover:bg-white hover:text-black trans" href={"/auth"}>Sign In</Link>
               )}
+              {isLanding &&
+                <Link className="border-white border-2 px-4 py-2 rounded-xl text-lg font-bold hover:bg-white hover:text-black trans" href={"/auth"}>Sign In</Link>}
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
