@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,6 +11,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import { getInitials } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { Skeleton } from "./ui/skeleton";
 
 interface NavbarProps {
   isLanding?: boolean;
@@ -39,49 +40,63 @@ export default function Navbar({ isLanding }: NavbarProps) {
                 </span>
               </NavigationMenuLink>
             </NavigationMenuItem>
-            {!isLanding && <>
-              <NavigationMenuItem>
-                <NavigationMenuLink href="/dashboard" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                  Dashboard
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink href="/passwords" className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                  Passwords
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-
-            </>}
+            {!isLanding && (
+              <>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    href="/dashboard"
+                    className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  >
+                    Dashboard
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    href="/passwords"
+                    className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  >
+                    Passwords
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              </>
+            )}
           </NavigationMenuList>
         </NavigationMenu>
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
               {!isLanding && (
-                <NavigationMenuLink href={"/account"} className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                                     {userData ? (
-                     <Avatar>
-                       <AvatarImage src={userData.image || ""} alt="User avatar" />
-                       <AvatarFallback className="text-white">
-                         {getInitials(userData.name)}
-                       </AvatarFallback>
-                     </Avatar>
-
-                   ) : (
-                     <Avatar>
-                       <AvatarFallback className="!bg-black text-transparent">
-                         {"XX"}
-                       </AvatarFallback>
-                     </Avatar>
-                   )}
+                <NavigationMenuLink
+                  href={"/account"}
+                  className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                >
+                  {userData ? (
+                    <Avatar>
+                      <AvatarImage
+                        src={userData.image || ""}
+                        alt="User avatar"
+                      />
+                      <AvatarFallback className="text-white">
+                        {getInitials(userData.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <Skeleton className="rounded-full h-10 w-10 !bg-neutral-50/10" />
+                  )}
                 </NavigationMenuLink>
               )}
-              {isLanding &&
-                <Link className="border-white border-2 px-4 py-2 rounded-xl text-lg font-bold hover:bg-white hover:text-black trans" href={"/auth"}>Sign In</Link>}
+              {isLanding && (
+                <Link
+                  className="border-white border-2 px-4 py-2 rounded-xl text-lg font-bold hover:bg-white hover:text-black trans"
+                  href={"/auth"}
+                >
+                  Sign In
+                </Link>
+              )}
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>
     </header>
   );
-};
+}

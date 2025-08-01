@@ -1,4 +1,4 @@
-import AccountCard from "@/app/(main)/(routes)/account/components/accountCard";
+import AccountCard from "@/app/account/components/accountCard";
 
 const Account = () => {
   return (

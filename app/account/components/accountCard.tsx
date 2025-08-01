@@ -19,7 +19,6 @@ import { User } from "lucide-react";
 export default function AccountCard() {
     const { data: session, isPending } = authClient.useSession();
     const userData = session?.user;
-    console.log("session", session)
 
     if (isPending) {
         return (

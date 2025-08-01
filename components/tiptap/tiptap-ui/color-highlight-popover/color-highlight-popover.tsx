@@ -31,7 +31,7 @@ import {
 } from "@/components/tiptap/tiptap-ui/color-highlight-button"
 
 // --- Styles ---
-import "@/components/tiptap-ui/color-highlight-popover/color-highlight-popover.scss"
+import "@/components/tiptap/tiptap-ui/color-highlight-popover/color-highlight-popover.scss"
 
 export interface ColorHighlightPopoverColor {
   label: string

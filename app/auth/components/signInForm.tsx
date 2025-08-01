@@ -123,14 +123,14 @@ export default function SignInForm() {
   useEffect(() => {
     const modeFromUrl = searchParams.get("signUp");
 
+    console.log("modeValue", modeFromUrl)
+
     if (modeFromUrl === "1") {
       setMode("signup");
-    } else {
-      setMode("signin");
-    }
+    } 
 
     router.replace("/auth");
-  }, [])
+  }, [router, searchParams])
 
   return (
     <Card className="w-[500px]">
@@ -264,7 +264,7 @@ export default function SignInForm() {
         )}
         <p className="text-center text-base mt-4">
           {mode === 'signin' ? (
-            <>Don't have an account? <button type="button" className="text-white hover:underline font-bold cursor-pointer" onClick={() => setMode('signup')} disabled={loading}>Sign up</button></>
+            <>Don&#39;t have an account? <button type="button" className="text-white hover:underline font-bold cursor-pointer" onClick={() => setMode('signup')} disabled={loading}>Sign up</button></>
           ) : (
             <>Already have an account? <button type="button" className="text-white hover:underline font-bold cursor-pointer" onClick={() => setMode('signin')} disabled={loading}>Sign in</button></>
           )}

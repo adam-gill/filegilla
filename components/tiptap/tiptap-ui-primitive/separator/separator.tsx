@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import "@/components/tiptap-ui-primitive/separator/separator.scss"
+import "@/components/tiptap/tiptap-ui-primitive/separator/separator.scss"
 
 type Orientation = "horizontal" | "vertical"
 

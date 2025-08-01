@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { generateUsername } from "../generate-username";
+import { generateUsername } from "./generate-username";
 import { prisma } from "@/lib/prisma";
 import { jwt } from "better-auth/plugins";
 
@@ -38,7 +38,7 @@ export const auth = betterAuth({
             username?: string | null;
           };
           if (!extendedUser.username && extendedUser.name) {
-            let username = generateUsername(extendedUser.name);
+            const username = generateUsername(extendedUser.name);
             await prisma.user.update({
               where: { id: user.id },
               data: { username },
@@ -50,5 +50,3 @@ export const auth = betterAuth({
   },
   plugins: [jwt()],
 });
-
-type Session = typeof auth.$Infer.Session

@@ -16,7 +16,6 @@ export const Link = TiptapLink.extend({
   },
 
   addProseMirrorPlugins(): Plugin[] {
-    // @ts-expect-error - Tiptap types are not fully compatible with TypeScript
     const { editor } = this
 
     return [

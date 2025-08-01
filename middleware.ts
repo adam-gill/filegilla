@@ -11,15 +11,14 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
+  const sessionToken = request.cookies.get("better-auth.session_token");
   if (isProtectedRoute) {
-    const sessionToken = request.cookies.get("better-auth.session_token");
-    console.log(sessionToken);
 
     if (!sessionToken) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   } else {
-    if (pathname === "/") {
+    if (pathname === "/" && sessionToken) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

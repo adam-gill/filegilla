@@ -39,10 +39,10 @@ import {
 
 // --- Tiptap Node ---
 import { ImageUploadNode } from "@/components/tiptap/tiptap-node/image-upload-node/image-upload-node-extension";
-import "@/components/tiptap-node/code-block-node/code-block-node.scss";
-import "@/components/tiptap-node/list-node/list-node.scss";
-import "@/components/tiptap-node/image-node/image-node.scss";
-import "@/components/tiptap-node/paragraph-node/paragraph-node.scss";
+import "@/components/tiptap/tiptap-node/code-block-node/code-block-node.scss";
+import "@/components/tiptap/tiptap-node/list-node/list-node.scss";
+import "@/components/tiptap/tiptap-node/image-node/image-node.scss";
+import "@/components/tiptap/tiptap-node/paragraph-node/paragraph-node.scss";
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap/tiptap-ui/heading-dropdown-menu";
@@ -79,7 +79,7 @@ import { ThemeToggle } from "@/components/tiptap/simple/theme-toggle";
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
 
 // --- Styles ---
-import "@/components/tiptap-templates/simple/simple-editor.scss";
+import "@/components/tiptap/simple/simple-editor.scss";
 import { FontSizeInput } from "@/components/tiptap/tiptap-ui/font-size-input";
 
 import { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion";

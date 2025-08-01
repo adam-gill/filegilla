@@ -1,11 +1,11 @@
 'use client'
 
 import { SimpleEditor } from "@/components/tiptap/simple/simple-editor"
-import { useState, useRef } from "react"
+import { useState } from "react"
 
 export default function Note() {
   const [content, setContent] = useState<string>("");
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 
 
