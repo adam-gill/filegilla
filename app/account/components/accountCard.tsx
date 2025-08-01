@@ -69,7 +69,7 @@ export default function AccountCard() {
                 <CardHeader className="flex flex-row items-center gap-4">
                     <Avatar className="w-16 h-16 font-bold text-lg border-px border-black">
                         <AvatarImage
-                            src={userData?.image || ""}
+                            src={userData?.image || undefined}
                             alt={userData?.name || "Avatar Image"}
                         />
                         <AvatarFallback className="!bg-black text-2xl">

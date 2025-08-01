@@ -175,7 +175,7 @@ export default function SignInForm() {
                 </div>
               </button>
             </div>
-            <Button type="submit" className="w-full text-lg font-bold" disabled={loading}>
+            <Button type="submit" className="w-full text-lg font-bold cursor-pointer" disabled={loading}>
               {loading ? <TailSpin stroke="#000" width={24} height={24} speed={3} /> : 'Sign In'}
             </Button>
             {errorMsg && (
@@ -245,7 +245,7 @@ export default function SignInForm() {
                 </div>
               </button>
             </div>
-            <Button type="submit" className="w-full text-lg font-bold" disabled={loading}>
+            <Button type="submit" className="w-full text-lg font-bold cursor-pointer" disabled={loading}>
               {loading ? <TailSpin stroke="#000" width={24} height={24} speed={3} /> : 'Sign Up'}
             </Button>
             {errorMsg && (
@@ -271,10 +271,10 @@ export default function SignInForm() {
         </p>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
-        <Button variant="outline" className="w-full text-base font-bold" onClick={onGoogle} disabled={loading}>
+        <Button variant="outline" className="w-full text-base font-bold cursor-pointer" onClick={onGoogle} disabled={loading}>
           <FcGoogle className="mr-2 h-6 w-6" /> Google
         </Button>
-        <Button variant="outline" className="w-full text-base font-bold" onClick={onGithub} disabled={loading}>
+        <Button variant="outline" className="w-full text-base font-bold cursor-pointer" onClick={onGithub} disabled={loading}>
           <FaGithub className="mr-2 h-6 w-6" /> GitHub
         </Button>
       </CardFooter>
