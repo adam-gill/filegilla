@@ -11,9 +11,15 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  const sessionToken = request.cookies.get("better-auth.session_token");
-  if (isProtectedRoute) {
+  let sessionToken;
 
+  if (process.env.NODE_ENV === "production") {
+    sessionToken = request.cookies.get("__Secure-better-auth.session_token");
+  } else {
+    sessionToken = request.cookies.get("better-auth.session_token");
+  }
+
+  if (isProtectedRoute) {
     if (!sessionToken) {
       return NextResponse.redirect(new URL("/", request.url));
     }
