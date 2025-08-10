@@ -5,7 +5,6 @@ const protectedRoutes = ["/dashboard"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  console.log(pathname);
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)

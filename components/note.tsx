@@ -7,9 +7,6 @@ export default function Note() {
   const [content, setContent] = useState<string>("");
   // const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-
-
-
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
   };
