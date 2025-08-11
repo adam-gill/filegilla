@@ -10,6 +10,7 @@ import {
   S3Client,
   PutObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 
 const S3_ACCESS_ROLE_ARN = process.env.S3_ACCESS_ROLE_ARN!;
@@ -133,3 +134,87 @@ export const createFolder = async (
     return { success: false, message: "An error occurred on the server." };
   }
 };
+
+// Type for folder contents
+interface FolderItem {
+  name: string;
+  type: 'file' | 'folder';
+  size?: number;
+  lastModified?: Date;
+  path: string;
+  etag?: string;
+}
+
+export const listFolderContents = async (location: string[]): Promise<{ success: boolean, contents: FolderItem[], message: string }> => {
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const userId = session?.user.id
+
+  if (!userId) {
+    return { success: false, contents: [], message: "User is not authenticated." };
+  }
+
+  const key = createS3Key(userId, location);
+  
+  try {
+    const s3Client = await getScopedS3Client(userId);
+    
+    const command = new ListObjectsV2Command({
+      Bucket: S3_BUCKET_NAME,
+      Prefix: key,
+      Delimiter: '/',
+    });
+
+    const response = await s3Client.send(command);
+    
+    const contents: FolderItem[] = [];
+    
+    // Add folders (CommonPrefixes)
+    if (response.CommonPrefixes) {
+      for (const prefix of response.CommonPrefixes) {
+        if (prefix.Prefix) {
+          const folderName = prefix.Prefix.replace(key, '').replace('/', '');
+          contents.push({
+            name: folderName,
+            type: 'folder',
+            path: prefix.Prefix,
+          });
+        }
+      }
+    }
+    
+    // Add files (Contents)
+    if (response.Contents) {
+      for (const object of response.Contents) {
+        if (object.Key && object.Key !== key) {
+          const fileName = object.Key.replace(key, '');
+          if (fileName && !fileName.includes('/')) {
+            contents.push({
+              name: fileName,
+              type: 'file',
+              size: object.Size,
+              lastModified: object.LastModified,
+              path: object.Key,
+              etag: object.ETag
+            });
+          }
+        }
+      }
+    }
+    
+    return {
+      success: true,
+      contents,
+      message: `Found ${contents.length} items in folder.`,
+    };
+  } catch (error) {
+    console.error("Failed to list folder contents:", error);
+    return { 
+      success: false, 
+      contents: [], 
+      message: "An error occurred while listing folder contents." 
+    };
+  }
+}
