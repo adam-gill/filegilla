@@ -5,7 +5,6 @@ import { auth } from "@/lib/auth/auth";
 import {
   STSClient,
   AssumeRoleCommand,
-  AssumeRoleCommandOutput,
 } from "@aws-sdk/client-sts";
 import {
   S3Client,
@@ -42,8 +41,19 @@ const getScopedS3Client = async (userId: string): Promise<S3Client> => {
   });
 };
 
+const createS3Key = (userId: string, location: string[], folderName?: string): string => {
+  const parts = ['private', userId, ...location];
+  if (folderName) {
+    parts.push(folderName);
+  }
+  
+  const cleanPath = parts.filter(part => part.trim() !== '').join('/');
+  return cleanPath.endsWith('/') ? cleanPath : cleanPath + '/';
+};
+
 export const folderNameExists = async (
-  folderName: string
+  folderName: string,
+  location: string[],
 ): Promise<boolean> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -56,9 +66,12 @@ export const folderNameExists = async (
 
   try {
     const s3Client = await getScopedS3Client(userId);
+
+    const key = createS3Key(userId, location, folderName);
+    
     const command = new HeadObjectCommand({
       Bucket: S3_BUCKET_NAME,
-      Key: `private/${userId}/${folderName}/`,
+      Key: key,
     });
 
     await s3Client.send(command);
@@ -74,7 +87,8 @@ export const folderNameExists = async (
 
 
 export const createFolder = async (
-  folderName: string
+  folderName: string,
+  location: string[],
 ): Promise<{ success: boolean; message: string }> => {
 
     const session = await auth.api.getSession({
@@ -91,7 +105,7 @@ export const createFolder = async (
   }
 
   try {
-    const nameExists = await folderNameExists(folderName);
+    const nameExists = await folderNameExists(folderName, location);
     if (nameExists) {
       return {
         success: false,
@@ -100,10 +114,12 @@ export const createFolder = async (
     }
 
     const s3Client = await getScopedS3Client(userId);
+    const key = createS3Key(userId, location, folderName);
+    
     const command = new PutObjectCommand({
       Bucket: S3_BUCKET_NAME,
-      Key: `private/${userId}/${folderName}/`,
-      Body: "",
+      Key: key,
+      Body: Buffer.from(""),
     });
 
     await s3Client.send(command);

@@ -7,7 +7,7 @@ export default function Dashboard() {
   return (
     <>
       <Info />
-      <AddContent />
+      <AddContent location={[]} />
     </>
   );
 }

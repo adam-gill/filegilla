@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Folder, Upload, FolderPlus, FileText, Image, Video, Music } from "lucide-react";
+import { Plus, Folder, Upload, FolderPlus, FileText } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,8 +21,13 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { createFolder } from "../actions";
+import { toast } from "@/hooks/use-toast";
 
-export default function AddContent() {
+interface AddContentProps {
+    location: string[];
+}
+
+export default function AddContent({ location }: AddContentProps) {
     const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
     const [folderName, setFolderName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
@@ -40,9 +45,14 @@ export default function AddContent() {
             return "Folder name cannot contain: < > : \" / \\ | ? * or control characters";
         }
 
-        // Check for leading/trailing spaces and dots
-        if (name.startsWith(" ") || name.endsWith(" ") || name.startsWith(".") || name.endsWith(".")) {
-            return "Folder name cannot start or end with spaces or dots";
+        // Check for any spaces
+        if (name.includes(" ")) {
+            return "Folder name cannot contain spaces";
+        }
+
+        // Check for leading/trailing dots
+        if (name.startsWith(".") || name.endsWith(".")) {
+            return "Folder name cannot start or end with dots";
         }
 
         if (name.length > 255) {
@@ -66,11 +76,6 @@ export default function AddContent() {
         console.log("Folder upload clicked");
     };
 
-    const handleNewFolder = () => {
-        // This will be handled by the dialog trigger
-        console.log("New folder clicked");
-    };
-
     const handleNewDocument = () => {
         // Handle new document creation logic
         console.log("New document clicked");
@@ -78,28 +83,41 @@ export default function AddContent() {
 
     const handleCreateFolder = async () => {
         if (!folderName.trim()) return;
-        
+
         // Validate folder name before creating
         const error = validateFolderName(folderName);
         if (error) {
             setValidationError(error);
             return;
         }
-        
+
         setIsCreating(true);
         try {
-            const result = await createFolder(folderName.trim());
+            const result = await createFolder(folderName.trim(), location);
             if (result.success) {
-                console.log("Folder created:", result.message);
+                toast({
+                    title: "Success!",
+                    description: `Folder '${folderName}' was successfully created.`,
+                    variant: "good"
+                })
                 setFolderName("");
                 setValidationError("");
                 setIsFolderDialogOpen(false);
             } else {
-                console.error("Failed to create folder:", result.message);
+                toast({
+                    title: "Error",
+                    description: `Failed to create folder. Error: ${result.message}`,
+                    variant: "destructive"
+                })
                 setValidationError(result.message);
             }
-        } catch (error) {
-            console.error("Error creating folder:", error);
+        } catch {
+
+            toast({
+                title: "Error",
+                description: "Failed to create folder. Error: Unknown",
+                variant: "destructive"
+            })
             setValidationError("An unexpected error occurred");
         } finally {
             setIsCreating(false);
@@ -122,7 +140,7 @@ export default function AddContent() {
                     <Button
                         type="button"
                         variant={"pretty"}
-                        className="w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
+                        className="cursor-pointer w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
                     >
                         <Plus className="w-8 h-8 mr-2" strokeWidth={2} />
                         Add
@@ -183,9 +201,8 @@ export default function AddContent() {
                                 setValidationError(validateFolderName(newName));
                             }}
                             onKeyDown={handleKeyPress}
-                            className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${
-                                validationError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
-                            }`}
+                            className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${validationError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""
+                                }`}
                             autoFocus
                             disabled={isCreating}
                         />
@@ -195,7 +212,7 @@ export default function AddContent() {
                     </div>
                     <AlertDialogFooter>
                         <AlertDialogCancel
-                            className="text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
+                            className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
                             disabled={isCreating}
                             onClick={() => {
                                 setFolderName("");
@@ -207,7 +224,7 @@ export default function AddContent() {
                         <AlertDialogAction
                             onClick={handleCreateFolder}
                             disabled={!folderName.trim() || isCreating || !!validationError}
-                            className="text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+                            className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
                         >
                             {isCreating ? "Creating..." : "Create"}
                         </AlertDialogAction>

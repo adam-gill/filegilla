@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const protectedRoutes = ["/dashboard"];
+const protectedRoutes = ["/u"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -24,7 +24,7 @@ export function middleware(request: NextRequest) {
     }
   } else {
     if (pathname === "/" && sessionToken) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/u", request.url));
     }
   }
 

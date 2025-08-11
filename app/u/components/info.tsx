@@ -13,6 +13,7 @@ export default function Info() {
                     <div>Name: {userData.name}</div>
                     <div>Email: {userData.email}</div>
                     <div>Username: {userData.username}</div>
+                    <div>User ID: {userData.id}</div>
                 </div>
             )}
         </>

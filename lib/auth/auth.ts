@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { generateUsername } from "./generate-username";
 import { prisma } from "@/lib/prisma";
 import { jwt } from "better-auth/plugins";
+import { createUserFolder } from "./actions";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -43,6 +44,7 @@ export const auth = betterAuth({
               where: { id: user.id },
               data: { username },
             });
+            await createUserFolder(user.id);
           }
         },
       },

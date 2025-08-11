@@ -58,7 +58,7 @@ export default function SignInForm() {
     try {
       const { error } = await authClient.signIn.email({
         ...values,
-        callbackURL: "/dashboard"
+        callbackURL: "/u"
       });
       if (error) {
         setErrorMsg(error.message || 'Sign in failed.');
@@ -76,7 +76,7 @@ export default function SignInForm() {
     try {
       const { error } = await authClient.signUp.email({
         ...values,
-        callbackURL: "/dashboard"
+        callbackURL: "/u"
       });
       if (error) {
         setErrorMsg(error.message || 'Sign up failed.');
@@ -94,7 +94,7 @@ export default function SignInForm() {
     try {
       const { error } = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: "/dashboard"
+        callbackURL: "/u"
       });
       if (error) {
         setErrorMsg(error.message || 'Google sign in failed.');
@@ -110,7 +110,7 @@ export default function SignInForm() {
     try {
       const { error } = await authClient.signIn.social({
         provider: 'github',
-        callbackURL: "/dashboard"
+        callbackURL: "/u"
       });
       if (error) {
         setErrorMsg(error.message || 'GitHub sign in failed.');
