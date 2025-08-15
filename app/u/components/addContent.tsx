@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { createFolder } from "../actions";
 import { toast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface AddContentProps {
     location: string[];
@@ -32,6 +33,7 @@ export default function AddContent({ location }: AddContentProps) {
     const [folderName, setFolderName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [validationError, setValidationError] = useState("");
+    const router = useRouter();
 
     // Folder name validation function
     const validateFolderName = (name: string): string => {
@@ -103,6 +105,7 @@ export default function AddContent({ location }: AddContentProps) {
                 setFolderName("");
                 setValidationError("");
                 setIsFolderDialogOpen(false);
+                router.refresh();
             } else {
                 toast({
                     title: "Error",
@@ -146,7 +149,7 @@ export default function AddContent({ location }: AddContentProps) {
                         Add
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-gray-800 border border-gray-600 rounded-lg shadow-xl shadow-white p-1">
+                <DropdownMenuContent className="!z-100 w-56 !bg-gray-900 border border-gray-600 !rounded-lg !shadow-lg !shadow-gray-800 p-1">
                     <DropdownMenuItem
                         className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
                         onSelect={handleFileUpload}

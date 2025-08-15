@@ -2,10 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/auth";
-import {
-  STSClient,
-  AssumeRoleCommand,
-} from "@aws-sdk/client-sts";
+import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 import {
   S3Client,
   PutObjectCommand,
@@ -42,19 +39,23 @@ const getScopedS3Client = async (userId: string): Promise<S3Client> => {
   });
 };
 
-const createS3Key = (userId: string, location: string[], folderName?: string): string => {
-  const parts = ['private', userId, ...location];
+const createS3Key = (
+  userId: string,
+  location: string[],
+  folderName?: string
+): string => {
+  const parts = ["private", userId, ...location];
   if (folderName) {
     parts.push(folderName);
   }
-  
-  const cleanPath = parts.filter(part => part.trim() !== '').join('/');
-  return cleanPath.endsWith('/') ? cleanPath : cleanPath + '/';
+
+  const cleanPath = parts.filter((part) => part.trim() !== "").join("/");
+  return cleanPath.endsWith("/") ? cleanPath : cleanPath + "/";
 };
 
 export const folderNameExists = async (
   folderName: string,
-  location: string[],
+  location: string[]
 ): Promise<boolean> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -69,7 +70,7 @@ export const folderNameExists = async (
     const s3Client = await getScopedS3Client(userId);
 
     const key = createS3Key(userId, location, folderName);
-    
+
     const command = new HeadObjectCommand({
       Bucket: S3_BUCKET_NAME,
       Key: key,
@@ -86,13 +87,11 @@ export const folderNameExists = async (
   }
 };
 
-
 export const createFolder = async (
   folderName: string,
-  location: string[],
+  location: string[]
 ): Promise<{ success: boolean; message: string }> => {
-
-    const session = await auth.api.getSession({
+  const session = await auth.api.getSession({
     headers: await headers(),
   });
 
@@ -116,7 +115,7 @@ export const createFolder = async (
 
     const s3Client = await getScopedS3Client(userId);
     const key = createS3Key(userId, location, folderName);
-    
+
     const command = new PutObjectCommand({
       Bucket: S3_BUCKET_NAME,
       Key: key,
@@ -135,75 +134,170 @@ export const createFolder = async (
   }
 };
 
+export const validatePath = async (
+  location: string[]
+): Promise<{ valid: boolean; type: "folder" | "file" | null }> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    const userId = session?.user.id;
+
+    if (!userId) {
+      throw new Error("User not authenticated");
+    }
+
+    const key = createS3Key(userId, location).slice(0, -1);
+    const s3Client = await getScopedS3Client(userId);
+
+    try {
+      const headCommand = new HeadObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: key,
+      });
+      
+      await s3Client.send(headCommand);
+      
+      return {
+        valid: true,
+        type: "file",
+      };
+    } catch (error: any) {
+      if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
+        try {
+          const folderPrefix = key.endsWith('/') ? key : key + '/';
+          
+          const listCommand = new ListObjectsV2Command({
+            Bucket: S3_BUCKET_NAME,
+            Prefix: folderPrefix,
+            MaxKeys: 1,
+            Delimiter: '/',
+          });
+          
+          const response = await s3Client.send(listCommand);
+          
+          const hasFiles = response.Contents && response.Contents.length > 0;
+          const hasSubfolders = response.CommonPrefixes && response.CommonPrefixes.length > 0;
+          
+          if (hasFiles || hasSubfolders) {
+            return {
+              valid: true,
+              type: "folder",
+            };
+          }
+          
+          try {
+            const folderMarkerCommand = new HeadObjectCommand({
+              Bucket: S3_BUCKET_NAME,
+              Key: folderPrefix,
+            });
+            
+            await s3Client.send(folderMarkerCommand);
+            
+            return {
+              valid: true,
+              type: "folder",
+            };
+          } catch (markerError) {
+            console.log("No folder marker, continue to return invalid")
+          }
+          
+        } catch (listError) {
+          console.log("Error listing objects for folder validation:", listError);
+        }
+      } else {
+        console.log("Error during HeadObject:", error);
+      }
+    }
+
+    return {
+      valid: false,
+      type: null,
+    };
+
+  } catch (error) {
+    console.log("Error trying to validate path. Error: ", error);
+    return {
+      valid: false,
+      type: null,
+    };
+  }
+};
+
 // Type for folder contents
-interface FolderItem {
+export interface FolderItem {
   name: string;
-  type: 'file' | 'folder';
+  type: "file" | "folder";
   size?: number;
   lastModified?: Date;
   path: string;
   etag?: string;
 }
 
-export const listFolderContents = async (location: string[]): Promise<{ success: boolean, contents: FolderItem[], message: string }> => {
-
+export const listFolderContents = async (
+  location: string[]
+): Promise<{ success: boolean; contents: FolderItem[]; message: string }> => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  const userId = session?.user.id
+  const userId = session?.user.id;
 
   if (!userId) {
-    return { success: false, contents: [], message: "User is not authenticated." };
+    return {
+      success: false,
+      contents: [],
+      message: "User is not authenticated.",
+    };
   }
 
   const key = createS3Key(userId, location);
-  
+
   try {
     const s3Client = await getScopedS3Client(userId);
-    
+
     const command = new ListObjectsV2Command({
       Bucket: S3_BUCKET_NAME,
       Prefix: key,
-      Delimiter: '/',
+      Delimiter: "/",
     });
 
     const response = await s3Client.send(command);
-    
+
     const contents: FolderItem[] = [];
-    
+
     // Add folders (CommonPrefixes)
     if (response.CommonPrefixes) {
       for (const prefix of response.CommonPrefixes) {
         if (prefix.Prefix) {
-          const folderName = prefix.Prefix.replace(key, '').replace('/', '');
+          const folderName = prefix.Prefix.replace(key, "").replace("/", "");
           contents.push({
             name: folderName,
-            type: 'folder',
+            type: "folder",
             path: prefix.Prefix,
           });
         }
       }
     }
-    
+
     // Add files (Contents)
     if (response.Contents) {
       for (const object of response.Contents) {
         if (object.Key && object.Key !== key) {
-          const fileName = object.Key.replace(key, '');
-          if (fileName && !fileName.includes('/')) {
+          const fileName = object.Key.replace(key, "");
+          if (fileName && !fileName.includes("/")) {
             contents.push({
               name: fileName,
-              type: 'file',
+              type: "file",
               size: object.Size,
               lastModified: object.LastModified,
               path: object.Key,
-              etag: object.ETag
+              etag: object.ETag,
             });
           }
         }
       }
     }
-    
+
     return {
       success: true,
       contents,
@@ -211,10 +305,10 @@ export const listFolderContents = async (location: string[]): Promise<{ success:
     };
   } catch (error) {
     console.error("Failed to list folder contents:", error);
-    return { 
-      success: false, 
-      contents: [], 
-      message: "An error occurred while listing folder contents." 
+    return {
+      success: false,
+      contents: [],
+      message: "An error occurred while listing folder contents.",
     };
   }
-}
+};

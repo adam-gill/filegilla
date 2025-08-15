@@ -1,20 +1,26 @@
-import { listFolderContents } from "../actions";
+import { cn } from "@/lib/utils";
+import { FolderItem } from "../actions";
 import Item from "./item";
 
+interface ItemsLayoutProps {
+    contents: FolderItem[];
+    className?: string;
+}
+
+export default function ItemsLayout({ contents, className }: ItemsLayoutProps) {
 
 
-export default async function ItemsLayout() {
 
-    const loadContents = async () => {
-        const { contents } = await listFolderContents([]);
-        return contents;
-    }
-
-    const contents = await loadContents();
+    const sortedContents = contents.sort((a, b) => {
+        if (a.type === b.type) {
+            return 0;
+        }
+        return a.type === 'folder' ? -1 : 1;
+    });
 
     return (
-        <div>
-            {contents.map((content, index) => (
+        <div className={cn("flex flex-wrap w-full gap-4", className)}>
+            {sortedContents.map((content, index) => (
                 <Item key={index} item={content} />
             ))}
         </div>

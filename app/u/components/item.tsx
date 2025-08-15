@@ -25,6 +25,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@radix-ui/react-context-menu";
+import { usePathname, useRouter } from "next/navigation";
 
 // Type for folder contents
 interface FolderItem {
@@ -72,31 +73,11 @@ const getFileIcon = (fileName: string) => {
   return <File className="w-5 h-5 text-gray-400" />;
 };
 
-const formatFileSize = (bytes?: number): string => {
-  if (!bytes) return '';
-  
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  if (bytes === 0) return '0 Bytes';
-  
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-};
-
-const formatDate = (date?: Date): string => {
-  if (!date) return '';
-  
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
-};
-
 export default function Item({ item }: ItemProps) {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -120,10 +101,10 @@ export default function Item({ item }: ItemProps) {
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <Card className="group relative w-full max-w-sm bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-blue-400 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-xl">
+        <Card className="group relative w-xs bg-gray-800 hover:bg-gray-700 border !border-gray-600 hover:border-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl">
           <CardContent className="p-0 h-full flex flex-col">
             {/* Top Banner */}
-            <div className="flex items-center justify-between p-3 border-b border-gray-600">
+            <div className="flex items-center justify-between p-3">
               {/* Icon and Name */}
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <div className="flex-shrink-0">
@@ -135,8 +116,8 @@ export default function Item({ item }: ItemProps) {
                 </div>
                 
                 {/* Name with truncation */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-100 truncate">
+                <div onClick={() => router.push(`${pathname}/${item.name}`)} className="cursor-pointer flex-1 min-w-0">
+                  <p className="text-base font-medium text-gray-100 truncate">
                     {item.name}
                   </p>
                 </div>
@@ -147,7 +128,7 @@ export default function Item({ item }: ItemProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 hover:bg-gray-600 text-gray-300 hover:text-white"
+                  className="cursor-pointer h-8 w-8 p-0 hover:bg-gray-600 text-gray-300 hover:text-white"
                   onClick={handleOptionsClick}
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -186,25 +167,12 @@ export default function Item({ item }: ItemProps) {
                 )}
               </div>
             </div>
-
-            {/* Content Area */}
-            <div className="flex-1 p-3">
-              {/* File Info */}
-              <div className="space-y-1">
-                {item.type === 'file' && item.size && (
-                  <p className="text-xs text-gray-400">{formatFileSize(item.size)}</p>
-                )}
-                {item.lastModified && (
-                  <p className="text-xs text-gray-400">{formatDate(item.lastModified)}</p>
-                )}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </ContextMenuTrigger>
 
       {/* Right-click Context Menu */}
-      <ContextMenuContent className="min-w-[200px] bg-gray-800 rounded-md shadow-lg border border-gray-600 p-1">
+      <ContextMenuContent className="!z-100 min-w-[200px] bg-gray-800 rounded-md shadow-lg border border-gray-600 p-1">
         <ContextMenuItem className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
           <Edit className="mr-2 h-4 w-4" />
           Rename

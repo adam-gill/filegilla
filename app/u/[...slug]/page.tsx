@@ -1,4 +1,6 @@
+import { listFolderContents, validatePath } from "../actions";
 import AddContent from "../components/addContent"
+import ItemsLayout from "../components/itemsLayout";
 
 export default async function PathPage({
     params,
@@ -6,11 +8,15 @@ export default async function PathPage({
     params: Promise<{ slug: string[] }>
 }) {
     const { slug } = await params
+    const { contents } = await listFolderContents(slug);
+    const { valid, type } = await validatePath(slug);
+
     return (
         <div>
             <AddContent location={slug} />
-            <div className="mt-8">My Post: {slug.join('/')}</div>
-            <div className="mt-8">Slug: {JSON.stringify(slug)}</div>
+            <ItemsLayout className="mt-6" contents={contents} />
+            <div>{JSON.stringify(slug)}</div>
+            <div>{`Valid: ${valid} Type: ${type}`}</div>
         </div>
     )
 }
