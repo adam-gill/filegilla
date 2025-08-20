@@ -8,11 +8,29 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 
 const S3_ACCESS_ROLE_ARN = process.env.S3_ACCESS_ROLE_ARN!;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 const AWS_REGION = process.env.AWS_REGION!;
+
+const getUserId = async (): Promise<string | null> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      throw new Error("User must be authenticated to make service calls.");
+    }
+
+    return session.user.id
+  } catch (error) {
+    console.log("Error fetching userId on the server", error);
+    return null;
+  }
+};
 
 const getScopedS3Client = async (userId: string): Promise<S3Client> => {
   const stsClient = new STSClient({ region: AWS_REGION });
@@ -134,6 +152,44 @@ export const createFolder = async (
   }
 };
 
+export const deleteFolder = async (
+  folderName: string,
+  location: string[]
+): Promise<{ success: boolean; message: string }> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "User is not authenticated." };
+  }
+  const userId = session.user.id;
+
+  if (!folderName || folderName.includes("/")) {
+    return { success: false, message: "Invalid folder name provided." };
+  }
+
+  try {
+    const s3Client = await getScopedS3Client(userId);
+    const key = createS3Key(userId, location, folderName);
+
+    const command = new DeleteObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: key,
+    });
+
+    await s3Client.send(command);
+
+    return {
+      success: true,
+      message: `Successfully deleted the folder '${folderName}'.`,
+    };
+  } catch (error) {
+    console.log(`Error deleting the folder '${folderName}`);
+    return { success: false, message: "Error when deleting folder: " + error };
+  }
+};
+
 export const validatePath = async (
   location: string[]
 ): Promise<{ valid: boolean; type: "folder" | "file" | null }> => {
@@ -155,55 +211,61 @@ export const validatePath = async (
         Bucket: S3_BUCKET_NAME,
         Key: key,
       });
-      
+
       await s3Client.send(headCommand);
-      
+
       return {
         valid: true,
         type: "file",
       };
     } catch (error: any) {
-      if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
+      if (
+        error.name === "NotFound" ||
+        error.$metadata?.httpStatusCode === 404
+      ) {
         try {
-          const folderPrefix = key.endsWith('/') ? key : key + '/';
-          
+          const folderPrefix = key.endsWith("/") ? key : key + "/";
+
           const listCommand = new ListObjectsV2Command({
             Bucket: S3_BUCKET_NAME,
             Prefix: folderPrefix,
             MaxKeys: 1,
-            Delimiter: '/',
+            Delimiter: "/",
           });
-          
+
           const response = await s3Client.send(listCommand);
-          
+
           const hasFiles = response.Contents && response.Contents.length > 0;
-          const hasSubfolders = response.CommonPrefixes && response.CommonPrefixes.length > 0;
-          
+          const hasSubfolders =
+            response.CommonPrefixes && response.CommonPrefixes.length > 0;
+
           if (hasFiles || hasSubfolders) {
             return {
               valid: true,
               type: "folder",
             };
           }
-          
+
           try {
             const folderMarkerCommand = new HeadObjectCommand({
               Bucket: S3_BUCKET_NAME,
               Key: folderPrefix,
             });
-            
+
             await s3Client.send(folderMarkerCommand);
-            
+
             return {
               valid: true,
               type: "folder",
             };
           } catch (markerError) {
-            console.log("No folder marker, continue to return invalid")
+            console.log("No folder marker, continue to return invalid");
           }
-          
         } catch (listError) {
-          console.log("Error listing objects for folder validation:", listError);
+          console.log(
+            "Error listing objects for folder validation:",
+            listError
+          );
         }
       } else {
         console.log("Error during HeadObject:", error);
@@ -214,7 +276,6 @@ export const validatePath = async (
       valid: false,
       type: null,
     };
-
   } catch (error) {
     console.log("Error trying to validate path. Error: ", error);
     return {

@@ -154,7 +154,7 @@ export default function Item({ item }: ItemProps) {
                     
                     <button className="flex items-center w-full px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
                       <Info className="mr-2 h-4 w-4" />
-                      More information
+                      More info
                     </button>
                     
                     <div className="h-px bg-gray-600 my-1" />
@@ -190,7 +190,7 @@ export default function Item({ item }: ItemProps) {
         
         <ContextMenuItem className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
           <Info className="mr-2 h-4 w-4" />
-          More information
+          More info
         </ContextMenuItem>
         
         <ContextMenuSeparator className="h-px bg-gray-600 my-1" />
