@@ -34,7 +34,7 @@ export default async function PathPage({
         }
       >
         {valid && (
-          <ItemsLayout className="mt-6" contents={contents} location={[]} />
+          <ItemsLayout className="mt-6" contents={contents} location={slug} />
         )}
       </Suspense>
 

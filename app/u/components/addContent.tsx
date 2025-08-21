@@ -53,17 +53,17 @@ export default function AddContent({ location }: AddContentProps) {
       return "Folder name cannot contain spaces";
     }
 
-    // Check for leading/trailing dots
-    if (name.startsWith(".") || name.endsWith(".")) {
-      return "Folder name cannot start or end with dots";
+    // Check for leading/trailing spaces
+    if (name.startsWith(" ") || name.endsWith(" ")) {
+      return "Folder name cannot start or end with spaces";
+    }
+
+    if (name.includes("  ")) {
+      return "Folder name cannot have consecutive spaces"
     }
 
     if (name.length > 255) {
       return "Folder name cannot exceed 255 characters";
-    }
-
-    if (name.includes("..")) {
-      return "Folder name cannot contain consecutive dots";
     }
 
     return "";

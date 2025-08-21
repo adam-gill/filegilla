@@ -10,28 +10,12 @@ import {
   ListObjectsV2Command,
   DeleteObjectCommand,
   DeleteObjectsCommand,
+  CopyObjectCommand,
 } from "@aws-sdk/client-s3";
 
 const S3_ACCESS_ROLE_ARN = process.env.S3_ACCESS_ROLE_ARN!;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 const AWS_REGION = process.env.AWS_REGION!;
-
-const getUserId = async (): Promise<string | null> => {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session?.user?.id) {
-      throw new Error("User must be authenticated to make service calls.");
-    }
-
-    return session.user.id;
-  } catch (error) {
-    console.log("Error fetching userId on the server", error);
-    return null;
-  }
-};
 
 const getScopedS3Client = async (userId: string): Promise<S3Client> => {
   const stsClient = new STSClient({ region: AWS_REGION });
@@ -61,11 +45,11 @@ const getScopedS3Client = async (userId: string): Promise<S3Client> => {
 const createS3Key = (
   userId: string,
   location: string[],
-  folderName?: string
+  itemName?: string
 ): string => {
   const parts = ["private", userId, ...location];
-  if (folderName) {
-    parts.push(folderName);
+  if (itemName) {
+    parts.push(itemName);
   }
 
   const cleanPath = parts.filter((part) => part.trim() !== "").join("/");
@@ -270,6 +254,128 @@ export const deleteItem = async (
         `Error when deleting ${type}: ` +
         (error instanceof Error ? error.message : error),
     };
+  }
+};
+
+export const renameItem = async (
+  type: "file" | "folder",
+  oldName: string,
+  newName: string,
+  location: string[]
+): Promise<{ success: boolean; message: string }> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "User is not authenticated." };
+  }
+  const userId = session.user.id;
+
+  try {
+    const s3Client = await getScopedS3Client(userId);
+
+    if (type === "file") {
+      // Preserve original file extension
+      const lastDotIndex = oldName.lastIndexOf(".");
+      const oldExtension = lastDotIndex > 0 ? oldName.slice(lastDotIndex) : "";
+      const newBaseName = newName.includes(".") ? newName.slice(0, newName.lastIndexOf(".")) : newName;
+      const finalNewName = `${newBaseName}${oldExtension}`;
+
+      const oldKey = createS3Key(userId, location, oldName).slice(0, -1);
+      const newKey = createS3Key(userId, location, finalNewName).slice(0, -1);
+
+      if (oldKey === newKey) {
+        return { success: true, message: "No changes detected." };
+      }
+
+      // Copy then delete original
+      await s3Client.send(
+        new CopyObjectCommand({
+          Bucket: S3_BUCKET_NAME,
+          CopySource: `${S3_BUCKET_NAME}/${encodeURI(oldKey)}`,
+          Key: newKey,
+        })
+      );
+
+      await s3Client.send(
+        new DeleteObjectCommand({ Bucket: S3_BUCKET_NAME, Key: oldKey })
+      );
+
+      return { success: true, message: "Successfully renamed file." };
+    } else {
+      // Folder rename: recursively copy all objects from old prefix to new prefix, then delete old ones
+      const oldPrefix = createS3Key(userId, location, oldName);
+      const newPrefix = createS3Key(userId, location, newName);
+
+      if (oldPrefix === newPrefix) {
+        return { success: true, message: "No changes detected." };
+      }
+
+      let continuationToken: string | undefined = undefined;
+      const keysToDelete: { Key: string }[] = [];
+
+      do {
+        const listResp: Awaited<ReturnType<typeof s3Client.send>> extends infer R
+          ? R extends { Contents?: any[]; IsTruncated?: boolean; NextContinuationToken?: string }
+            ? R
+            : any
+          : any = await s3Client.send(
+          new ListObjectsV2Command({
+            Bucket: S3_BUCKET_NAME,
+            Prefix: oldPrefix,
+            ContinuationToken: continuationToken,
+          })
+        );
+
+        const contents = listResp.Contents || [];
+        for (const obj of contents) {
+          if (!obj.Key) continue;
+          const newKey = obj.Key.replace(oldPrefix, newPrefix);
+
+          await s3Client.send(
+            new CopyObjectCommand({
+              Bucket: S3_BUCKET_NAME,
+              CopySource: `${S3_BUCKET_NAME}/${encodeURI(obj.Key)}`,
+              Key: newKey,
+            })
+          );
+
+          keysToDelete.push({ Key: obj.Key });
+        }
+
+        continuationToken = listResp.IsTruncated
+          ? listResp.NextContinuationToken
+          : undefined;
+      } while (continuationToken);
+
+      // Delete old objects in batches of 1000
+      for (let i = 0; i < keysToDelete.length; i += 1000) {
+        const chunk = keysToDelete.slice(i, i + 1000);
+        await s3Client.send(
+          new DeleteObjectsCommand({
+            Bucket: S3_BUCKET_NAME,
+            Delete: { Objects: chunk, Quiet: true },
+          })
+        );
+      }
+
+      return { success: true, message: `Successfully renamed folder.` };
+    }
+  } catch (error) {
+    if (type === "file") {
+      console.log(`Error renaming file '${oldName}'. ${error}`);
+      return {
+        success: false,
+        message: `Error renaming file '${oldName}'. ${error}`,
+      };
+    } else {
+      console.log(`Error renaming folder '${oldName}'. ${error}`);
+      return {
+        success: false,
+        message: `Error renaming folder '${oldName}'. ${error}`,
+      };
+    }
   }
 };
 
