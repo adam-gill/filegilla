@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.864.0",
     "@aws-sdk/client-sts": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.872.0",
     "@azure/storage-blob": "^12.27.0",
     "@floating-ui/react": "^0.27.13",
     "@hookform/resolvers": "^5.1.1",

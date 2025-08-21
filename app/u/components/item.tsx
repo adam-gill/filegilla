@@ -26,6 +26,8 @@ import {
   ContextMenuTrigger,
 } from "@radix-ui/react-context-menu";
 import { usePathname, useRouter } from "next/navigation";
+import { deleteItem } from "../actions";
+import { toast } from "@/hooks/use-toast";
 
 // Type for folder contents
 interface FolderItem {
@@ -39,6 +41,7 @@ interface FolderItem {
 
 interface ItemProps {
   item: FolderItem;
+  location: string[];
 }
 
 const getFileIcon = (fileName: string) => {
@@ -73,7 +76,7 @@ const getFileIcon = (fileName: string) => {
   return <File className="w-5 h-5 text-gray-400" />;
 };
 
-export default function Item({ item }: ItemProps) {
+export default function Item({ item, location }: ItemProps) {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -97,6 +100,36 @@ export default function Item({ item }: ItemProps) {
     e.stopPropagation();
     setIsOptionsOpen(!isOptionsOpen);
   };
+
+  const handleItemDeletion = async () => {
+    setIsOptionsOpen(false);
+
+    const { success, message } = await deleteItem(item.type, item.name, location);
+
+    if (success) {
+      toast({
+        title: "Success!",
+        description: message,
+        variant: "good",
+      });
+      router.refresh();
+    } else {
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  }
+
+  const testToast = () => {
+    console.log("test toast");
+    toast({
+      title: "Lebron",
+      description: "James",
+      variant: "default"
+    })
+  }
 
   return (
     <ContextMenu>
@@ -142,7 +175,7 @@ export default function Item({ item }: ItemProps) {
                       Rename
                     </button>
                     
-                    <button className="flex items-center w-full px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
+                    <button onClick={() => testToast()} className="flex items-center w-full px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
                       <Copy className="mr-2 h-4 w-4" />
                       Make a copy
                     </button>
@@ -159,7 +192,7 @@ export default function Item({ item }: ItemProps) {
                     
                     <div className="h-px bg-gray-600 my-1" />
                     
-                    <button className="flex items-center w-full px-3 py-2 text-sm cursor-pointer hover:bg-red-900 text-red-400 rounded-sm">
+                    <button onClick={() => handleItemDeletion()} className="flex items-center w-full px-3 py-2 text-sm cursor-pointer hover:bg-red-900 text-red-400 rounded-sm">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
                     </button>
@@ -173,29 +206,29 @@ export default function Item({ item }: ItemProps) {
 
       {/* Right-click Context Menu */}
       <ContextMenuContent className="!z-100 min-w-[200px] bg-gray-800 rounded-md shadow-lg border border-gray-600 p-1">
-        <ContextMenuItem className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
+        <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:bg-gray-700 rounded-sm text-gray-100">
           <Edit className="mr-2 h-4 w-4" />
           Rename
         </ContextMenuItem>
         
-        <ContextMenuItem className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
+        <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:bg-gray-700 rounded-sm text-gray-100">
           <Copy className="mr-2 h-4 w-4" />
           Make a copy
         </ContextMenuItem>
         
-        <ContextMenuItem className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
+        <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:bg-gray-700 rounded-sm text-gray-100">
           <Share className="mr-2 h-4 w-4" />
           Share
         </ContextMenuItem>
         
-        <ContextMenuItem className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-700 rounded-sm text-gray-100">
+        <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:bg-gray-700 rounded-sm text-gray-100">
           <Info className="mr-2 h-4 w-4" />
           More info
         </ContextMenuItem>
         
         <ContextMenuSeparator className="h-px bg-gray-600 my-1" />
         
-        <ContextMenuItem className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-red-900 text-red-400 rounded-sm">
+        <ContextMenuItem onClick={() => handleItemDeletion()} className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-red-900 text-red-400 rounded-sm">
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </ContextMenuItem>

@@ -36,7 +36,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
                   className="w-10 h-6"
                 />
                 <span className="text-2xl font-semibold max-sm:hidden p-2">
-                  FileGilla
+                  filegilla
                 </span>
               </NavigationMenuLink>
             </NavigationMenuItem>
@@ -47,7 +47,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
                     href="/u"
                     className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
-                    Dashboard
+                    dashboard
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
@@ -55,7 +55,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
                     href="/passwords"
                     className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
-                    Passwords
+                    passwords
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               </>
