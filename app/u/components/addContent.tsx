@@ -48,11 +48,6 @@ export default function AddContent({ location }: AddContentProps) {
       return 'Folder name cannot contain: < > : " / \\ | ? * or control characters';
     }
 
-    // Check for any spaces
-    if (name.includes(" ")) {
-      return "Folder name cannot contain spaces";
-    }
-
     // Check for leading/trailing spaces
     if (name.startsWith(" ") || name.endsWith(" ")) {
       return "Folder name cannot start or end with spaces";
@@ -70,7 +65,6 @@ export default function AddContent({ location }: AddContentProps) {
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("fire");
     const files = event.target.files;
     if (!files || files.length === 0) return;
 

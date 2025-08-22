@@ -89,7 +89,7 @@ export default function AccountCard() {
                         </div>
                     ) : (
                         <h1 className="text-2xl font-bold">
-                            Sign in to view your account.{" "}
+                            sign in to view your account.{" "}
                         </h1>
                     )}
                 </CardHeader>
@@ -102,7 +102,7 @@ export default function AccountCard() {
                                         htmlFor="firstName"
                                         className="text-base font-medium text-muted-foreground"
                                     >
-                                        First Name
+                                        first name
                                     </Label>
                                     <p id="firstName" className="text-lg font-semibold">
                                         {userData.name.split(" ")[0]}
@@ -113,7 +113,7 @@ export default function AccountCard() {
                                         htmlFor="lastName"
                                         className="text-base font-medium text-muted-foreground"
                                     >
-                                        Last Name
+                                        last name
                                     </Label>
                                     <p id="lastName" className="text-lg font-semibold">
                                         {userData.name.split(" ")[1]}
@@ -125,7 +125,7 @@ export default function AccountCard() {
                                     htmlFor="username"
                                     className="text-base font-medium text-muted-foreground"
                                 >
-                                    Username
+                                    username
                                 </Label>
                                 <p id="username" className="text-lg font-semibold">
                                     {userData.username}
@@ -136,7 +136,7 @@ export default function AccountCard() {
                                     htmlFor="id"
                                     className="text-base font-medium text-muted-foreground"
                                 >
-                                    User ID
+                                    user id
                                 </Label>
                                 <p id="id" className="text-lg font-semibold">
                                     {userData.id}
@@ -147,7 +147,7 @@ export default function AccountCard() {
                                     htmlFor="email"
                                     className="text-base font-medium text-muted-foreground"
                                 >
-                                    Email
+                                    email
                                 </Label>
                                 <p id="email" className="text-lg font-semibold">
                                     {userData.email}

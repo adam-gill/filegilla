@@ -5,6 +5,7 @@ import ItemsLayout from "../components/itemsLayout";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UnlinkIcon } from "lucide-react";
+import ItemViewer from "../components/fileViewer";
 
 export default async function PathPage({
   params,
@@ -12,8 +13,9 @@ export default async function PathPage({
   params: Promise<{ slug: string[] }>;
 }) {
   const { slug } = await params;
-  const { contents } = await listFolderContents(slug);
-  const { valid, type } = await validatePath(slug);
+  const cleanSlug = decodeURIComponent(slug.join(",")).split(",");
+  const { contents } = await listFolderContents(cleanSlug);
+  const { valid, type } = await validatePath(cleanSlug);
 
   const getPath = (slug: string[]) => {
     return "/u/" + slug.join("/");
@@ -21,9 +23,14 @@ export default async function PathPage({
 
   return (
     <div className="w-full">
-      <AddContent location={slug} />
-      <div>{JSON.stringify(slug)}</div>
-      <div>{`Valid: ${valid} Type: ${type}`}</div>
+      <AddContent location={cleanSlug} />
+
+      {valid && type === "file" && (
+        <div>
+          <ItemViewer location={cleanSlug} />
+        </div>
+      )}
+
       <Suspense
         fallback={
           <div className="flex flex-wrap w-full gap-4">
@@ -33,15 +40,19 @@ export default async function PathPage({
           </div>
         }
       >
-        {valid && (
-          <ItemsLayout className="mt-6" contents={contents} location={slug} />
+        {type === "folder" && (
+          <ItemsLayout
+            className="mt-6"
+            contents={contents}
+            location={cleanSlug}
+          />
         )}
       </Suspense>
 
       {!valid && (
         <div className="w-full items-center justify-center text-center text-xl mt-6">
           <div className="flex gap-2 w-full items-center justify-center">
-            <div>{`path '${getPath(slug)}' not found`}</div>
+            <div>{`path '${getPath(cleanSlug)}' not found`}</div>
             <UnlinkIcon size={32} />
           </div>
           <Link className="underline font-medium cursor-pointer" href={"/u"}>

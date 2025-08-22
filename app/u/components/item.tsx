@@ -7,7 +7,6 @@ import {
   MoreVertical,
   Folder,
   FileText,
-  Image,
   Video,
   Music,
   Archive,
@@ -18,6 +17,8 @@ import {
   Share,
   Info,
   SquareArrowOutUpRight,
+  X,
+  ImagePlus,
 } from "lucide-react";
 import {
   ContextMenu,
@@ -40,6 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { formatBytes } from "@/lib/helpers";
 
 // Type for folder contents
 interface FolderItem {
@@ -65,7 +67,7 @@ const getFileIcon = (fileName: string) => {
       extension || ""
     )
   ) {
-    return <Image className="w-5 h-5 text-blue-400" />;
+    return <ImagePlus className="w-5 h-5 text-blue-400" />;
   }
 
   // Video files
@@ -100,28 +102,35 @@ const getFileIcon = (fileName: string) => {
 
 const removeFileExtension = (name: string): string => {
   const lastDotIndex = name.lastIndexOf(".");
-  
+
   if (lastDotIndex <= 0 || lastDotIndex === name.length - 1) {
     return name;
   }
-  
+
   return name.substring(0, lastDotIndex);
-}
+};
 
 const getFileExtension = (fileName: string): string => {
   return "." + fileName.toLowerCase().split(".").pop();
-}
+};
 
 export default function Item({ item, location }: ItemProps) {
   const [isOptionsOpen, setIsOptionsOpen] = useState<boolean>(false);
   const [isRenameOpen, setIsRenameOpen] = useState<boolean>(false);
-  const [renameName, setRenameName] = useState<string>(removeFileExtension(item.name));
+  const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
+  const [renameName, setRenameName] = useState<string>(item.name);
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    if (item.type === "file") {
+      setRenameName(removeFileExtension(item.name));
+    }
+  }, [item.type, item.name, setRenameName]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -137,6 +146,20 @@ export default function Item({ item, location }: ItemProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Close dropdown when clicking outside of the more info alert dialog
+  useEffect(() => {
+    const handleClickOutsideAlert = (event: MouseEvent) => {
+      if (infoRef.current && !infoRef.current.contains(event.target as Node)) {
+        setIsInfoOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutsideAlert);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideAlert);
     };
   }, []);
 
@@ -177,8 +200,10 @@ export default function Item({ item, location }: ItemProps) {
     setIsRenaming(true);
 
     try {
-
-      const fullRenameName = item.type === "file" ? renameName + getFileExtension(renameName) : renameName
+      const fullRenameName =
+        item.type === "file"
+          ? renameName + getFileExtension(renameName)
+          : renameName;
 
       const { success, message } = await renameItem(
         item.type,
@@ -247,6 +272,20 @@ export default function Item({ item, location }: ItemProps) {
     }
   };
 
+  const getPath = (path: string): string => {
+    const parts = path.split("/");
+    return "/u/" + parts.slice(2).join("/");
+  };
+
+  const handleItemOpen = () => {
+    if (item.type === "file") {
+      
+    } else {
+      router.push(`${pathname}/${item.name}`)
+      setIsOptionsOpen(false);
+    }
+  }
+
   return (
     <>
       <ContextMenu>
@@ -292,7 +331,7 @@ export default function Item({ item, location }: ItemProps) {
                   {isOptionsOpen && (
                     <div className="absolute bg-black right-0 top-full mt-1 min-w-[200px] rounded-md shadow-lg border !z-100 border-neutral-700">
                       <div className="px-1 pt-1">
-                        <Button className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-not-allowed hover:!bg-gray-700">
+                        <Button onClick={handleItemOpen} className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700">
                           <SquareArrowOutUpRight className="mr-2 h-4 w-4 text-neutral-400" />
                           open
                         </Button>
@@ -317,7 +356,13 @@ export default function Item({ item, location }: ItemProps) {
                           share
                         </Button>
 
-                        <Button className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-not-allowed hover:!bg-gray-700">
+                        <Button
+                          onClick={() => {
+                            setIsInfoOpen(true);
+                            setIsOptionsOpen(false);
+                          }}
+                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                        >
                           <Info className="mr-2 h-4 w-4 text-neutral-400" />
                           more info
                         </Button>
@@ -343,7 +388,7 @@ export default function Item({ item, location }: ItemProps) {
 
         {/* Right-click Context Menu */}
         <ContextMenuContent className="!z-100 min-w-[200px] bg-black rounded-md shadow-lg border border-neutral-700 p-1">
-          <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
+          <ContextMenuItem onClick={handleItemOpen} className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
             <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
             open
           </ContextMenuItem>
@@ -368,7 +413,13 @@ export default function Item({ item, location }: ItemProps) {
             share
           </ContextMenuItem>
 
-          <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
+          <ContextMenuItem
+            onClick={() => {
+              setIsInfoOpen(true);
+              setIsOptionsOpen(false);
+            }}
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+          >
             <Info className="mr-2 h-4 w-4" />
             more info
           </ContextMenuItem>
@@ -423,7 +474,6 @@ export default function Item({ item, location }: ItemProps) {
               className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
               disabled={isRenaming}
               onClick={() => {
-                setRenameName("");
                 setValidationError("");
               }}
             >
@@ -431,12 +481,66 @@ export default function Item({ item, location }: ItemProps) {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleItemRename}
-              disabled={!renameName.trim() || isRenaming || !!validationError || removeFileExtension(item.name) === renameName}
+              disabled={
+                !renameName.trim() ||
+                isRenaming ||
+                !!validationError ||
+                removeFileExtension(item.name) === renameName
+              }
               className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
             >
               {isRenaming ? "Renaming..." : "Rename"}
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+        <AlertDialogContent
+          ref={infoRef}
+          className="!bg-white shadow-2xl shadow-gray-600 text-gray-200"
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-black text-2xl">
+              {`${item.name}`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="!text-gray-600 text-base">
+              {`${item.type} information`}
+            </AlertDialogDescription>
+            <AlertDialogCancel className="!bg-transparent border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
+              <X className="text-black stroke-3 hover:scale-110 trans" />
+            </AlertDialogCancel>
+          </AlertDialogHeader>
+          <div className="w-full max-w-[580px] pb-4 text-gray-600">
+            {item.size && (
+              <div>
+                <strong>item size: </strong>
+                {formatBytes(item.size)}
+              </div>
+            )}
+            {item.lastModified && (
+              <div>
+                <strong>last modified: </strong>
+                {item.lastModified?.toLocaleDateString("en-US", {
+                  month: "numeric",
+                  day: "numeric",
+                  year: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
+              </div>
+            )}
+            <div className="break-words overflow-hidden">
+              <strong>item path: </strong>
+              {getPath(item.path)}
+            </div>
+            {item.etag && (
+              <div>
+                <strong>uid: </strong> {item.etag.slice(1, -1)}
+              </div>
+            )}
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </>

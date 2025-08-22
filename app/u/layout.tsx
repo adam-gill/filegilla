@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 
 export function metadata(): Metadata {
   return {
-    title: "Dashboard",
-    description: "FileGilla Dashboard",
+    title: "dashboard",
+    description: "fileGilla dashboard",
     openGraph: {
       images: "/ogLogo.png",
     },

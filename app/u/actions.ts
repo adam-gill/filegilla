@@ -11,7 +11,10 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   CopyObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { FileMetadata, FolderItem } from "./types";
 
 const S3_ACCESS_ROLE_ARN = process.env.S3_ACCESS_ROLE_ARN!;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
@@ -279,7 +282,9 @@ export const renameItem = async (
       // Preserve original file extension
       const lastDotIndex = oldName.lastIndexOf(".");
       const oldExtension = lastDotIndex > 0 ? oldName.slice(lastDotIndex) : "";
-      const newBaseName = newName.includes(".") ? newName.slice(0, newName.lastIndexOf(".")) : newName;
+      const newBaseName = newName.includes(".")
+        ? newName.slice(0, newName.lastIndexOf("."))
+        : newName;
       const finalNewName = `${newBaseName}${oldExtension}`;
 
       const oldKey = createS3Key(userId, location, oldName).slice(0, -1);
@@ -316,8 +321,14 @@ export const renameItem = async (
       const keysToDelete: { Key: string }[] = [];
 
       do {
-        const listResp: Awaited<ReturnType<typeof s3Client.send>> extends infer R
-          ? R extends { Contents?: any[]; IsTruncated?: boolean; NextContinuationToken?: string }
+        const listResp: Awaited<
+          ReturnType<typeof s3Client.send>
+        > extends infer R
+          ? R extends {
+              Contents?: any[];
+              IsTruncated?: boolean;
+              NextContinuationToken?: string;
+            }
             ? R
             : any
           : any = await s3Client.send(
@@ -448,7 +459,7 @@ export const validatePath = async (
               type: "folder",
             };
           } catch (markerError) {
-            console.log("No folder marker, continue to return invalid");
+            console.log("No folder marker, continue to return invalid", markerError);
           }
         } catch (listError) {
           console.log(
@@ -473,16 +484,6 @@ export const validatePath = async (
     };
   }
 };
-
-// Type for folder contents
-export interface FolderItem {
-  name: string;
-  type: "file" | "folder";
-  size?: number;
-  lastModified?: Date;
-  path: string;
-  etag?: string;
-}
 
 export const listFolderContents = async (
   location: string[]
@@ -559,6 +560,70 @@ export const listFolderContents = async (
       success: false,
       contents: [],
       message: "An error occurred while listing folder contents.",
+    };
+  }
+};
+
+export const getFile = async (
+  location: string[]
+): Promise<{
+  success: boolean;
+  message: string;
+  url?: string;
+  fileMetadata?: FileMetadata;
+}> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const userId = session?.user.id;
+
+  if (!userId) {
+    return {
+      success: false,
+      message: "User is not authenticated.",
+    };
+  }
+  const key = createS3Key(userId, location);
+  const fileKey = key.endsWith("/") ? key.slice(0, -1) : key;
+
+  try {
+    const s3Client = await getScopedS3Client(userId);
+
+
+
+    const headCommand = new HeadObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: fileKey,
+    });
+    const metadata = await s3Client.send(headCommand);
+
+    const urlCommand = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: fileKey,
+    });
+
+    const fileMetadata: FileMetadata = {
+      etag: metadata.ETag,
+      fileType: metadata.ContentType,
+      lastModified: metadata.LastModified,
+      size: metadata.ContentLength,
+    };
+
+    const url = await getSignedUrl(s3Client, urlCommand, { expiresIn: 3600 });
+
+    return {
+      success: true,
+      message: "successfully fetched resource url",
+      url: url,
+      fileMetadata: fileMetadata,
+    };
+  } catch (error) {
+    console.log(
+      `Error fetching file at location '${fileKey}', error: ${error}`
+    );
+    return {
+      success: false,
+      message: `Error fetching file: ${error}`,
     };
   }
 };

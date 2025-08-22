@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { FolderItem } from "../actions";
+import { FolderItem } from "../types";
 import Item from "./item";
 import { BrushCleaning } from "lucide-react";
 
