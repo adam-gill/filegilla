@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Dispatch, SetStateAction } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatBytes } from "@/lib/helpers";
+import { formatBytes, sortItems } from "@/lib/helpers";
 
 // Type for folder contents
 interface FolderItem {
@@ -55,6 +55,8 @@ interface FolderItem {
 
 interface ItemProps {
   item: FolderItem;
+  newContents: FolderItem[];
+  setNewContents: Dispatch<SetStateAction<FolderItem[]>>;
   location: string[];
 }
 
@@ -114,7 +116,12 @@ const getFileExtension = (fileName: string): string => {
   return "." + fileName.toLowerCase().split(".").pop();
 };
 
-export default function Item({ item, location }: ItemProps) {
+export default function Item({
+  item,
+  location,
+  setNewContents,
+  newContents,
+}: ItemProps) {
   const [isOptionsOpen, setIsOptionsOpen] = useState<boolean>(false);
   const [isRenameOpen, setIsRenameOpen] = useState<boolean>(false);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
@@ -199,11 +206,36 @@ export default function Item({ item, location }: ItemProps) {
   const handleItemRename = async () => {
     setIsRenaming(true);
 
+    // TODO - need state updates for file interactions setNewContent(something)
+    const savedContents = newContents;
+
     try {
+      const itemName = item.name;
       const fullRenameName =
         item.type === "file"
-          ? renameName + getFileExtension(renameName)
+          ? renameName + getFileExtension(itemName)
           : renameName;
+
+      setNewContents(
+        sortItems(
+          newContents.map((contentItem) => {
+            if (contentItem.name === itemName) {
+              const updatedItem = {
+                ...contentItem,
+                name: fullRenameName,
+                lastModified: new Date(),
+                path:
+                  contentItem.path.substring(
+                    0,
+                    contentItem.path.lastIndexOf("/") + 1
+                  ) + fullRenameName,
+              };
+              return updatedItem;
+            }
+            return contentItem;
+          })
+        )
+      );
 
       const { success, message } = await renameItem(
         item.type,
@@ -218,9 +250,8 @@ export default function Item({ item, location }: ItemProps) {
           description: message,
           variant: "good",
         });
-
-        router.refresh();
       } else {
+        setNewContents(sortItems(savedContents))
         toast({
           title: "Error",
           description: message,
@@ -228,6 +259,7 @@ export default function Item({ item, location }: ItemProps) {
         });
       }
     } catch (error) {
+      setNewContents(sortItems(savedContents))
       toast({
         title: "Error",
         description: "Unknown server error" + error,
@@ -241,23 +273,38 @@ export default function Item({ item, location }: ItemProps) {
   const handleItemDeletion = async () => {
     setIsOptionsOpen(false);
 
-    const { success, message } = await deleteItem(
-      item.type,
-      item.name,
-      location
+    const savedContents = newContents;
+    const itemName = item.name;
+    setNewContents(
+      sortItems(newContents.filter((item) => item.name !== itemName))
     );
 
-    if (success) {
-      toast({
-        title: "Success!",
-        description: message,
-        variant: "good",
-      });
-      router.refresh();
-    } else {
+    try {
+      const { success, message } = await deleteItem(
+        item.type,
+        item.name,
+        location
+      );
+
+      if (success) {
+        toast({
+          title: "Success!",
+          description: message,
+          variant: "good",
+        });
+      } else {
+        setNewContents(sortItems(savedContents));
+        toast({
+          title: "Error",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setNewContents(sortItems(savedContents));
       toast({
         title: "Error",
-        description: message,
+        description: `Unknown error deleting file: ${error}`,
         variant: "destructive",
       });
     }
@@ -279,18 +326,17 @@ export default function Item({ item, location }: ItemProps) {
 
   const handleItemOpen = () => {
     if (item.type === "file") {
-      
     } else {
-      router.push(`${pathname}/${item.name}`)
+      router.push(`${pathname}/${item.name}`);
       setIsOptionsOpen(false);
     }
-  }
+  };
 
   return (
     <>
       <ContextMenu>
         <ContextMenuTrigger>
-          <Card className="group relative w-xs border !border-neutral-700 hover:border-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl">
+          <Card className="max-w-full group relative w-xs max-md:w-3xs border !border-neutral-700 hover:border-blue-400 transition-all duration-200 shadow-md shadow-neutral-900 hover:shadow-xl">
             <CardContent className="p-0 h-full flex flex-col">
               {/* Top Banner */}
               <div className="flex items-center justify-between p-3">
@@ -331,7 +377,10 @@ export default function Item({ item, location }: ItemProps) {
                   {isOptionsOpen && (
                     <div className="absolute bg-black right-0 top-full mt-1 min-w-[200px] rounded-md shadow-lg border !z-100 border-neutral-700">
                       <div className="px-1 pt-1">
-                        <Button onClick={handleItemOpen} className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700">
+                        <Button
+                          onClick={handleItemOpen}
+                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                        >
                           <SquareArrowOutUpRight className="mr-2 h-4 w-4 text-neutral-400" />
                           open
                         </Button>
@@ -388,7 +437,10 @@ export default function Item({ item, location }: ItemProps) {
 
         {/* Right-click Context Menu */}
         <ContextMenuContent className="!z-100 min-w-[200px] bg-black rounded-md shadow-lg border border-neutral-700 p-1">
-          <ContextMenuItem onClick={handleItemOpen} className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
+          <ContextMenuItem
+            onClick={handleItemOpen}
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+          >
             <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
             open
           </ContextMenuItem>
@@ -449,6 +501,7 @@ export default function Item({ item, location }: ItemProps) {
           <div className="py-4">
             <Input
               type="text"
+              tabIndex={0}
               placeholder={`${item.type} name`}
               value={renameName}
               onChange={(e) => {

@@ -5,13 +5,7 @@ const nextConfig = {
       remotePatterns: [
         {
           protocol: "https",
-          hostname: "filegillablobs.blob.core.windows.net",
-          port: "",
-          pathname: "**",
-        },
-        {
-          protocol: "https",
-          hostname: "https://filegilla.s3.us-east-1.amazonaws.com",
+          hostname: "filegilla.s3.us-east-1.amazonaws.com",
           port: "",
           pathname: "**"
         }

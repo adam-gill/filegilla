@@ -1,11 +1,7 @@
-import Link from "next/link";
 import { listFolderContents, validatePath } from "../actions";
-import AddContent from "../components/addContent";
 import ItemsLayout from "../components/itemsLayout";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UnlinkIcon } from "lucide-react";
-import ItemViewer from "../components/fileViewer";
 
 export default async function PathPage({
   params,
@@ -17,20 +13,8 @@ export default async function PathPage({
   const { contents } = await listFolderContents(cleanSlug);
   const { valid, type } = await validatePath(cleanSlug);
 
-  const getPath = (slug: string[]) => {
-    return "/u/" + slug.join("/");
-  };
-
   return (
-    <div className="w-full">
-      <AddContent location={cleanSlug} />
-
-      {valid && type === "file" && (
-        <div>
-          <ItemViewer location={cleanSlug} />
-        </div>
-      )}
-
+    <main className="w-full">
       <Suspense
         fallback={
           <div className="flex flex-wrap w-full gap-4">
@@ -40,26 +24,13 @@ export default async function PathPage({
           </div>
         }
       >
-        {type === "folder" && (
-          <ItemsLayout
-            className="mt-6"
-            contents={contents}
-            location={cleanSlug}
-          />
-        )}
+        <ItemsLayout
+          contents={contents}
+          location={cleanSlug}
+          type={type}
+          valid={valid}
+        />
       </Suspense>
-
-      {!valid && (
-        <div className="w-full items-center justify-center text-center text-xl mt-6">
-          <div className="flex gap-2 w-full items-center justify-center">
-            <div>{`path '${getPath(cleanSlug)}' not found`}</div>
-            <UnlinkIcon size={32} />
-          </div>
-          <Link className="underline font-medium cursor-pointer" href={"/u"}>
-            return home
-          </Link>
-        </div>
-      )}
-    </div>
+    </main>
   );
 }

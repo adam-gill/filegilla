@@ -22,7 +22,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
   const userData = session?.user;
 
   return (
-    <header className="w-full py-2">
+    <header className="w-full pt-1">
       <div className="flex h-16 items-center justify-between w-full max-w-6xl px-6 mx-auto">
         <NavigationMenu>
           <NavigationMenuList className="flex items-center gap-3 sm:gap-1">
@@ -35,25 +35,26 @@ export default function Navbar({ isLanding }: NavbarProps) {
                   height={60}
                   className="w-10 h-6"
                 />
-                <span className="text-2xl font-semibold max-sm:hidden p-2">
+                <span className="text-2xl font-semibold p-2">
                   filegilla
                 </span>
               </NavigationMenuLink>
             </NavigationMenuItem>
             {!isLanding && (
               <>
+              {/* TODO - need mobile hamburger menu */}
                 <NavigationMenuItem>
                   <NavigationMenuLink
                     href="/u"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                    className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
                     dashboard
                   </NavigationMenuLink>
                 </NavigationMenuItem>
-                <NavigationMenuItem>
+                <NavigationMenuItem> 
                   <NavigationMenuLink
                     href="/passwords"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                    className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
                     passwords
                   </NavigationMenuLink>

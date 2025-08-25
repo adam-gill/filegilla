@@ -1,15 +1,14 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { listFolderContents } from "./actions";
-import AddContent from "./components/addContent";
+import { listFolderContents, validatePath } from "./actions";
 import ItemsLayout from "./components/itemsLayout";
 import { Suspense } from "react";
 
 export default async function Dashboard() {
   const { contents } = await listFolderContents([]);
+  const { valid, type } = await validatePath(["/"]);
 
   return (
     <main>
-      <AddContent location={[]} />
       <Suspense
         fallback={
           <div className="flex flex-wrap w-full gap-4">
@@ -19,7 +18,7 @@ export default async function Dashboard() {
           </div>
         }
       >
-        <ItemsLayout className="mt-6" contents={contents} location={[]} />
+        <ItemsLayout contents={contents} location={[]} valid={valid} type={type} />
       </Suspense>
     </main>
   );

@@ -14,8 +14,15 @@ import {
   AlertCircle,
   Share,
   Images,
+  MoreVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { FileData, FileMetadata } from "../types";
 import { formatBytes } from "@/lib/helpers";
 import { getFile } from "../actions";
@@ -163,11 +170,13 @@ const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
   switch (fileType) {
     case "image":
       return (
-        <div className=" rounded-lg border border-none p-4">
+        <div className="w-full rounded-lg border border-none p-4">
           <Image
+            width={1000}
+            height={1000}
             src={url}
             alt={fileName}
-            className="max-w-full max-h-96 mx-auto rounded"
+            className="max-w-full max-h-[70vh] mx-auto rounded"
             onError={handleError}
           />
         </div>
@@ -175,10 +184,10 @@ const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
 
     case "video":
       return (
-        <div className=" rounded-lg border border-none p-4">
+        <div className="w-full rounded-lg border border-none p-4">
           <video
             controls
-            className="max-w-full max-h-96 mx-auto rounded"
+            className="max-w-full max-h-[80vh] mx-auto rounded"
             onError={handleError}
           >
             <source src={url} />
@@ -202,7 +211,7 @@ const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
 
     case "pdf":
       return (
-        <div className=" rounded-lg border border-none h-96">
+        <div className="w-full rounded-lg border border-none h-[70vh]">
           <iframe
             src={url}
             className="w-full h-full rounded-lg"
@@ -232,7 +241,7 @@ const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
 
     case "text":
       return (
-        <div className=" rounded-lg border border-none p-4">
+        <div className="rounded-lg border border-none p-4">
           <iframe
             src={url}
             className="w-full h-96 rounded bg-gray-800"
@@ -312,104 +321,158 @@ export default function FileViewer({ location }: FileViewerProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-row w-full">
-            <div className="w-1/2 flex flex-col gap-y-3">
-              <Skeleton className="w-full h-10" />
-              <Skeleton className="w-[200px] h-6" />
-              <Skeleton className="w-[300px] h-6" />
+      <div>
+        <div className="min-h-screen p-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-row w-full">
+              <div className="w-1/2 flex flex-col gap-y-3">
+                <Skeleton className="w-full h-10" />
+                <Skeleton className="w-[200px] h-6" />
+                <Skeleton className="w-[300px] h-6" />
+              </div>
+              <div className="w-1/2 flex items-start justify-end gap-4">
+                <Skeleton className="w-[52px] h-[40px]" />
+                <Skeleton className="w-[52px] h-[40px]" />
+                <Skeleton className="w-[52px] h-[40px]" />
+                <Skeleton className="w-[52px] h-[40px]" />
+                <Skeleton className="w-[52px] h-[40px]" />
+              </div>
             </div>
-            <div className="w-1/2 flex items-start justify-center gap-6">
-              <Skeleton className="w-12 h-6" />
-              <Skeleton className="w-12 h-6" />
-              <Skeleton className="w-12 h-6" />
-            </div>
+            <Skeleton className="w-full h-[600px] mt-8" />
           </div>
-          <Skeleton className="w-full h-[600px] mt-8" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          {file && (
-            <div className="flex items-center gap-3">
-              {getFileIcon(file.name)}
-              <div>
-                <h1 className="text-xl font-semibold text-gray-100">
-                  {file.name}
-                </h1>
-                <p className="text-sm text-gray-400">
-                  {`${formatBytes(file?.metadata.size)} • Modified `}
-                  {file.metadata.lastModified?.toLocaleDateString("en-US", {
-                    month: "numeric",
-                    day: "numeric",
-                    year: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })}
-                </p>
+    <div>
+      <div className="text-white p-6 max-md:p-4 bg-neutral-900 rounded-lg">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            {file && (
+              <div className="flex items-center gap-3">
+                {getFileIcon(file.name)}
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-100">
+                    {file.name}
+                  </h1>
+                  <div className="text-sm text-gray-400 flex flex-col max-md:text-xs">
+                    <p>{`${formatBytes(file?.metadata.size)} • Modified `}</p>
+                    <p>
+                      {file.metadata.lastModified?.toLocaleDateString("en-US", {
+                        month: "numeric",
+                        day: "numeric",
+                        year: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Desktop Action Buttons - Hidden on mobile */}
+              <div className="hidden md:flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <Share className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <Info className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Mobile Dropdown Menu - Visible only on mobile */}
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    asChild
+                    className="outline-none ring-none"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-gray-800 border-gray-600 text-gray-300"
+                  >
+                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                      <Share className="w-4 h-4 mr-2" />
+                      Share
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-gray-700 text-red-400 focus:text-red-300">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                      <Info className="w-4 h-4 mr-2" />
+                      Info
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Edit3 className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Share className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Download className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Info className="w-4 h-4" />
-            </Button>
           </div>
-        </div>
 
-        {/* File Preview */}
-        {file && file.url && (
-          <FileRenderer
-            url={file.url}
-            fileName={file.name}
-            fileType={getFileType(file.name)}
-          />
-        )}
+          {/* File Preview */}
+          {file && file.url && (
+            <FileRenderer
+              url={file.url}
+              fileName={file.name}
+              fileType={getFileType(file.name)}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
