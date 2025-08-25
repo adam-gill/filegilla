@@ -25,13 +25,19 @@ import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { FolderItem } from "../types";
 import { sortItems } from "@/lib/helpers";
+import { authClient } from "@/lib/auth/auth-client";
 
 interface AddContentProps {
   location: string[];
+  newContents: FolderItem[];
   setNewContents: Dispatch<SetStateAction<FolderItem[]>>;
 }
 
-export default function AddContent({ location, setNewContents }: AddContentProps) {
+export default function AddContent({
+  location,
+  setNewContents,
+  newContents,
+}: AddContentProps) {
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -40,6 +46,8 @@ export default function AddContent({ location, setNewContents }: AddContentProps
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const { data: session } = authClient.useSession();
 
   // Folder name validation function
   const validateFolderName = (name: string): string => {
@@ -177,7 +185,7 @@ export default function AddContent({ location, setNewContents }: AddContentProps
         });
       } else {
         setNewContents((prev) => sortItems([...uploadedFiles, ...prev]));
-        
+
         if (failedFiles.length > 0) {
           toast({
             title: "Partial Success",
@@ -222,13 +230,26 @@ export default function AddContent({ location, setNewContents }: AddContentProps
   const handleCreateFolder = async () => {
     if (!folderName.trim()) return;
 
+    setIsCreating(true);
     const error = validateFolderName(folderName);
     if (error) {
       setValidationError(error);
       return;
     }
 
-    setIsCreating(true);
+    const savedContents = newContents;
+
+    const newFolderItem: FolderItem = {
+      name: folderName.trim(),
+      type: "folder",
+      lastModified: new Date(),
+      path: `private/${session?.user.id}/${location.join("/")}${
+        location.length === 0 ? "" : "/"
+      }${folderName.trim()}/`,
+    };
+
+    setNewContents((prev) => sortItems([newFolderItem, ...prev]));
+
     try {
       const { success, message } = await createFolder(
         folderName.trim(),
@@ -243,8 +264,8 @@ export default function AddContent({ location, setNewContents }: AddContentProps
         setFolderName("");
         setValidationError("");
         setIsFolderDialogOpen(false);
-        router.refresh();
       } else {
+        setNewContents(sortItems(savedContents));
         toast({
           title: "Error",
           description: `Failed to create folder. Error: ${message}`,
@@ -253,6 +274,7 @@ export default function AddContent({ location, setNewContents }: AddContentProps
         setValidationError(message);
       }
     } catch {
+      setNewContents(sortItems(savedContents));
       toast({
         title: "Error",
         description: "Failed to create folder. Error: Unknown",
@@ -275,162 +297,164 @@ export default function AddContent({ location, setNewContents }: AddContentProps
 
   return (
     <>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFilesUpload}
-          multiple
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant={"pretty"}
-              className="cursor-pointer w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <div className="flex items-center justify-center w-full h-full">
-                  <div className="relative w-8 h-8 mr-2">
-                    <svg
-                      className="w-8 h-8 transform -rotate-90"
-                      viewBox="0 0 32 32"
-                    >
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        fill="none"
-                        className="text-transparent"
-                      />
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        fill="none"
-                        strokeDasharray={`${2 * Math.PI * 14}`}
-                        strokeDashoffset={`${
-                          2 * Math.PI * 14 * (1 - uploadProgress / 100)
-                        }`}
-                        className="text-black transition-all duration-300 ease-out"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-                  <span className="inset-0 flex items-center justify-center text-2xl font-medium text-black">
-                    {uploadProgress}%
-                  </span>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFilesUpload}
+        multiple
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant={"pretty"}
+            className="cursor-pointer w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <div className="flex items-center justify-center w-full h-full">
+                <div className="relative w-8 h-8 mr-2">
+                  <svg
+                    className="w-8 h-8 transform -rotate-90"
+                    viewBox="0 0 32 32"
+                  >
+                    <circle
+                      cx="16"
+                      cy="16"
+                      r="14"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      fill="none"
+                      className="text-transparent"
+                    />
+                    <circle
+                      cx="16"
+                      cy="16"
+                      r="14"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 14}`}
+                      strokeDashoffset={`${
+                        2 * Math.PI * 14 * (1 - uploadProgress / 100)
+                      }`}
+                      className="text-black transition-all duration-300 ease-out"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </div>
-              ) : (
-                <>
-                  <Plus className="w-8 h-8 mr-2" strokeWidth={2} />
-                  add
-                </>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="!z-100 w-56 !bg-gray-900 border border-gray-600 !rounded-lg !shadow-lg !shadow-gray-800 p-1">
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
-              onSelect={() => {
-                fileInputRef.current?.click();
-              }}
-              disabled={isUploading}
-            >
-              <Upload className="w-4 h-4" />
-              Upload files
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
-              onSelect={handleFolderUpload}
-              disabled={isUploading}
-            >
-              <Folder className="w-4 h-4" />
-              Upload folder
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
-              onSelect={() => {
-                setIsFolderDialogOpen(true);
-              }}
-              disabled={isUploading}
-            >
-              <FolderPlus className="w-4 h-4" />
-              New folder
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
-              onSelect={handleNewDocument}
-              disabled={isUploading}
-            >
-              <FileText className="w-4 h-4" />
-              New document
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <span className="inset-0 flex items-center justify-center text-2xl font-medium text-black">
+                  {uploadProgress}%
+                </span>
+              </div>
+            ) : (
+              <>
+                <Plus className="w-8 h-8 mr-2" strokeWidth={2} />
+                add
+              </>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="!z-100 w-56 !bg-gray-900 border border-gray-600 !rounded-lg !shadow-lg !shadow-gray-800 p-1">
+          <DropdownMenuItem
+            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
+            onSelect={() => {
+              fileInputRef.current?.click();
+            }}
+            disabled={isUploading}
+          >
+            <Upload className="w-4 h-4" />
+            Upload files
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
+            onSelect={handleFolderUpload}
+            disabled={isUploading}
+          >
+            <Folder className="w-4 h-4" />
+            Upload folder
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
+            onSelect={() => {
+              setIsFolderDialogOpen(true);
+            }}
+            disabled={isUploading}
+          >
+            <FolderPlus className="w-4 h-4" />
+            New folder
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
+            onSelect={handleNewDocument}
+            disabled={isUploading}
+          >
+            <FileText className="w-4 h-4" />
+            New document
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-        <AlertDialog
-          open={isFolderDialogOpen}
-          onOpenChange={setIsFolderDialogOpen}
-        >
-          <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-black text-2xl">
-                Create New Folder
-              </AlertDialogTitle>
-              <AlertDialogDescription className="!text-gray-600 text-base">
-                Enter a name for your new folder
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="py-4">
-              <Input
-                type="text"
-                placeholder="Folder name"
-                value={folderName}
-                onChange={(e) => {
-                  const newName = e.target.value;
-                  setFolderName(newName);
-                  setValidationError(validateFolderName(newName));
-                }}
-                onKeyDown={handleKeyPress}
-                className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${
-                  validationError
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : ""
-                }`}
-                autoFocus
-                disabled={isCreating}
-              />
-              {validationError && (
-                <p className="text-red-500 text-sm mt-2">{validationError}</p>
-              )}
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
-                disabled={isCreating}
-                onClick={() => {
-                  setFolderName("");
-                  setValidationError("");
-                }}
-              >
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleCreateFolder}
-                disabled={!folderName.trim() || isCreating || !!validationError}
-                className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
-              >
-                {isCreating ? "Creating..." : "Create"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <AlertDialog
+        open={isFolderDialogOpen}
+        onOpenChange={setIsFolderDialogOpen}
+      >
+        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-black text-2xl">
+              Create New Folder
+            </AlertDialogTitle>
+            <AlertDialogDescription className="!text-gray-600 text-base">
+              Enter a name for your new folder
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            {/* TODO - make this automatically focus the cursor int the text input */}
+            <Input
+              tabIndex={-1}
+              type="text"
+              placeholder="Folder name"
+              value={folderName}
+              onChange={(e) => {
+                const newName = e.target.value;
+                setFolderName(newName);
+                setValidationError(validateFolderName(newName));
+              }}
+              onKeyDown={handleKeyPress}
+              className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${
+                validationError
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  : ""
+              }`}
+              autoFocus
+              disabled={isCreating}
+            />
+            {validationError && (
+              <p className="text-red-500 text-sm mt-2">{validationError}</p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
+              disabled={isCreating}
+              onClick={() => {
+                setFolderName("");
+                setValidationError("");
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCreateFolder}
+              disabled={!folderName.trim() || isCreating || !!validationError}
+              className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+            >
+              {isCreating ? "Creating..." : "Create"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

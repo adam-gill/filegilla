@@ -216,9 +216,9 @@ export default function Item({
           ? renameName + getFileExtension(itemName)
           : renameName;
 
-      setNewContents(
+      setNewContents((prev) =>
         sortItems(
-          newContents.map((contentItem) => {
+          prev.map((contentItem) => {
             if (contentItem.name === itemName) {
               const updatedItem = {
                 ...contentItem,
@@ -251,7 +251,7 @@ export default function Item({
           variant: "good",
         });
       } else {
-        setNewContents(sortItems(savedContents))
+        setNewContents(sortItems(savedContents));
         toast({
           title: "Error",
           description: message,
@@ -259,7 +259,7 @@ export default function Item({
         });
       }
     } catch (error) {
-      setNewContents(sortItems(savedContents))
+      setNewContents(sortItems(savedContents));
       toast({
         title: "Error",
         description: "Unknown server error" + error,
@@ -275,8 +275,8 @@ export default function Item({
 
     const savedContents = newContents;
     const itemName = item.name;
-    setNewContents(
-      sortItems(newContents.filter((item) => item.name !== itemName))
+    setNewContents((prev) =>
+      sortItems(prev.filter((item) => item.name !== itemName))
     );
 
     try {

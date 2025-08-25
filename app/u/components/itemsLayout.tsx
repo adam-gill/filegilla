@@ -42,7 +42,7 @@ export default function ItemsLayout({
       <div className="w-full flex items-center justify-between max-md:items-start max-md:flex-col-reverse">
         <Navigator location={location} />
         {type === "folder" && (
-          <AddContent location={location} setNewContents={setNewContents} />
+          <AddContent location={location} setNewContents={setNewContents} newContents={newContents} />
         )}
       </div>
 
