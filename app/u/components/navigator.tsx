@@ -30,7 +30,7 @@ export default function Navigator({ location }: NavigatorProps) {
 
   return (
     <Breadcrumb className="font-bold py-3">
-      <BreadcrumbList className="text-base">
+      <BreadcrumbList className="text-xl max-md:text-lg">
         {paths.length < 4 ? (
           <>
             {paths.map((path, index) => (

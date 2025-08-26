@@ -325,11 +325,8 @@ export default function Item({
   };
 
   const handleItemOpen = () => {
-    if (item.type === "file") {
-    } else {
-      router.push(`${pathname}/${item.name}`);
+      router.push(`${pathname}/${item.name}`)
       setIsOptionsOpen(false);
-    }
   };
 
   return (
@@ -353,7 +350,7 @@ export default function Item({
                   {/* Name with truncation */}
                   <div
                     title={item.name}
-                    onClick={() => router.push(`${pathname}/${item.name}`)}
+                    onClick={handleItemOpen}
                     className="cursor-pointer flex-1 min-w-0"
                   >
                     <p className="text-base font-medium text-gray-100 truncate">

@@ -123,7 +123,6 @@ export default function SignInForm() {
   useEffect(() => {
     const modeFromUrl = searchParams.get("signUp");
 
-    console.log("modeValue", modeFromUrl)
 
     if (modeFromUrl === "1") {
       setMode("signup");

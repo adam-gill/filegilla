@@ -302,12 +302,6 @@ export default function FileViewer({ location }: FileViewerProps) {
         metadata: fileMetadata || {},
         url: url,
       });
-      console.log({
-        name: location[location.length - 1],
-        path: getPath(location),
-        metadata: fileMetadata || {},
-        url: url,
-      });
     } catch (error) {
       console.error("Error fetching file URL:", error);
     } finally {

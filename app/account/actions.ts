@@ -42,3 +42,9 @@ export const editUsername = async (
 export const changeAvatar = async (userId: string) => {
     return userId
 }
+
+/*
+
+TODO - make alert dialog for deleting files
+
+*/
