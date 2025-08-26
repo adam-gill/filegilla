@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FileData, FileMetadata } from "../types";
-import { formatBytes } from "@/lib/helpers";
+import { formatBytes, formatDate } from "@/lib/helpers";
 import { getFile } from "../actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
@@ -360,16 +360,9 @@ export default function FileViewer({ location }: FileViewerProps) {
                   </h1>
                   <div className="text-sm text-gray-400 flex flex-col max-md:text-xs">
                     <p>{`${formatBytes(file?.metadata.size)} • Modified `}</p>
-                    <p>
-                      {file.metadata.lastModified?.toLocaleDateString("en-US", {
-                        month: "numeric",
-                        day: "numeric",
-                        year: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      })}
-                    </p>
+                    {file.metadata.lastModified && (
+                      <p>{formatDate(file.metadata.lastModified)}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -422,10 +415,7 @@ export default function FileViewer({ location }: FileViewerProps) {
               {/* Mobile Dropdown Menu - Visible only on mobile */}
               <div className="md:hidden">
                 <DropdownMenu>
-                  <DropdownMenuTrigger
-                    asChild
-                    className="outline-none ring-none"
-                  >
+                  <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"

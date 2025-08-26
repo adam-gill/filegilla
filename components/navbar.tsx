@@ -35,28 +35,17 @@ export default function Navbar({ isLanding }: NavbarProps) {
                   height={60}
                   className="w-10 h-6"
                 />
-                <span className="text-2xl font-semibold p-2">
-                  filegilla
-                </span>
+                <span className="text-2xl font-semibold p-2">filegilla</span>
               </NavigationMenuLink>
             </NavigationMenuItem>
             {!isLanding && (
               <>
-              {/* TODO - need mobile hamburger menu */}
                 <NavigationMenuItem>
                   <NavigationMenuLink
                     href="/u"
-                    className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                    className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                   >
                     dashboard
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem> 
-                  <NavigationMenuLink
-                    href="/passwords"
-                    className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-                  >
-                    passwords
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               </>
@@ -69,7 +58,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
               {!isLanding && (
                 <NavigationMenuLink
                   href={"/account"}
-                  className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  className="group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                 >
                   {userData ? (
                     <Avatar>

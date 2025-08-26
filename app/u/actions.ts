@@ -2,9 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/auth";
-import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 import {
-  S3Client,
   PutObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
@@ -15,49 +13,10 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FileMetadata, FolderItem } from "./types";
+import { getScopedS3Client } from "@/lib/aws/actions";
+import { createPrivateS3Key } from "@/lib/aws/helpers";
 
-const S3_ACCESS_ROLE_ARN = process.env.S3_ACCESS_ROLE_ARN!;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
-const AWS_REGION = process.env.AWS_REGION!;
-
-const getScopedS3Client = async (userId: string): Promise<S3Client> => {
-  const stsClient = new STSClient({ region: AWS_REGION });
-  const assumeRoleCommand = new AssumeRoleCommand({
-    RoleArn: S3_ACCESS_ROLE_ARN,
-    RoleSessionName: `s3-access-${userId}`,
-    Tags: [{ Key: "userId", Value: userId }],
-    DurationSeconds: 900,
-  });
-
-  const assumedRole = await stsClient.send(assumeRoleCommand);
-
-  if (!assumedRole.Credentials) {
-    throw new Error("Failed to assume role, no credentials received.");
-  }
-
-  return new S3Client({
-    region: AWS_REGION,
-    credentials: {
-      accessKeyId: assumedRole.Credentials.AccessKeyId!,
-      secretAccessKey: assumedRole.Credentials.SecretAccessKey!,
-      sessionToken: assumedRole.Credentials.SessionToken!,
-    },
-  });
-};
-
-const createS3Key = (
-  userId: string,
-  location: string[],
-  itemName?: string
-): string => {
-  const parts = ["private", userId, ...location];
-  if (itemName) {
-    parts.push(itemName);
-  }
-
-  const cleanPath = parts.filter((part) => part.trim() !== "").join("/");
-  return cleanPath.endsWith("/") ? cleanPath : cleanPath + "/";
-};
 
 export const folderNameExists = async (
   folderName: string,
@@ -75,7 +34,7 @@ export const folderNameExists = async (
   try {
     const s3Client = await getScopedS3Client(userId);
 
-    const key = createS3Key(userId, location, folderName);
+    const key = createPrivateS3Key(userId, location, folderName, true);
 
     const command = new HeadObjectCommand({
       Bucket: S3_BUCKET_NAME,
@@ -120,7 +79,7 @@ export const createFolder = async (
     }
 
     const s3Client = await getScopedS3Client(userId);
-    const key = createS3Key(userId, location, folderName);
+    const key = createPrivateS3Key(userId, location, folderName, true);
 
     const command = new PutObjectCommand({
       Bucket: S3_BUCKET_NAME,
@@ -163,7 +122,7 @@ export const deleteItem = async (
 
     if (type === "file") {
       // Delete a single file
-      const fileKey = createS3Key(userId, location, itemName).slice(0, -1); // Remove trailing slash for files
+      const fileKey = createPrivateS3Key(userId, location, itemName);
 
       try {
         const deleteCommand = new DeleteObjectCommand({
@@ -184,7 +143,7 @@ export const deleteItem = async (
       }
     } else {
       // Delete a folder and all its contents
-      const folderPrefix = createS3Key(userId, location, itemName);
+      const folderPrefix = createPrivateS3Key(userId, location, itemName, true);
 
       // List all objects with this prefix
       const listCommand = new ListObjectsV2Command({
@@ -287,8 +246,8 @@ export const renameItem = async (
         : newName;
       const finalNewName = `${newBaseName}${oldExtension}`;
 
-      const oldKey = createS3Key(userId, location, oldName).slice(0, -1);
-      const newKey = createS3Key(userId, location, finalNewName).slice(0, -1);
+      const oldKey = createPrivateS3Key(userId, location, oldName);
+      const newKey = createPrivateS3Key(userId, location, finalNewName);
 
       if (oldKey === newKey) {
         return { success: true, message: "No changes detected." };
@@ -310,8 +269,8 @@ export const renameItem = async (
       return { success: true, message: "Successfully renamed file." };
     } else {
       // Folder rename: recursively copy all objects from old prefix to new prefix, then delete old ones
-      const oldPrefix = createS3Key(userId, location, oldName);
-      const newPrefix = createS3Key(userId, location, newName);
+      const oldPrefix = createPrivateS3Key(userId, location, oldName, true);
+      const newPrefix = createPrivateS3Key(userId, location, newName, true);
 
       if (oldPrefix === newPrefix) {
         return { success: true, message: "No changes detected." };
@@ -403,7 +362,7 @@ export const validatePath = async (
       throw new Error("User not authenticated");
     }
 
-    const key = createS3Key(userId, location).slice(0, -1);
+    const key = createPrivateS3Key(userId, location);
     const s3Client = await getScopedS3Client(userId);
 
     try {
@@ -412,7 +371,14 @@ export const validatePath = async (
         Key: key,
       });
 
-      await s3Client.send(headCommand);
+      const res = await s3Client.send(headCommand);
+
+      if (res.ContentLength === 0) {
+        return {
+          valid: true,
+          type: "folder",
+        };
+      }
 
       return {
         valid: true,
@@ -459,7 +425,10 @@ export const validatePath = async (
               type: "folder",
             };
           } catch (markerError) {
-            console.log("No folder marker, continue to return invalid", markerError);
+            console.log(
+              "No folder marker, continue to return invalid",
+              markerError
+            );
           }
         } catch (listError) {
           console.log(
@@ -501,7 +470,7 @@ export const listFolderContents = async (
     };
   }
 
-  const key = createS3Key(userId, location);
+  const key = createPrivateS3Key(userId, location, undefined, true);
 
   try {
     const s3Client = await getScopedS3Client(userId);
@@ -583,13 +552,11 @@ export const getFile = async (
       message: "User is not authenticated.",
     };
   }
-  const key = createS3Key(userId, location);
+  const key = createPrivateS3Key(userId, location);
   const fileKey = key.endsWith("/") ? key.slice(0, -1) : key;
 
   try {
     const s3Client = await getScopedS3Client(userId);
-
-
 
     const headCommand = new HeadObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,

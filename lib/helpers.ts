@@ -31,3 +31,14 @@ export const sortItems = (items: FolderItem[]): FolderItem[] => {
   });
   return sorted;
 };
+
+export const formatDate = (date: Date): string => {
+  return date.toLocaleDateString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};

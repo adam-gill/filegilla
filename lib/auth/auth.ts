@@ -44,8 +44,8 @@ export const auth = betterAuth({
               where: { id: user.id },
               data: { username },
             });
-            await createUserFolder(user.id);
           }
+          await createUserFolder(user.id);
         },
       },
     },

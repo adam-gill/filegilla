@@ -6,6 +6,7 @@ import { Suspense } from "react";
 export default async function Dashboard() {
   const { contents } = await listFolderContents([]);
   const { valid, type } = await validatePath(["/"]);
+  console.log(`valid: ${valid}, type: ${type}`)
 
   return (
     <main>

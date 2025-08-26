@@ -11,6 +11,7 @@ export default async function PathPage({
   const { slug } = await params;
   const cleanSlug = decodeURIComponent(slug.join(",")).split(",");
   const { contents } = await listFolderContents(cleanSlug);
+  console.log(contents);
   const { valid, type } = await validatePath(cleanSlug);
 
   return (

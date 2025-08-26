@@ -1,51 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/auth";
-import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 import {
-  S3Client,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getScopedS3Client } from "@/lib/aws/actions";
+import { createPrivateS3Key } from "@/lib/aws/helpers";
 
-const S3_ACCESS_ROLE_ARN = process.env.S3_ACCESS_ROLE_ARN!;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
-const AWS_REGION = process.env.AWS_REGION!;
-
-const getScopedS3Client = async (userId: string): Promise<S3Client> => {
-  const stsClient = new STSClient({ region: AWS_REGION });
-  const assumeRoleCommand = new AssumeRoleCommand({
-    RoleArn: S3_ACCESS_ROLE_ARN,
-    RoleSessionName: `s3-access-${userId}`,
-    Tags: [{ Key: "userId", Value: userId }],
-    DurationSeconds: 900,
-  });
-
-  const assumedRole = await stsClient.send(assumeRoleCommand);
-
-  if (!assumedRole.Credentials) {
-    throw new Error("Failed to assume role, no credentials received.");
-  }
-
-  return new S3Client({
-    region: AWS_REGION,
-    credentials: {
-      accessKeyId: assumedRole.Credentials.AccessKeyId!,
-      secretAccessKey: assumedRole.Credentials.SecretAccessKey!,
-      sessionToken: assumedRole.Credentials.SessionToken!,
-    },
-  });
-};
-
-const createS3Key = (
-  userId: string,
-  location: string[],
-  fileName: string
-): string => {
-  const parts = ["private", userId, ...location, fileName];
-  const cleanPath = parts.filter((part) => part.trim() !== "").join("/");
-  return cleanPath;
-};
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,7 +40,9 @@ export async function POST(request: NextRequest) {
     for (const file of files) {
       try {
         // Create the S3 key for this file
-        const fileKey = createS3Key(userId, location, file.name);
+        const fileKey = createPrivateS3Key(userId, location, file.name);
+
+        
         
         const uploadCommand = new PutObjectCommand({
           Bucket: S3_BUCKET_NAME,

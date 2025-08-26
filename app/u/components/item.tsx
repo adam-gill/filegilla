@@ -41,7 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatBytes, sortItems } from "@/lib/helpers";
+import { formatBytes, formatDate, sortItems } from "@/lib/helpers";
 
 // Type for folder contents
 interface FolderItem {
@@ -574,14 +574,7 @@ export default function Item({
             {item.lastModified && (
               <div>
                 <strong>last modified: </strong>
-                {item.lastModified?.toLocaleDateString("en-US", {
-                  month: "numeric",
-                  day: "numeric",
-                  year: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
+                {formatDate(item.lastModified)}
               </div>
             )}
             <div className="break-words overflow-hidden">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, Dispatch, SetStateAction } from "react";
+import { useState, useRef, Dispatch, SetStateAction, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Folder, Upload, FolderPlus, FileText } from "lucide-react";
@@ -22,10 +22,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { createFolder } from "../actions";
 import { toast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 import { FolderItem } from "../types";
 import { sortItems } from "@/lib/helpers";
-import { authClient } from "@/lib/auth/auth-client";
 
 interface AddContentProps {
   location: string[];
@@ -45,9 +43,7 @@ export default function AddContent({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
-
-  const { data: session } = authClient.useSession();
+  const folderNameInputRef = useRef<HTMLInputElement>(null);
 
   // Folder name validation function
   const validateFolderName = (name: string): string => {
@@ -168,9 +164,10 @@ export default function AddContent({
             type: "file",
             size: file.size,
             lastModified: new Date(file.lastModified),
-            path: location.join("/") + "/" + file.name,
+            path: "private/userId/" + location.join("/") + "/" + file.name,
             fileType: file.type || "application/octet-stream",
           };
+          console.log(folderItem);
           uploadedFiles.push(folderItem);
         } else {
           failedFiles.push(file.name);
@@ -243,7 +240,7 @@ export default function AddContent({
       name: folderName.trim(),
       type: "folder",
       lastModified: new Date(),
-      path: `private/${session?.user.id}/${location.join("/")}${
+      path: `private/userId/${location.join("/")}${
         location.length === 0 ? "" : "/"
       }${folderName.trim()}/`,
     };
@@ -294,6 +291,17 @@ export default function AddContent({
       setFolderName("");
     }
   };
+
+  useEffect(() => {
+    if (isFolderDialogOpen) {
+      requestAnimationFrame(() => {
+        if (folderNameInputRef.current) {
+          folderNameInputRef.current.focus();
+          folderNameInputRef.current.select();
+        }
+      });
+    }
+  }, [isFolderDialogOpen]);
 
   return (
     <>
@@ -412,6 +420,7 @@ export default function AddContent({
           <div className="py-4">
             {/* TODO - make this automatically focus the cursor int the text input */}
             <Input
+              ref={folderNameInputRef}
               tabIndex={-1}
               type="text"
               placeholder="Folder name"
