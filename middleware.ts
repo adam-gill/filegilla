@@ -12,6 +12,11 @@ export function middleware(request: NextRequest) {
 
   let sessionToken;
 
+  // block test page in production
+  if (process.env.NODE_ENV === "production" && pathname === "/test") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   if (process.env.NODE_ENV === "production") {
     sessionToken = request.cookies.get("__Secure-better-auth.session_token");
   } else {

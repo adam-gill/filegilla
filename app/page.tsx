@@ -34,7 +34,7 @@ export default function Landing() {
 
         <Link
           href={"/auth?signUp=1"}
-          className="bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium mt-36 w-72 py-6 text-3xl px-18 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
+          className="bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium mt-36 py-4 text-3xl text-center px-14 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
         >
 
           Join Now

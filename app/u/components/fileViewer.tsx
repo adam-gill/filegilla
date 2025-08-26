@@ -25,9 +25,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileData, FileMetadata } from "../types";
 import { formatBytes, formatDate } from "@/lib/helpers";
-import { getFile } from "../actions";
+import { getDownloadUrl, getFile } from "../actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import { toast } from "@/hooks/use-toast";
 
 interface FileViewerProps {
   location: string[];
@@ -47,12 +48,6 @@ type FileType =
   | "text"
   | "archive"
   | "unknown";
-
-interface FileRendererProps {
-  url: string;
-  fileName: string;
-  fileType: FileType;
-}
 
 const getFileData = async (location: string[]): Promise<FileResponse> => {
   const { success, url, fileMetadata } = await getFile(location);
@@ -147,7 +142,19 @@ const getPath = (path: string[]): string => {
   return "/u/" + path.slice(2).join("/");
 };
 
-const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
+interface FileRendererProps {
+  url: string;
+  fileName: string;
+  fileType: FileType;
+  onDownload: () => void;
+}
+
+const FileRenderer = ({
+  url,
+  fileName,
+  fileType,
+  onDownload,
+}: FileRendererProps) => {
   const [error, setError] = useState<boolean>(false);
 
   const handleError = (): void => {
@@ -260,6 +267,7 @@ const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
             Archive files must be downloaded to extract
           </p>
           <Button
+            onClick={onDownload}
             variant="outline"
             className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
           >
@@ -278,8 +286,9 @@ const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
             Preview not available for this file type
           </p>
           <Button
+            onClick={onDownload}
             variant="outline"
-            className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+            className="cursor-pointer bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
           >
             <Download className="w-4 h-4 mr-2" />
             Download File
@@ -292,6 +301,33 @@ const FileRenderer = ({ url, fileName, fileType }: FileRendererProps) => {
 export default function FileViewer({ location }: FileViewerProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [file, setFile] = useState<FileData>();
+
+  const handleDownload = useCallback(async () => {
+    const { success, url } = await getDownloadUrl(location);
+
+    if (success && url) {
+      // Download the file from the download url
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file?.name || "download";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "success!",
+        description: `successfully downloaded ${file?.name}`,
+        variant: "good",
+      });
+    } else {
+      toast({
+        title: "error",
+        description: `failed to download ${file?.name}`,
+        variant: "destructive",
+      });
+    }
+  }, [location, file?.name]);
 
   const fetchFile = useCallback(async (): Promise<void> => {
     try {
@@ -369,7 +405,14 @@ export default function FileViewer({ location }: FileViewerProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
+                >
+                  <Info className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
                 >
                   <Edit3 className="w-4 h-4" />
                 </Button>
@@ -377,7 +420,7 @@ export default function FileViewer({ location }: FileViewerProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
                 >
                   <Share className="w-4 h-4" />
                 </Button>
@@ -385,7 +428,8 @@ export default function FileViewer({ location }: FileViewerProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  onClick={handleDownload}
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                 </Button>
@@ -393,16 +437,9 @@ export default function FileViewer({ location }: FileViewerProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="!bg-red-600/85 border-gray-600 text-gray-300 hover:!bg-red-600 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-                >
-                  <Info className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -423,6 +460,10 @@ export default function FileViewer({ location }: FileViewerProps) {
                     className="bg-gray-800 border-gray-600 text-gray-300"
                   >
                     <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                      <Info className="w-4 h-4 mr-2" />
+                      Info
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
                       <Edit3 className="w-4 h-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
@@ -430,17 +471,16 @@ export default function FileViewer({ location }: FileViewerProps) {
                       <Share className="w-4 h-4 mr-2" />
                       Share
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                    <DropdownMenuItem
+                      className="focus:bg-gray-700 focus:text-gray-200 cursor-pointer"
+                      onClick={handleDownload}
+                    >
                       <Download className="w-4 h-4 mr-2" />
                       Download
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="focus:bg-gray-700 text-red-400 focus:text-red-300">
-                      <Trash2 className="w-4 h-4 mr-2" />
+                    <DropdownMenuItem className="cursor-pointer text-white bg-red-600/85 focus:bg-gray-700 hover:bg-red-600 focus:text-red-300">
+                      <Trash2 className="w-4 h-4 mr-2 text-white" />
                       Delete
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
-                      <Info className="w-4 h-4 mr-2" />
-                      Info
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -454,6 +494,7 @@ export default function FileViewer({ location }: FileViewerProps) {
               url={file.url}
               fileName={file.name}
               fileType={getFileType(file.name)}
+              onDownload={handleDownload}
             />
           )}
         </div>

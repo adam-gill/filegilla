@@ -124,6 +124,7 @@ export default function Item({
 }: ItemProps) {
   const [isOptionsOpen, setIsOptionsOpen] = useState<boolean>(false);
   const [isRenameOpen, setIsRenameOpen] = useState<boolean>(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [renameName, setRenameName] = useState<string>(item.name);
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
@@ -246,14 +247,14 @@ export default function Item({
 
       if (success) {
         toast({
-          title: "Success!",
+          title: "success!",
           description: message,
           variant: "good",
         });
       } else {
         setNewContents(sortItems(savedContents));
         toast({
-          title: "Error",
+          title: "error",
           description: message,
           variant: "destructive",
         });
@@ -261,7 +262,7 @@ export default function Item({
     } catch (error) {
       setNewContents(sortItems(savedContents));
       toast({
-        title: "Error",
+        title: "error",
         description: "Unknown server error" + error,
         variant: "destructive",
       });
@@ -270,16 +271,20 @@ export default function Item({
     }
   };
 
+  const handleDeletionClick = () => {
+    setIsDeleteOpen(true);
+    setIsOptionsOpen(false);
+  };
+
   const handleItemDeletion = async () => {
     setIsOptionsOpen(false);
+    setIsDeleteOpen(false);
 
     const savedContents = newContents;
-    const itemName = item.name;
-    setNewContents((prev) =>
-      sortItems(prev.filter((item) => item.name !== itemName))
-    );
 
     try {
+      await Promise.resolve();
+
       const { success, message } = await deleteItem(
         item.type,
         item.name,
@@ -287,6 +292,10 @@ export default function Item({
       );
 
       if (success) {
+        const itemName = item.name;
+        setNewContents((prev) =>
+          sortItems(prev.filter((item) => item.name !== itemName))
+        );
         toast({
           title: "Success!",
           description: message,
@@ -325,8 +334,8 @@ export default function Item({
   };
 
   const handleItemOpen = () => {
-      router.push(`${pathname}/${item.name}`)
-      setIsOptionsOpen(false);
+    router.push(`${pathname}/${item.name}`);
+    setIsOptionsOpen(false);
   };
 
   return (
@@ -418,7 +427,7 @@ export default function Item({
                       <div className="px-1 pb-1">
                         <Button
                           className="w-full flex justify-start cursor-pointer border-none !text-gray-100 !bg-red-600/50 hover:!bg-red-600/80 trans"
-                          onClick={handleItemDeletion}
+                          onClick={handleDeletionClick}
                         >
                           <Trash2 className="mr-2 h-4 w-4 text-neutral-400" />
                           delete
@@ -476,7 +485,7 @@ export default function Item({
           <ContextMenuSeparator className="h-px bg-gray-600 my-1" />
 
           <ContextMenuItem
-            onClick={handleItemDeletion}
+            onClick={handleDeletionClick}
             className="cursor-pointer flex items-center px-3 py-2 text-sm bg-red-600/50 hover:!bg-red-600/80 trans text-gray-100 rounded-sm"
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -485,6 +494,7 @@ export default function Item({
         </ContextMenuContent>
       </ContextMenu>
 
+      {/* Rename Dialog */}
       <AlertDialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
         <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
           <AlertDialogHeader>
@@ -545,6 +555,34 @@ export default function Item({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Delete Dialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-black text-2xl">
+              {`delete '${item.name}'`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="!text-gray-600 text-base">
+              {item.type === "file"
+                ? `this will permanently delete ${item.name}`
+                : `this will permanently delete ${item.name} and all of its contents`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleItemDeletion}
+              className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* More Info Dialog */}
       <AlertDialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
         <AlertDialogContent
           ref={infoRef}

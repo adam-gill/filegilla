@@ -37,7 +37,13 @@ export default function Navigator({ location }: NavigatorProps) {
               <React.Fragment key={index}>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild className="text-white">
-                    <Link href={makeLink(index)}>{path}</Link>
+                    <Link href={makeLink(index)}>
+                      {path}
+                      {(index !== paths.length - 1 ||
+                        !paths[index].includes(".")) && (
+                          <div className="border-t-1 w-full h-px"></div>
+                        )}
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 {index !== paths.length - 1 && (
@@ -50,11 +56,12 @@ export default function Navigator({ location }: NavigatorProps) {
           <>
             <BreadcrumbItem>
               <BreadcrumbLink asChild className="text-white">
-                <Link href={"/u"}>u</Link>
+                <Link href={"/u"}>
+                  u<div className="border-t-1 w-full h-px"></div>
+                </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="stroke-white" />
-
             <BreadcrumbItem>
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center gap-1 cursor-pointer ring-none outline-none">
@@ -82,6 +89,7 @@ export default function Navigator({ location }: NavigatorProps) {
               <BreadcrumbLink asChild className="text-white">
                 <Link href={makeLink(paths.length - 2)}>
                   {paths[paths.length - 2]}
+                  <div className="border-t-1 w-full h-px"></div>
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -90,6 +98,9 @@ export default function Navigator({ location }: NavigatorProps) {
               <BreadcrumbLink asChild className="text-white">
                 <Link href={makeLink(paths.length - 1)}>
                   {paths[paths.length - 1]}
+                  {!paths[paths.length - 1].includes(".") && (
+                    <div className="border-t-1 w-full h-px"></div>
+                  )}
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>

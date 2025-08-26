@@ -25,7 +25,12 @@ type SignInFormData = z.infer<typeof signInSchema>;
 
 const signUpSchema = z.object({
   name: z.string().min(2),
-  username: z.string().min(1),
+  username: z
+    .string()
+    .min(1, "username cannot be empty")
+    .max(50, "username must 50 characters or less")
+    .refine((v) => !/\s/.test(v), "username cannot contain spaces")
+    .regex(/^[a-z0-9_]+$/, "only lowercase letters, numbers, and underscores are allowed"),
   email: z.email(),
   password: z.string().min(8),
 });
@@ -44,11 +49,13 @@ export default function SignInForm() {
 
   const signInForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
+    mode: 'onChange',
     defaultValues: { email: '', password: '' },
   });
 
   const signUpForm = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
+    mode: 'onChange',
     defaultValues: { name: '', username: '', email: '', password: '' },
   });
 
@@ -82,6 +89,8 @@ export default function SignInForm() {
         setErrorMsg(error.message || 'Sign up failed.');
       } else {
         setErrorMsg(null);
+        // Explicit redirect for email signups
+        router.push('/u');
       }
     } finally {
       setLoading(false);
@@ -151,6 +160,11 @@ export default function SignInForm() {
                 {...signInForm.register('email')}
                 disabled={loading}
               />
+              {signInForm.formState.errors.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  {signInForm.formState.errors.email.message as string}
+                </p>
+              )}
             </div>
             <div className="space-y-2 relative">
               <Label htmlFor="password" className="text-lg">Password</Label>
@@ -161,6 +175,11 @@ export default function SignInForm() {
                 {...signInForm.register('password')}
                 disabled={loading}
               />
+              {signInForm.formState.errors.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {signInForm.formState.errors.password.message as string}
+                </p>
+              )}
               <button
                 type="button"
                 tabIndex={-1}
@@ -203,6 +222,11 @@ export default function SignInForm() {
                 {...signUpForm.register('name')}
                 disabled={loading}
               />
+              {signUpForm.formState.errors.name && (
+                <p className="text-red-500 text-sm mt-1">
+                  {signUpForm.formState.errors.name.message as string}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="username" className="text-lg">Username</Label>
@@ -212,6 +236,11 @@ export default function SignInForm() {
                 {...signUpForm.register('username')}
                 disabled={loading}
               />
+              {signUpForm.formState.errors.username && (
+                <p className="text-red-500 text-sm mt-1">
+                  {signUpForm.formState.errors.username.message as string}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-lg">Email</Label>
@@ -221,6 +250,11 @@ export default function SignInForm() {
                 {...signUpForm.register('email')}
                 disabled={loading}
               />
+              {signUpForm.formState.errors.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  {signUpForm.formState.errors.email.message as string}
+                </p>
+              )}
             </div>
             <div className="space-y-2 relative">
               <Label htmlFor="password" className="text-lg">Password</Label>
@@ -231,6 +265,11 @@ export default function SignInForm() {
                 {...signUpForm.register('password')}
                 disabled={loading}
               />
+              {signUpForm.formState.errors.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {signUpForm.formState.errors.password.message as string}
+                </p>
+              )}
               <button
                 type="button"
                 tabIndex={-1}

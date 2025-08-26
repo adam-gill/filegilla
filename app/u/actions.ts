@@ -553,20 +553,19 @@ export const getFile = async (
     };
   }
   const key = createPrivateS3Key(userId, location);
-  const fileKey = key.endsWith("/") ? key.slice(0, -1) : key;
 
   try {
     const s3Client = await getScopedS3Client(userId);
 
     const headCommand = new HeadObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: fileKey,
+      Key: key,
     });
     const metadata = await s3Client.send(headCommand);
 
     const urlCommand = new GetObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: fileKey,
+      Key: key,
     });
 
     const fileMetadata: FileMetadata = {
@@ -586,7 +585,57 @@ export const getFile = async (
     };
   } catch (error) {
     console.log(
-      `Error fetching file at location '${fileKey}', error: ${error}`
+      `Error fetching file at location '${key}', error: ${error}`
+    );
+    return {
+      success: false,
+      message: `Error fetching file: ${error}`,
+    };
+  }
+};
+
+export const getDownloadUrl = async (
+  location: string[]
+): Promise<{
+  success: boolean;
+  message: string;
+  url?: string;
+}> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const userId = session?.user.id;
+
+  if (!userId) {
+    return {
+      success: false,
+      message: "User is not authenticated.",
+    };
+  }
+  const key = createPrivateS3Key(userId, location);
+
+  try {
+    const s3Client = await getScopedS3Client(userId);
+
+    const urlCommand = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename="${
+        location[location.length - 1]
+      }"`,
+      ResponseContentType: "application/octet-stream",
+    });
+
+    const url = await getSignedUrl(s3Client, urlCommand, { expiresIn: 3600 });
+
+    return {
+      success: true,
+      message: "successfully fetched resource's download url",
+      url: url,
+    };
+  } catch (error) {
+    console.log(
+      `Error fetching file at location '${key}', error: ${error}`
     );
     return {
       success: false,

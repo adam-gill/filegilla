@@ -8,6 +8,7 @@ import { useState } from "react";
 import Navigator from "./navigator";
 import AddContent from "./addContent";
 import FileViewer from "./fileViewer";
+import { sortContents } from "@/lib/helpers";
 
 interface ItemsLayoutProps {
   contents: FolderItem[];
@@ -24,14 +25,8 @@ export default function ItemsLayout({
   type,
   valid,
 }: ItemsLayoutProps) {
-  const [newContents, setNewContents] = useState<FolderItem[]>(
-    contents.sort((a, b) => {
-      if (a.type === b.type) {
-        return 0;
-      }
-      return a.type === "folder" ? -1 : 1;
-    })
-  );
+  const initialContents = sortContents(contents);
+  const [newContents, setNewContents] = useState<FolderItem[]>(initialContents);
 
   const getPath = (slug: string[]) => {
     return "/u/" + slug.join("/");
@@ -39,10 +34,14 @@ export default function ItemsLayout({
 
   return (
     <div className={className}>
-      <div className="w-full flex items-center justify-between max-md:items-start max-md:flex-col-reverse">
+      <div className="w-full flex items-center justify-between max-md:items-start max-md:flex-col-reverse mb-3">
         <Navigator location={location} />
         {type === "folder" && (
-          <AddContent location={location} setNewContents={setNewContents} newContents={newContents} />
+          <AddContent
+            location={location}
+            setNewContents={setNewContents}
+            newContents={newContents}
+          />
         )}
       </div>
 
@@ -76,7 +75,7 @@ export default function ItemsLayout({
           ) : (
             <div
               className={cn(
-                "flex flex-wrap w-full gap-4 max-md:items-center max-md:justify-center",
+                "flex flex-wrap w-full gap-4 items-center justify-center",
                 className
               )}
             >
