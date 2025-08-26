@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/next"
+
 
 import { Space_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster"
@@ -35,6 +37,7 @@ export default function RootLayout({
       <body className={cn("antialiased bg-black", spaceGrotesk.className)}>
           {children}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
