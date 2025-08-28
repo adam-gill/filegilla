@@ -69,3 +69,49 @@ export const sortContents = (contents: FolderItem[]): FolderItem[] => {
     return [];
   }
 };
+
+export const validateItemName = (name: string, type: string): string => {
+  if (!name.trim()) {
+    return "";
+  }
+
+  // Check for invalid characters
+  const invalidChars = /[<>:"/\\|?*\x00-\x1f]/;
+  if (invalidChars.test(name)) {
+    return `${type} name cannot contain: < > : " / \\ | ? * or control characters`;
+  }
+
+  // Check for leading/trailing dots
+  if (name.startsWith(" ") || name.endsWith(" ")) {
+    return `${type} name cannot start or end with spaces`;
+  }
+
+  // Check for consecutive spaces
+  if (name.includes("  ")) {
+    return `${type} name cannot contain consecutive spaces`;
+  }
+
+  if (name.length > 255) {
+    return `${type} name cannot exceed 255 characters`;
+  }
+
+  return "";
+};
+
+export const getFileExtension = (fileName: string): string => {
+  return "." + fileName.toLowerCase().split(".").pop();
+};
+
+export const removeFileExtension = (name: string | undefined): string => {
+  if (!name) {
+    return "";
+  }
+
+  const lastDotIndex = name.lastIndexOf(".");
+
+  if (lastDotIndex <= 0 || lastDotIndex === name.length - 1) {
+    return name;
+  }
+
+  return name.substring(0, lastDotIndex);
+};

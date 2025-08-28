@@ -123,6 +123,7 @@ export const deleteItem = async (
     if (type === "file") {
       // Delete a single file
       const fileKey = createPrivateS3Key(userId, location, itemName);
+      console.log(fileKey)
 
       try {
         const deleteCommand = new DeleteObjectCommand({
@@ -248,6 +249,8 @@ export const renameItem = async (
 
       const oldKey = createPrivateS3Key(userId, location, oldName);
       const newKey = createPrivateS3Key(userId, location, finalNewName);
+
+      console.log(`old key: ${oldKey}, new key: ${newKey}`)
 
       if (oldKey === newKey) {
         return { success: true, message: "No changes detected." };

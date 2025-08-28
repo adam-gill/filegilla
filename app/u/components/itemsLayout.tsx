@@ -3,12 +3,13 @@
 import { cn } from "@/lib/utils";
 import { FolderItem } from "../types";
 import Item from "./item";
-import { BrushCleaning, Link, UnlinkIcon } from "lucide-react";
+import { BrushCleaning, UnlinkIcon } from "lucide-react";
 import { useState } from "react";
 import Navigator from "./navigator";
 import AddContent from "./addContent";
 import FileViewer from "./fileViewer";
 import { sortContents } from "@/lib/helpers";
+import Link from "next/link";
 
 interface ItemsLayoutProps {
   contents: FolderItem[];
@@ -54,7 +55,10 @@ export default function ItemsLayout({
             <div>{`path '${getPath(location)}' not found`}</div>
             <UnlinkIcon size={32} />
           </div>
-          <Link className="underline font-medium cursor-pointer" href={"/u"}>
+          <Link
+            className="text-white underline font-medium cursor-pointer"
+            href={"/u"}
+          >
             return home
           </Link>
         </div>
@@ -65,30 +69,34 @@ export default function ItemsLayout({
         <FileViewer location={location} />
       ) : (
         <>
-          {newContents.length === 0 ? (
-            <div className="w-full items-center justify-center text-center text-xl">
-              <div className="flex items-center justify-center flex-row gap-2 w-full">
-                <div>No items here...</div>
-                <BrushCleaning size={32} />
-              </div>
-            </div>
-          ) : (
-            <div
-              className={cn(
-                "flex flex-wrap w-full gap-4 items-center justify-center",
-                className
+          {valid && (
+            <>
+              {newContents.length === 0 ? (
+                <div className="w-full items-center justify-center text-center text-xl">
+                  <div className="flex items-center justify-center flex-row gap-2 w-full">
+                    <div>No items here...</div>
+                    <BrushCleaning size={32} />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    "flex flex-wrap w-full gap-4 items-center justify-start max-md:justify-center",
+                    className
+                  )}
+                >
+                  {newContents.map((content, index) => (
+                    <Item
+                      key={index}
+                      item={content}
+                      location={location}
+                      setNewContents={setNewContents}
+                      newContents={newContents}
+                    />
+                  ))}
+                </div>
               )}
-            >
-              {newContents.map((content, index) => (
-                <Item
-                  key={index}
-                  item={content}
-                  location={location}
-                  setNewContents={setNewContents}
-                  newContents={newContents}
-                />
-              ))}
-            </div>
+            </>
           )}
         </>
       )}

@@ -17,9 +17,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: {
     template: "%s",
-    default: "FileGilla",
+    default: "filegilla",
   },
-  description: "Store your stuff in the cloud",
+  description: "store your stuff in the cloud",
   openGraph: {
     images: "/ogLogo.png",
   },

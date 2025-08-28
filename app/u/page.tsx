@@ -11,7 +11,7 @@ export default async function Dashboard() {
     <main>
       <Suspense
         fallback={
-          <div className="flex flex-wrap w-full gap-4">
+          <div className="flex flex-wrap w-full gap-4 items-center justify-start max-md:justify-center">
             {new Array(9).fill(0).map((_, index) => (
               <Skeleton className="w-xs h-[70px] rounded-xl" key={index} />
             ))}

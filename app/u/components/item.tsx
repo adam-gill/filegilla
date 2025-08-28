@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, Dispatch, SetStateAction } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  Dispatch,
+  SetStateAction,
+  useCallback,
+} from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +26,7 @@ import {
   SquareArrowOutUpRight,
   X,
   ImagePlus,
+  Download,
 } from "lucide-react";
 import {
   ContextMenu,
@@ -28,7 +36,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { usePathname, useRouter } from "next/navigation";
-import { deleteItem, renameItem } from "../actions";
+import { deleteItem, getDownloadUrl, renameItem } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,7 +49,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatBytes, formatDate, sortItems } from "@/lib/helpers";
+import {
+  formatBytes,
+  formatDate,
+  getFileExtension,
+  removeFileExtension,
+  sortItems,
+  validateItemName,
+} from "@/lib/helpers";
 
 // Type for folder contents
 interface FolderItem {
@@ -102,20 +117,6 @@ const getFileIcon = (fileName: string) => {
   return <File className="w-5 h-5 text-gray-400" />;
 };
 
-const removeFileExtension = (name: string): string => {
-  const lastDotIndex = name.lastIndexOf(".");
-
-  if (lastDotIndex <= 0 || lastDotIndex === name.length - 1) {
-    return name;
-  }
-
-  return name.substring(0, lastDotIndex);
-};
-
-const getFileExtension = (fileName: string): string => {
-  return "." + fileName.toLowerCase().split(".").pop();
-};
-
 export default function Item({
   item,
   location,
@@ -171,34 +172,6 @@ export default function Item({
     };
   }, []);
 
-  const validateItemName = (name: string): string => {
-    if (!name.trim()) {
-      return "";
-    }
-
-    // Check for invalid characters
-    const invalidChars = /[<>:"/\\|?*\x00-\x1f]/;
-    if (invalidChars.test(name)) {
-      return `${item.type} name cannot contain: < > : " / \\ | ? * or control characters`;
-    }
-
-    // Check for leading/trailing dots
-    if (name.startsWith(" ") || name.endsWith(" ")) {
-      return `${item.type} name cannot start or end with spaces`;
-    }
-
-    // Check for consecutive spaces
-    if (name.includes("  ")) {
-      return `${item.type} name cannot contain consecutive spaces`;
-    }
-
-    if (name.length > 255) {
-      return `${item.type} name cannot exceed 255 characters`;
-    }
-
-    return "";
-  };
-
   const handleOptionsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOptionsOpen(!isOptionsOpen);
@@ -207,7 +180,6 @@ export default function Item({
   const handleItemRename = async () => {
     setIsRenaming(true);
 
-    // TODO - need state updates for file interactions setNewContent(something)
     const savedContents = newContents;
 
     try {
@@ -271,6 +243,45 @@ export default function Item({
     }
   };
 
+  const handleDownload = useCallback(async () => {
+    setIsOptionsOpen(false);
+
+    try {
+
+    
+    const { success, url } = await getDownloadUrl([...location, item.name]);
+
+    if (success && url) {
+      // Download the file from the download url
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = item.name || "download";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "success!",
+        description: `successfully downloaded ${item.name}`,
+        variant: "good",
+      });
+    } else {
+      toast({
+        title: "error",
+        description: `failed to download ${item.name}`,
+        variant: "destructive",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    toast({
+      title: "error",
+      description: `download failed: ${error}`
+    })
+  }
+  }, [location, item.name]);
+
   const handleDeletionClick = () => {
     setIsDeleteOpen(true);
     setIsOptionsOpen(false);
@@ -313,7 +324,7 @@ export default function Item({
       setNewContents(sortItems(savedContents));
       toast({
         title: "Error",
-        description: `Unknown error deleting file: ${error}`,
+        description: `Unknown error deleting ${item.type}: ${error}`,
         variant: "destructive",
       });
     }
@@ -401,14 +412,24 @@ export default function Item({
                           rename
                         </Button>
 
-                        <Button className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-not-allowed hover:!bg-gray-700">
-                          <Copy className="mr-2 h-4 w-4 text-neutral-400" />
-                          make a copy
-                        </Button>
+                        {item.type === "file" && (
+                          <Button
+                            onClick={handleDownload}
+                            className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                          >
+                            <Download className="mr-2 h-4 w-4 text-neutral-400" />
+                            download
+                          </Button>
+                        )}
 
                         <Button className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-not-allowed hover:!bg-gray-700">
                           <Share className="mr-2 h-4 w-4 text-neutral-400" />
                           share
+                        </Button>
+
+                        <Button className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-not-allowed hover:!bg-gray-700">
+                          <Copy className="mr-2 h-4 w-4 text-neutral-400" />
+                          make a copy
                         </Button>
 
                         <Button
@@ -461,14 +482,24 @@ export default function Item({
             rename
           </ContextMenuItem>
 
-          <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
-            <Copy className="mr-2 h-4 w-4" />
-            make a copy
-          </ContextMenuItem>
+          {item.type === "file" && (
+            <ContextMenuItem
+              onClick={handleDownload}
+              className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              download
+            </ContextMenuItem>
+          )}
 
           <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
             <Share className="mr-2 h-4 w-4" />
             share
+          </ContextMenuItem>
+
+          <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
+            <Copy className="mr-2 h-4 w-4" />
+            make a copy
           </ContextMenuItem>
 
           <ContextMenuItem
@@ -514,7 +545,7 @@ export default function Item({
               onChange={(e) => {
                 const newName = e.target.value;
                 setRenameName(newName);
-                setValidationError(validateItemName(newName));
+                setValidationError(validateItemName(newName, item.type));
               }}
               onKeyDown={handleKeyPress}
               className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${
