@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, ReactNode, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+  useRef,
+} from "react";
 import {
   Video,
   Music,
@@ -15,6 +21,7 @@ import {
   Images,
   MoreVertical,
   Pencil,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -156,8 +163,14 @@ const getFileType = (fileName: string): FileType => {
   return "unknown";
 };
 
-const getPath = (path: string[]): string => {
-  return "/u/" + path.slice(2).join("/");
+const getPath = (path: string[] | string): string => {
+  if (typeof path === "string") {
+    return path;
+  } else if (Array.isArray(path)) {
+    return "/u/" + path.join("/");
+  } else {
+    return "";
+  }
 };
 
 interface FileRendererProps {
@@ -319,6 +332,7 @@ const FileRenderer = ({
 export default function FileViewer({ location }: FileViewerProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [isRenameOpen, setIsRenameOpen] = useState<boolean>(false);
+  const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
@@ -327,6 +341,7 @@ export default function FileViewer({ location }: FileViewerProps) {
   );
   const [validationError, setValidationError] = useState<string>("");
   const [file, setFile] = useState<FileData>();
+  const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const handleDownload = useCallback(async () => {
@@ -488,6 +503,20 @@ export default function FileViewer({ location }: FileViewerProps) {
     }
   };
 
+  // Close dropdown when clicking outside of the more info alert dialog
+  useEffect(() => {
+    const handleClickOutsideAlert = (event: MouseEvent) => {
+      if (infoRef.current && !infoRef.current.contains(event.target as Node)) {
+        setIsInfoOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutsideAlert);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideAlert);
+    };
+  }, []);
+
   if (loading) {
     return (
       <div>
@@ -542,6 +571,7 @@ export default function FileViewer({ location }: FileViewerProps) {
               {/* Desktop Action Buttons - Hidden on mobile */}
               <div className="hidden md:flex items-center gap-2">
                 <Button
+                  onClick={() => setIsInfoOpen(true)}
                   variant="outline"
                   size="sm"
                   className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
@@ -608,7 +638,13 @@ export default function FileViewer({ location }: FileViewerProps) {
                     align="end"
                     className="bg-gray-800 border-gray-600 text-gray-300"
                   >
-                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setIsInfoOpen(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="focus:bg-gray-700 focus:text-gray-200"
+                    >
                       <Info className="w-4 h-4 mr-2" />
                       Info
                     </DropdownMenuItem>
@@ -743,6 +779,53 @@ export default function FileViewer({ location }: FileViewerProps) {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* More Info Dialog */}
+      <AlertDialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+        <AlertDialogContent
+          ref={infoRef}
+          className="!bg-white shadow-2xl shadow-gray-600 text-gray-200"
+        >
+          {file && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-black text-2xl">
+                  {`${file.name}`}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="!text-gray-600 text-base">
+                  file information
+                </AlertDialogDescription>
+                <AlertDialogCancel className="!bg-transparent border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
+                  <X className="text-black stroke-3 hover:scale-110 trans" />
+                </AlertDialogCancel>
+              </AlertDialogHeader>
+              <div className="w-full max-w-[580px] pb-4 text-gray-600">
+                {file.metadata.size && (
+                  <div>
+                    <strong>item size: </strong>
+                    {formatBytes(file.metadata.size)}
+                  </div>
+                )}
+                {file.metadata.lastModified && (
+                  <div>
+                    <strong>last modified: </strong>
+                    {formatDate(file.metadata.lastModified)}
+                  </div>
+                )}
+                <div className="break-words overflow-hidden">
+                  <strong>item path: </strong>
+                  {getPath(file.path)}
+                </div>
+                {file.metadata.etag && (
+                  <div>
+                    <strong>uid: </strong> {file.metadata.etag.slice(1, -1)}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </div>

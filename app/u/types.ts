@@ -16,8 +16,15 @@ export interface FolderItem {
 }
 
 export interface FileData {
-    name: string;
-    path: string;
-    url?: string;
-    metadata: FileMetadata;
+  name: string;
+  path: string;
+  url?: string;
+  metadata: FileMetadata;
+}
+
+export interface ShareItemProps {
+  itemName: string;
+  itemType: "file" | "folder";
+  shareName: string;
+  sourceEtag?: string;
 }

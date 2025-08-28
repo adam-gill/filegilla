@@ -49,6 +49,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               </>
+              
             )}
           </NavigationMenuList>
         </NavigationMenu>

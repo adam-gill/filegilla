@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
     const body = await request.json();
-    const { files, location } = body;
+    const { files, location, isFolder } = body;
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -40,7 +40,11 @@ export async function POST(request: NextRequest) {
     for (const file of files) {
       try {
         // Create the S3 key for this file
-        const fileKey = createPrivateS3Key(userId, location, file.name);
+        // For folder uploads, use the webkitRelativePath to maintain folder structure
+        const fileName = isFolder && file.webkitRelativePath 
+          ? file.webkitRelativePath 
+          : file.name;
+        const fileKey = createPrivateS3Key(userId, location, fileName);
 
         
         

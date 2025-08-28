@@ -20,7 +20,6 @@ import {
   File,
   Trash2,
   Edit,
-  Copy,
   Share,
   Info,
   SquareArrowOutUpRight,
@@ -247,39 +246,37 @@ export default function Item({
     setIsOptionsOpen(false);
 
     try {
+      const { success, url } = await getDownloadUrl([...location, item.name]);
 
-    
-    const { success, url } = await getDownloadUrl([...location, item.name]);
+      if (success && url) {
+        // Download the file from the download url
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = item.name || "download";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-    if (success && url) {
-      // Download the file from the download url
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = item.name || "download";
-      link.style.display = "none";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast({
-        title: "success!",
-        description: `successfully downloaded ${item.name}`,
-        variant: "good",
-      });
-    } else {
+        toast({
+          title: "success!",
+          description: `successfully downloaded ${item.name}`,
+          variant: "good",
+        });
+      } else {
+        toast({
+          title: "error",
+          description: `failed to download ${item.name}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.log(error);
       toast({
         title: "error",
-        description: `failed to download ${item.name}`,
-        variant: "destructive",
+        description: `download failed: ${error}`,
       });
     }
-  } catch (error) {
-    console.log(error);
-    toast({
-      title: "error",
-      description: `download failed: ${error}`
-    })
-  }
   }, [location, item.name]);
 
   const handleDeletionClick = () => {
@@ -296,6 +293,11 @@ export default function Item({
     try {
       await Promise.resolve();
 
+      const itemName = item.name;
+      setNewContents((prev) =>
+        sortItems(prev.filter((item) => item.name !== itemName))
+      );
+      
       const { success, message } = await deleteItem(
         item.type,
         item.name,
@@ -303,10 +305,6 @@ export default function Item({
       );
 
       if (success) {
-        const itemName = item.name;
-        setNewContents((prev) =>
-          sortItems(prev.filter((item) => item.name !== itemName))
-        );
         toast({
           title: "Success!",
           description: message,
@@ -427,11 +425,6 @@ export default function Item({
                           share
                         </Button>
 
-                        <Button className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-not-allowed hover:!bg-gray-700">
-                          <Copy className="mr-2 h-4 w-4 text-neutral-400" />
-                          make a copy
-                        </Button>
-
                         <Button
                           onClick={() => {
                             setIsInfoOpen(true);
@@ -495,11 +488,6 @@ export default function Item({
           <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
             <Share className="mr-2 h-4 w-4" />
             share
-          </ContextMenuItem>
-
-          <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
-            <Copy className="mr-2 h-4 w-4" />
-            make a copy
           </ContextMenuItem>
 
           <ContextMenuItem

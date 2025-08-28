@@ -12,7 +12,7 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { FileMetadata, FolderItem } from "./types";
+import { FileMetadata, FolderItem, ShareItemProps } from "./types";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createPrivateS3Key } from "@/lib/aws/helpers";
 
@@ -123,7 +123,7 @@ export const deleteItem = async (
     if (type === "file") {
       // Delete a single file
       const fileKey = createPrivateS3Key(userId, location, itemName);
-      console.log(fileKey)
+      console.log(fileKey);
 
       try {
         const deleteCommand = new DeleteObjectCommand({
@@ -250,7 +250,7 @@ export const renameItem = async (
       const oldKey = createPrivateS3Key(userId, location, oldName);
       const newKey = createPrivateS3Key(userId, location, finalNewName);
 
-      console.log(`old key: ${oldKey}, new key: ${newKey}`)
+      console.log(`old key: ${oldKey}, new key: ${newKey}`);
 
       if (oldKey === newKey) {
         return { success: true, message: "No changes detected." };
@@ -587,9 +587,7 @@ export const getFile = async (
       fileMetadata: fileMetadata,
     };
   } catch (error) {
-    console.log(
-      `Error fetching file at location '${key}', error: ${error}`
-    );
+    console.log(`Error fetching file at location '${key}', error: ${error}`);
     return {
       success: false,
       message: `Error fetching file: ${error}`,
@@ -637,12 +635,37 @@ export const getDownloadUrl = async (
       url: url,
     };
   } catch (error) {
-    console.log(
-      `Error fetching file at location '${key}', error: ${error}`
-    );
+    console.log(`Error fetching file at location '${key}', error: ${error}`);
     return {
       success: false,
       message: `Error fetching file: ${error}`,
     };
   }
+};
+
+export const shareItem = async ({
+  itemName,
+  itemType,
+  shareName,
+  sourceEtag,
+}: ShareItemProps) => {
+  console.log(itemName, itemType, shareName, sourceEtag);
+};
+
+export const deleteShareItem = async ({
+  itemName,
+  itemType,
+  shareName,
+  sourceEtag,
+}: ShareItemProps) => {
+  console.log(itemName, itemType, shareName, sourceEtag);
+};
+
+export const checkShareItem = async ({
+  itemName,
+  itemType,
+  shareName,
+  sourceEtag,
+}: ShareItemProps) => {
+  console.log(itemName, itemType, shareName, sourceEtag);
 };
