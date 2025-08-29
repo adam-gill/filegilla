@@ -646,27 +646,31 @@ export default function FileViewer({ location }: FileViewerProps) {
                       className="focus:bg-gray-700 focus:text-gray-200"
                     >
                       <Info className="w-4 h-4 mr-2" />
-                      Info
+                      info
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        setIsRenameOpen(true);
+                        setIsDropdownOpen(false);
+                        setTimeout(() => {
+                          setIsRenameOpen(true);
+                        }, 100);
+                        setIsDeleteOpen(false);
                       }}
                       className="focus:bg-gray-700 focus:text-gray-200"
                     >
                       <Pencil className="w-4 h-4 mr-2" />
-                      Edit
+                      rename
                     </DropdownMenuItem>
                     <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
                       <Share className="w-4 h-4 mr-2" />
-                      Share
+                      share
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="focus:bg-gray-700 focus:text-gray-200 cursor-pointer"
                       onClick={handleDownload}
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Download
+                      download
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
@@ -676,7 +680,7 @@ export default function FileViewer({ location }: FileViewerProps) {
                       className="cursor-pointer text-white bg-red-600/85 focus:bg-gray-700 hover:bg-red-600 focus:text-red-300"
                     >
                       <Trash2 className="w-4 h-4 mr-2 text-white" />
-                      Delete
+                      delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
