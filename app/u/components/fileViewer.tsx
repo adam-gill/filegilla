@@ -737,6 +737,7 @@ export default function FileViewer({ location }: FileViewerProps) {
               disabled={isRenaming}
               onClick={() => {
                 setValidationError("");
+                setIsRenameOpen(false);
               }}
             >
               Cancel
