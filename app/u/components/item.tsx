@@ -738,7 +738,7 @@ export default function Item({
                   <AlertDialogTitle className="text-black text-2xl">
                     {`${
                       item.type === "file"
-                        ? `${item.name} aka ${itemShareName}`
+                        ? `${item.name} aka /s/${itemShareName}`
                         : `${itemShareName}`
                     } `}
                   </AlertDialogTitle>

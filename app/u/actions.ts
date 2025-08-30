@@ -848,6 +848,17 @@ export const deleteShareItem = async ({
   shareName,
   sourceEtag,
 }: ShareItemProps) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "User is not authenticated." };
+  }
+
+  const userId = session.user.id;
+
+  console.log("need to also check if " + userId + " is the owner of that shared file/folder");
   console.log(itemName, itemType, shareName, sourceEtag);
 };
 
@@ -861,11 +872,22 @@ export const checkShareItem = async ({
   shareUrl?: string;
   shareName?: string;
 }> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "User is not authenticated." };
+  }
+
+  const userId = session.user.id;
+
   if (itemType === "file") {
     try {
       const response = await prisma.share.findFirst({
         where: {
           sourceEtag: sourceEtag,
+          ownerId: userId,
         },
       });
 
@@ -891,6 +913,7 @@ export const checkShareItem = async ({
       const response = await prisma.share.findFirst({
         where: {
           shareName: itemName,
+          ownerId: userId,
         },
       });
 
