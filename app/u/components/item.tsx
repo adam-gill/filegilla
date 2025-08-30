@@ -35,7 +35,13 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { usePathname, useRouter } from "next/navigation";
-import { deleteItem, getDownloadUrl, renameItem } from "../actions";
+import {
+  checkShareItem,
+  deleteItem,
+  getDownloadUrl,
+  renameItem,
+  shareItem,
+} from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,10 +58,13 @@ import {
   formatBytes,
   formatDate,
   getFileExtension,
+  randomId,
   removeFileExtension,
   sortItems,
   validateItemName,
 } from "@/lib/helpers";
+import { Skeleton } from "@/components/ui/skeleton";
+import CopyText from "./copyText";
 
 // Type for folder contents
 interface FolderItem {
@@ -126,8 +135,12 @@ export default function Item({
   const [isRenameOpen, setIsRenameOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
+  const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
+  const [isConfirmDelete, setIsConfirmDelete] = useState<boolean>(false);
   const [renameName, setRenameName] = useState<string>(item.name);
-  const [isRenaming, setIsRenaming] = useState<boolean>(false);
+  const [itemShareUrl, setItemShareUrl] = useState<string>("");
+  const [itemShareName, setItemShareName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
@@ -177,7 +190,7 @@ export default function Item({
   };
 
   const handleItemRename = async () => {
-    setIsRenaming(true);
+    setIsLoading(true);
 
     const savedContents = newContents;
 
@@ -238,7 +251,7 @@ export default function Item({
         variant: "destructive",
       });
     } finally {
-      setIsRenaming(false);
+      setIsLoading(false);
     }
   };
 
@@ -297,7 +310,7 @@ export default function Item({
       setNewContents((prev) =>
         sortItems(prev.filter((item) => item.name !== itemName))
       );
-      
+
       const { success, message } = await deleteItem(
         item.type,
         item.name,
@@ -329,7 +342,7 @@ export default function Item({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isRenaming) {
+    if (e.key === "Enter" && !isLoading) {
       handleItemRename();
     } else if (e.key === "Escape") {
       setIsRenameOpen(false);
@@ -346,6 +359,110 @@ export default function Item({
     router.push(`${pathname}/${item.name}`);
     setIsOptionsOpen(false);
   };
+
+  const handleItemShare = async () => {
+    setIsLoading(true);
+
+    try {
+      const { success, message, shareUrl } = await shareItem({
+        itemName: item.name,
+        itemType: item.type,
+        location: location,
+        shareName: itemShareName,
+        sourceEtag: item.etag,
+      });
+
+      if (success && shareUrl) {
+        toast({
+          title: "success!",
+          description: message,
+          variant: "good",
+        });
+        setItemShareUrl(shareUrl);
+      } else {
+        toast({
+          title: "error",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "error",
+        description: `unknown error sharing file: ${error}`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const checkShareStatus = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    if (item.type === "file" && item.etag && item.name) {
+      try {
+        const { success, shareUrl, shareName } = await checkShareItem({
+          itemName: item.name,
+          itemType: item.type,
+          sourceEtag: item.etag,
+        });
+
+        if (success && shareUrl && shareName) {
+          setItemShareUrl(shareUrl);
+          setItemShareName(shareName);
+        } else {
+          setItemShareUrl("");
+        }
+      } catch (error) {
+        console.error(
+          `unknown error checking ${item.name} share status: ${error}`
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      try {
+        const { success, shareUrl, shareName } = await checkShareItem({
+          itemName: item.name,
+          itemType: item.type,
+        });
+
+        if (success && shareUrl && shareName) {
+          setItemShareUrl(shareUrl);
+          setItemShareName(shareName);
+        } else {
+          setItemShareUrl("");
+        }
+      } catch (error) {
+        console.error(
+          `unknown error checking ${item.name} share status: ${error}`
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [item.name, item.type, item.etag]);
+
+  useEffect(() => {
+    if (isShareOpen) {
+      checkShareStatus();
+    }
+  }, [isShareOpen, checkShareStatus]);
+
+  useEffect(() => {
+    setItemShareName(randomId());
+  }, []);
+
+  // TODO
+  // const handleShareDelete = async () => {
+  //   try {
+  //   } catch (error) {
+  //     toast({
+  //       title: "error",
+  //       description: `unknown error deleting share: ${error}`,
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   return (
     <>
@@ -420,7 +537,13 @@ export default function Item({
                           </Button>
                         )}
 
-                        <Button className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-not-allowed hover:!bg-gray-700">
+                        <Button
+                          onClick={() => {
+                            setIsOptionsOpen(false);
+                            setIsShareOpen(true);
+                          }}
+                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                        >
                           <Share className="mr-2 h-4 w-4 text-neutral-400" />
                           share
                         </Button>
@@ -485,7 +608,10 @@ export default function Item({
             </ContextMenuItem>
           )}
 
-          <ContextMenuItem className="cursor-not-allowed flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100">
+          <ContextMenuItem
+            onClick={() => setIsShareOpen(true)}
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+          >
             <Share className="mr-2 h-4 w-4" />
             share
           </ContextMenuItem>
@@ -542,7 +668,7 @@ export default function Item({
                   : ""
               }`}
               autoFocus
-              disabled={isRenaming}
+              disabled={isLoading}
             />
             {validationError && (
               <p className="text-red-500 text-sm mt-2">{validationError}</p>
@@ -551,27 +677,179 @@ export default function Item({
           <AlertDialogFooter>
             <AlertDialogCancel
               className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
-              disabled={isRenaming}
+              disabled={isLoading}
               onClick={() => {
                 setValidationError("");
               }}
             >
-              Cancel
+              cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleItemRename}
               disabled={
                 !renameName.trim() ||
-                isRenaming ||
+                isLoading ||
                 !!validationError ||
                 removeFileExtension(item.name) === renameName
               }
               className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
             >
-              {isRenaming ? "Renaming..." : "Rename"}
+              {isLoading ? "renaming..." : "rename"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Share Dialog */}
+      <AlertDialog open={isShareOpen} onOpenChange={setIsShareOpen}>
+        {isLoading ? (
+          <>
+            <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-black text-2xl">
+                  <Skeleton className="h-7 w-3/5 !bg-neutral-900/10" />
+                </AlertDialogTitle>
+                <AlertDialogDescription className="!text-transparent absolute text-base">
+                  loading...
+                </AlertDialogDescription>
+                <Skeleton className="h-10 w-4/5 !bg-neutral-900/10 my-4" />
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="!m-0 !bg-transparent focus-visible:!ring-black focus-visible:!ring-2 border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
+                  <X className="text-black stroke-3 hover:scale-110 trans" />
+                </AlertDialogCancel>
+
+                <Skeleton className="w-[93px] h-[45px] !bg-neutral-900/10 !mr-3" />
+                <AlertDialogAction
+                  onClick={handleItemShare}
+                  disabled={isLoading}
+                  className="text-base !bg-neutral-900/10 !text-transparent border-none animate-pulse"
+                >
+                  share
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </>
+        ) : (
+          <>
+            {itemShareUrl ? (
+              <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-black text-2xl">
+                    {`${
+                      item.type === "file"
+                        ? `${item.name} aka ${itemShareName}`
+                        : `${itemShareName}`
+                    } `}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="!text-gray-600 text-base">
+                    shared with the world
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="flex flex-row  items-center text-black gap-2">
+                  <div className="text-black">{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</div>
+                  <CopyText
+                    textToCopy={`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}
+                  />
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="!m-0 !bg-transparent focus-visible:!ring-black focus-visible:!ring-2 border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
+                    <X className="text-black stroke-3 hover:scale-110 trans" />
+                  </AlertDialogCancel>
+
+                  <Button
+                    onClick={() => setIsConfirmDelete(true)}
+                    className={`${
+                      isConfirmDelete ? "hidden" : "flex"
+                    } focus-visible:!ring-black !m-0 focus-visible:!ring-2 text-base !bg-red-600/80 hover:!bg-red-500/90 cursor-pointer trans !text-white border-none trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed`}
+                  >
+                    <Trash2 />
+                  </Button>
+
+                  <AlertDialogAction
+                    onClick={() => {
+                      setIsConfirmDelete(false);
+                      console.log("delete");
+                    }}
+                    disabled={
+                      !itemShareName.trim() || isLoading || !!validationError
+                    }
+                    className={`${
+                      isConfirmDelete ? "!flex" : "!hidden"
+                    } focus-visible:!ring-black focus-visible:!ring-2 text-base !bg-red-600/80 hover:!bg-red-500/90 cursor-pointer trans !text-white border-none trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed`}
+                  >
+                    confirm delete?
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            ) : (
+              <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-black text-2xl">
+                    {`share ${item.name}`}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="!text-gray-600 text-base">
+                    create a permalink for <strong>{item.name}</strong>, or
+                    leave it random. this will be accessible to anyone with the
+                    link.
+                  </AlertDialogDescription>
+                  <div className="text-black">
+                    {`preview:`}{" "}
+                    <strong>{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</strong>
+                  </div>
+                </AlertDialogHeader>
+                <div className="pb-4">
+                  {itemShareUrl && <p className="text-black">{itemShareUrl}</p>}
+                  <Input
+                    type="text"
+                    tabIndex={0}
+                    placeholder={"share name"}
+                    value={itemShareName}
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setItemShareName(newName);
+                      setValidationError(validateItemName(newName, item.type));
+                    }}
+                    onKeyDown={handleKeyPress}
+                    className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${
+                      validationError
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : ""
+                    }`}
+                    autoFocus
+                    disabled={isLoading}
+                  />
+                  {validationError && (
+                    <p className="text-red-500 text-sm mt-2">
+                      {validationError}
+                    </p>
+                  )}
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
+                    disabled={isLoading}
+                    onClick={() => {
+                      setValidationError("");
+                      setItemShareName(randomId());
+                    }}
+                  >
+                    cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleItemShare}
+                    disabled={
+                      !itemShareName.trim() || isLoading || !!validationError
+                    }
+                    className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-[linear-gradient(to_left,#f3f4f6,#60a5fa,#1d4ed8)] cursor-pointer hover:scale-105 trans !text-black border-none hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "sharing..." : "share"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            )}
+          </>
+        )}
       </AlertDialog>
 
       {/* Delete Dialog */}
@@ -589,13 +867,13 @@ export default function Item({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
-              Cancel
+              cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleItemDeletion}
               className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
             >
-              Delete
+              delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

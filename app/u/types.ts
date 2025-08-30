@@ -25,6 +25,13 @@ export interface FileData {
 export interface ShareItemProps {
   itemName: string;
   itemType: "file" | "folder";
+  location: string[];
   shareName: string;
+  sourceEtag?: string;
+}
+
+export interface ShareStatusProps {
+  itemName: string;
+  itemType: "file" | "folder";
   sourceEtag?: string;
 }

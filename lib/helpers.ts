@@ -115,3 +115,14 @@ export const removeFileExtension = (name: string | undefined): string => {
 
   return name.substring(0, lastDotIndex);
 };
+
+export const randomId = (): string => {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  
+  for (let i = 0; i < 10; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return result;
+};

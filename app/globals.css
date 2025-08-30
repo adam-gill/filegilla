@@ -41,6 +41,10 @@ body {
   background: linear-gradient(to right, #f3f4f6, #60a5fa, #1d4ed8);
 }
 
+.fgg {
+  background: linear-gradient(to right, #f3f4f6, #60a5fa, #1d4ed8);
+}
+
 .fg-grad-r {
   background: linear-gradient(to right, #1d4ed8, #60a5fa, #f3f4f6);
 }

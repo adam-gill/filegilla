@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime
   accounts      Account[]
   sessions      Session[]
+  share         share[]
 
   @@map("user")
 }
@@ -82,4 +83,23 @@ model Jwks {
   createdAt  DateTime
 
   @@map("jwks")
+}
+
+model share {
+  shareName  String         @id(map: "shares_pkey")
+  id         String         @db.Uuid
+  itemName   String
+  s3Url      String
+  ownerId    String?
+  itemType   item_type_enum @default(file)
+  createdAt  DateTime       @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime       @default(now()) @db.Timestamp(6)
+  sourceEtag String?
+  views      BigInt         @default(0)
+  user       User?          @relation(fields: [ownerId], references: [id], onUpdate: NoAction, map: "fk_shares_owner")
+}
+
+enum item_type_enum {
+  file
+  folder
 }

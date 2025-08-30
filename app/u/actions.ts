@@ -12,11 +12,18 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { FileMetadata, FolderItem, ShareItemProps } from "./types";
+import {
+  FileMetadata,
+  FolderItem,
+  ShareItemProps,
+  ShareStatusProps,
+} from "./types";
 import { getScopedS3Client } from "@/lib/aws/actions";
-import { createPrivateS3Key } from "@/lib/aws/helpers";
+import { createPrivateS3Key, createPublicS3Key } from "@/lib/aws/helpers";
+import { prisma } from "@/lib/prisma";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
+const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
 
 export const folderNameExists = async (
   folderName: string,
@@ -644,10 +651,195 @@ export const getDownloadUrl = async (
 export const shareItem = async ({
   itemName,
   itemType,
+  location,
   shareName,
   sourceEtag,
-}: ShareItemProps) => {
-  console.log(itemName, itemType, shareName, sourceEtag);
+}: ShareItemProps): Promise<{
+  success: boolean;
+  message: string;
+  shareUrl?: string;
+}> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "User is not authenticated." };
+  }
+
+  const userId = session.user.id;
+  const s3Client = await getScopedS3Client(userId);
+
+  if (itemType === "file") {
+    try {
+      const privateKey = createPrivateS3Key(userId, location, itemName);
+      const publicKey = createPublicS3Key(itemName, shareName, "file");
+
+      try {
+        const headCommand = new HeadObjectCommand({
+          Bucket: S3_PUBLIC_BUCKET_NAME,
+          Key: publicKey,
+        });
+        await s3Client.send(headCommand);
+        return {
+          success: false,
+          message: "share name already exists. please choose a different name.",
+        };
+      } catch (error: any) {
+        if (error.name !== "NotFound") {
+          throw error;
+        }
+      }
+
+      const copyCommand = new CopyObjectCommand({
+        Bucket: S3_PUBLIC_BUCKET_NAME,
+        Key: publicKey,
+        CopySource: `${S3_BUCKET_NAME}/${privateKey}`,
+        MetadataDirective: "COPY",
+      });
+
+      await s3Client.send(copyCommand);
+
+      const shareUrl = `https://${S3_PUBLIC_BUCKET_NAME}.s3.amazonaws.com/${publicKey}`;
+
+      await prisma.share.create({
+        data: {
+          shareName: shareName,
+          id: crypto.randomUUID(),
+          itemName: itemName,
+          s3Url: shareUrl,
+          ownerId: userId,
+          itemType: "file",
+          sourceEtag: sourceEtag,
+          views: 0,
+        },
+      });
+
+      return {
+        success: true,
+        message: `file successfully shared as ${shareName}`,
+        shareUrl: shareUrl,
+      };
+    } catch (error) {
+      console.error("Error sharing file:", error);
+      return {
+        success: false,
+        message: `failed to share file: ${
+          error instanceof Error ? error.message : "unknown error"
+        }`,
+      };
+    }
+  } else {
+    try {
+      console.log("try folder share. shareName: ", shareName);
+
+      const existingShare = await prisma.share.findUnique({
+        where: { shareName: shareName },
+      });
+
+      if (existingShare) {
+        return {
+          success: false,
+          message: "share name already exists. please choose a different name.",
+        };
+      }
+
+      const privateKey = createPrivateS3Key(userId, location, itemName, true);
+      const publicKey = createPublicS3Key(itemName, shareName, "folder");
+
+      try {
+        const headCommand = new HeadObjectCommand({
+          Bucket: S3_PUBLIC_BUCKET_NAME,
+          Key: publicKey,
+        });
+        await s3Client.send(headCommand);
+        return {
+          success: false,
+          message: "share name already exists. please choose a different name.",
+        };
+      } catch (error: any) {
+        if (error.name !== "NotFound") {
+          throw error;
+        }
+      }
+
+      let continuationToken: string | undefined = undefined;
+      let totalCopied = 0;
+
+      do {
+        const listResponse: Awaited<
+          ReturnType<typeof s3Client.send>
+        > extends infer R
+          ? R extends {
+              Contents?: any[];
+              IsTruncated?: boolean;
+              NextContinuationToken?: string;
+            }
+            ? R
+            : any
+          : any = await s3Client.send(
+          new ListObjectsV2Command({
+            Bucket: S3_BUCKET_NAME,
+            Prefix: privateKey,
+            ContinuationToken: continuationToken,
+          })
+        );
+
+        const contents = listResponse.Contents || [];
+
+        // Copy each object to the public bucket
+        for (const object of contents) {
+          if (!object.Key) continue;
+
+          // Replace the private key prefix with the public key prefix
+          const publicObjectKey = object.Key.replace(privateKey, publicKey);
+
+          const copyCommand = new CopyObjectCommand({
+            Bucket: S3_PUBLIC_BUCKET_NAME,
+            Key: publicObjectKey,
+            CopySource: `${S3_BUCKET_NAME}/${encodeURI(object.Key)}`,
+            MetadataDirective: "COPY",
+          });
+
+          await s3Client.send(copyCommand);
+          totalCopied++;
+        }
+
+        continuationToken = listResponse.IsTruncated
+          ? listResponse.NextContinuationToken
+          : undefined;
+      } while (continuationToken);
+
+      const shareUrl = `https://${S3_PUBLIC_BUCKET_NAME}.s3.amazonaws.com/${publicKey}`;
+
+      await prisma.share.create({
+        data: {
+          shareName: shareName,
+          id: crypto.randomUUID(),
+          itemName: itemName,
+          s3Url: shareUrl,
+          ownerId: userId,
+          itemType: "folder",
+          sourceEtag: sourceEtag,
+          views: 0,
+        },
+      });
+
+      return {
+        success: true,
+        message: `folder successfully shared as ${shareName} (${totalCopied} files shared)`,
+        shareUrl: shareUrl,
+      };
+    } catch (error) {
+      console.error("Error sharing folder: ", error);
+      return {
+        success: false,
+        message: `failed to share folder: ${
+          error instanceof Error ? error.message : "unknown error"
+        }`,
+      };
+    }
+  }
 };
 
 export const deleteShareItem = async ({
@@ -662,8 +854,59 @@ export const deleteShareItem = async ({
 export const checkShareItem = async ({
   itemName,
   itemType,
-  shareName,
   sourceEtag,
-}: ShareItemProps) => {
-  console.log(itemName, itemType, shareName, sourceEtag);
+}: ShareStatusProps): Promise<{
+  success: boolean;
+  message: string;
+  shareUrl?: string;
+  shareName?: string;
+}> => {
+  if (itemType === "file") {
+    try {
+      const response = await prisma.share.findFirst({
+        where: {
+          sourceEtag: sourceEtag,
+        },
+      });
+
+      if (response?.s3Url && response.shareName) {
+        return {
+          success: true,
+          message: `${itemType} shareUrl found`,
+          shareUrl: response.s3Url,
+          shareName: response.shareName,
+        };
+      } else {
+        return { success: true, message: `${itemType} is not shared` };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: `unknown error checking share status: ${error}`,
+      };
+    }
+  } else {
+
+    try {
+      const response = await prisma.share.findFirst({
+        where: {
+          shareName: itemName,
+        },
+      });
+
+      if (response?.s3Url && response.shareName) {
+        return {
+          success: true,
+          message: `${itemType} shareUrl found`,
+          shareUrl: response.s3Url,
+          shareName: response.shareName,
+        };
+      } else {
+        return { success: true, message: `${itemType} is not shared` };
+      }
+
+    } catch (error) {
+      return {success: false, message: `unknown error checking share status: ${error}`}
+    }
+  }
 };

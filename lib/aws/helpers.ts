@@ -1,3 +1,5 @@
+import { getFileExtension } from "../helpers";
+
 export const createPrivateS3Key = (
   userId: string,
   location: string[],
@@ -16,5 +18,22 @@ export const createPrivateS3Key = (
     return cleanPath.endsWith("/") ? cleanPath : cleanPath + "/";
   } else {
     return cleanPath.endsWith("/") ? cleanPath.slice(0, -1) : cleanPath;
+  }
+};
+
+export const createPublicS3Key = (
+  itemName: string,
+  shareName: string,
+  itemType: string
+) => {
+  const basePath = "shares/";
+
+  if (itemType === "file") {
+    const fileExtension = getFileExtension(itemName);
+    const publicItemName = shareName + fileExtension;
+
+    return basePath + publicItemName;
+  } else {
+    return basePath + shareName + "/";
   }
 };
