@@ -21,19 +21,18 @@ export const createPrivateS3Key = (
   }
 };
 
-export const createPublicS3Key = (
-  itemName: string,
-  shareName: string,
-  itemType: string
-) => {
+export const createPublicS3Key = (itemName: string, shareName: string) => {
   const basePath = "shares/";
 
-  if (itemType === "file") {
-    const fileExtension = getFileExtension(itemName);
-    const publicItemName = shareName + fileExtension;
+  const fileExtension = getFileExtension(itemName);
+  const publicItemName = shareName + fileExtension;
 
-    return basePath + publicItemName;
-  } else {
-    return basePath + shareName + "/";
-  }
+  return basePath + publicItemName;
 };
+
+export const createPublicFileName = (itemName: string, shareName: string) => {
+  const fileExtension = getFileExtension(itemName);
+  const publicItemName = shareName + fileExtension;
+
+  return publicItemName;
+}

@@ -1,14 +1,7 @@
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  ReactNode,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Video,
   Music,
   Archive,
   FileText,
@@ -18,10 +11,8 @@ import {
   Trash2,
   AlertCircle,
   Share,
-  Images,
   MoreVertical,
   Pencil,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileData, FileMetadata } from "../types";
+import { FileMetadata, FileType, FolderItem } from "@/app/u/types";
 import {
   formatBytes,
   formatDate,
@@ -38,7 +29,12 @@ import {
   removeFileExtension,
   validateItemName,
 } from "@/lib/helpers";
-import { deleteItem, getDownloadUrl, getFile, renameItem } from "../actions";
+import {
+  deleteItem,
+  getDownloadUrl,
+  getFile,
+  renameItem,
+} from "@/app/u/actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
@@ -54,6 +50,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import ShareDialog from "@/app/u/components/shareDialog";
+import { getFileType } from "@/app/u/helpers";
+import GetFileIcon from "@/app/u/components/getFileIcon";
+import InfoDialog from "./infoDialog";
 
 interface FileViewerProps {
   location: string[];
@@ -64,16 +64,6 @@ interface FileResponse {
   fileMetadata?: FileMetadata;
 }
 
-type FileType =
-  | "image"
-  | "video"
-  | "audio"
-  | "pdf"
-  | "document"
-  | "text"
-  | "archive"
-  | "unknown";
-
 const getFileData = async (location: string[]): Promise<FileResponse> => {
   const { success, url, fileMetadata } = await getFile(location);
 
@@ -82,85 +72,6 @@ const getFileData = async (location: string[]): Promise<FileResponse> => {
   } else {
     return { url: undefined, fileMetadata: undefined };
   }
-};
-
-const getFileIcon = (fileName: string): ReactNode => {
-  const extension = fileName.toLowerCase().split(".").pop();
-
-  // Image files
-  if (
-    ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico"].includes(
-      extension || ""
-    )
-  ) {
-    return <Images className="w-5 h-5 text-blue-400" />;
-  }
-
-  // Video files
-  if (
-    ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv", "m4v"].includes(
-      extension || ""
-    )
-  ) {
-    return <Video className="w-5 h-5 text-purple-400" />;
-  }
-
-  // Audio files
-  if (
-    ["mp3", "wav", "flac", "aac", "ogg", "wma", "m4a"].includes(extension || "")
-  ) {
-    return <Music className="w-5 h-5 text-green-400" />;
-  }
-
-  // Archive files
-  if (["zip", "rar", "7z", "tar", "gz", "bz2"].includes(extension || "")) {
-    return <Archive className="w-5 h-5 text-orange-400" />;
-  }
-
-  // Document files
-  if (["pdf", "doc", "docx", "txt", "rtf", "odt"].includes(extension || "")) {
-    return <FileText className="w-5 h-5 text-red-400" />;
-  }
-
-  // Default file icon
-  return <File className="w-5 h-5 text-gray-400" />;
-};
-
-const getFileType = (fileName: string): FileType => {
-  const extension = fileName.toLowerCase().split(".").pop();
-
-  if (
-    ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico"].includes(
-      extension || ""
-    )
-  ) {
-    return "image";
-  }
-  if (
-    ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv", "m4v"].includes(
-      extension || ""
-    )
-  ) {
-    return "video";
-  }
-  if (
-    ["mp3", "wav", "flac", "aac", "ogg", "wma", "m4a"].includes(extension || "")
-  ) {
-    return "audio";
-  }
-  if (["pdf"].includes(extension || "")) {
-    return "pdf";
-  }
-  if (["doc", "docx"].includes(extension || "")) {
-    return "document";
-  }
-  if (["txt", "rtf", "odt", "md"].includes(extension || "")) {
-    return "text";
-  }
-  if (["zip", "rar", "7z", "tar", "gz", "bz2"].includes(extension || "")) {
-    return "archive";
-  }
-  return "unknown";
 };
 
 const getPath = (path: string[] | string): string => {
@@ -336,11 +247,12 @@ export default function FileViewer({ location }: FileViewerProps) {
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
+  const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [renameName, setRenameName] = useState<string>(
     removeFileExtension(location[location.length - 1]) || ""
   );
   const [validationError, setValidationError] = useState<string>("");
-  const [file, setFile] = useState<FileData>();
+  const [file, setFile] = useState<FolderItem>();
   const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -377,7 +289,11 @@ export default function FileViewer({ location }: FileViewerProps) {
       setFile({
         name: location[location.length - 1],
         path: getPath(location),
-        metadata: fileMetadata || {},
+        type: "file",
+        etag: fileMetadata?.etag,
+        lastModified: fileMetadata?.lastModified,
+        fileType: fileMetadata?.fileType,
+        size: fileMetadata?.size,
         url: url,
       });
     } catch (error) {
@@ -403,10 +319,7 @@ export default function FileViewer({ location }: FileViewerProps) {
         setFile({
           ...file,
           name: fullRenameName,
-          metadata: {
-            ...file.metadata,
-            lastModified: new Date(),
-          },
+          lastModified: new Date(),
         });
 
         const { success, message } = await renameItem(
@@ -551,15 +464,15 @@ export default function FileViewer({ location }: FileViewerProps) {
           <div className="flex items-center justify-between mb-6">
             {file && (
               <div className="flex items-center gap-3">
-                {getFileIcon(file.name)}
+                <GetFileIcon fileName={file.name} />
                 <div>
                   <h1 className="text-xl font-semibold text-gray-100">
                     {file.name}
                   </h1>
                   <div className="text-sm text-gray-400 flex flex-col max-md:text-xs">
-                    <p>{`${formatBytes(file?.metadata.size)} • Modified `}</p>
-                    {file.metadata.lastModified && (
-                      <p>{formatDate(file.metadata.lastModified)}</p>
+                    <p>{`${formatBytes(file?.size)} • Modified `}</p>
+                    {file.lastModified && (
+                      <p>{formatDate(file.lastModified)}</p>
                     )}
                   </div>
                 </div>
@@ -590,6 +503,7 @@ export default function FileViewer({ location }: FileViewerProps) {
                 </Button>
 
                 <Button
+                  onClick={() => setIsShareOpen(true)}
                   variant="outline"
                   size="sm"
                   className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
@@ -661,7 +575,10 @@ export default function FileViewer({ location }: FileViewerProps) {
                       <Pencil className="w-4 h-4 mr-2" />
                       rename
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="focus:bg-gray-700 focus:text-gray-200">
+                    <DropdownMenuItem
+                      onClick={() => setIsShareOpen(true)}
+                      className="focus:bg-gray-700 focus:text-gray-200"
+                    >
                       <Share className="w-4 h-4 mr-2" />
                       share
                     </DropdownMenuItem>
@@ -787,52 +704,22 @@ export default function FileViewer({ location }: FileViewerProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* More Info Dialog */}
-      <AlertDialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
-        <AlertDialogContent
-          ref={infoRef}
-          className="!bg-white shadow-2xl shadow-gray-600 text-gray-200"
-        >
-          {file && (
-            <>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-black text-2xl">
-                  {`${file.name}`}
-                </AlertDialogTitle>
-                <AlertDialogDescription className="!text-gray-600 text-base">
-                  file information
-                </AlertDialogDescription>
-                <AlertDialogCancel className="!bg-transparent border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
-                  <X className="text-black stroke-3 hover:scale-110 trans" />
-                </AlertDialogCancel>
-              </AlertDialogHeader>
-              <div className="w-full max-w-[580px] pb-4 text-gray-600">
-                {file.metadata.size && (
-                  <div>
-                    <strong>item size: </strong>
-                    {formatBytes(file.metadata.size)}
-                  </div>
-                )}
-                {file.metadata.lastModified && (
-                  <div>
-                    <strong>last modified: </strong>
-                    {formatDate(file.metadata.lastModified)}
-                  </div>
-                )}
-                <div className="break-words overflow-hidden">
-                  <strong>item path: </strong>
-                  {getPath(file.path)}
-                </div>
-                {file.metadata.etag && (
-                  <div>
-                    <strong>uid: </strong> {file.metadata.etag.slice(1, -1)}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </AlertDialogContent>
-      </AlertDialog>
+      {file && (
+        <InfoDialog
+          isInfoOpen={isInfoOpen}
+          setIsInfoOpen={setIsInfoOpen}
+          item={file}
+        />
+      )}
+
+      {file && (
+        <ShareDialog
+          item={file}
+          location={location.slice(0, -1)}
+          isShareOpen={isShareOpen}
+          setIsShareOpen={setIsShareOpen}
+        />
+      )}
     </div>
   );
 }

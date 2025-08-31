@@ -13,6 +13,7 @@ export interface FolderItem {
   path: string;
   etag?: string;
   fileType?: string;
+  url?: string;
 }
 
 export interface FileData {
@@ -30,8 +31,12 @@ export interface ShareItemProps {
   sourceEtag?: string;
 }
 
-export interface ShareStatusProps {
-  itemName: string;
-  itemType: "file" | "folder";
-  sourceEtag?: string;
-}
+export type FileType =
+  | "image"
+  | "video"
+  | "audio"
+  | "pdf"
+  | "document"
+  | "text"
+  | "archive"
+  | "unknown";
