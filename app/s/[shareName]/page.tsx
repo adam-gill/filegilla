@@ -13,9 +13,7 @@ export async function generateMetadata({
 }: ShareViewerProps): Promise<Metadata> {
   const shareName = (await params).shareName;
 
-  // Use your environment variable or fallback to localhost
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  console.log(baseUrl);
 
   return {
     title: `${decodeURIComponent(shareName)} - filegilla`,
@@ -58,12 +56,19 @@ const LoadingScreen = () => {
 export default async function ShareViewer({ params }: ShareViewerProps) {
   const shareName = (await params).shareName;
   const { file } = await getSharedFile(shareName);
+  console.log(file);
 
   return (
     <main>
       <Suspense fallback={<LoadingScreen />}>
         {file && <SharedFileViewer file={file} shareName={shareName} />}
       </Suspense>
+
+      {!file && (
+        <div className="min-h-[70vh] w-full flex items-center justify-center text-center">
+          <div className="text-2xl font-medium">{`404 - '${shareName}' not found`}</div>
+        </div>
+      )}
     </main>
   );
 }

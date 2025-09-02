@@ -25,7 +25,7 @@ export const getFileType = (fileName: string): FileType => {
     if (["pdf"].includes(extension || "")) {
       return "pdf";
     }
-    if (["doc", "docx"].includes(extension || "")) {
+    if (["doc", "docx", "ppt", "pptx"].includes(extension || "")) {
       return "document";
     }
     if (["txt", "rtf", "odt", "md"].includes(extension || "")) {
