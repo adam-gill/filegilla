@@ -27,6 +27,7 @@ export default function FileRenderer({
   const [error, setError] = useState<boolean>(false);
   const [pageHeight, setPageHeight] = useState<number>(0);
   const [pageWidth, setPageWidth] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   
 
   useEffect(() => {
@@ -40,12 +41,23 @@ export default function FileRenderer({
       setPageWidth(width);
     }
 
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    }
+
     calculatePageHeight();
     calculatePageWidth();
+    checkMobile();
     window.addEventListener("resize", calculatePageHeight);
+    window.addEventListener("resize", calculatePageWidth);
+    window.addEventListener("resize", checkMobile);
 
     // Cleanup event listener
-    return () => window.removeEventListener("resize", calculatePageHeight);
+    return () => {
+      window.removeEventListener("resize", calculatePageHeight);
+      window.removeEventListener("resize", calculatePageWidth);
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
   const handleError = (): void => {
@@ -113,7 +125,7 @@ export default function FileRenderer({
       return (
         <div className="w-full rounded-lg border border-none h-full">
           <iframe
-            src={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+            src={isMobile ? `${url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit&zoom=page-fit` : `${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=page-width`}
             className="w-full rounded-lg"
             title={fileName}
             onError={handleError}
