@@ -56,6 +56,7 @@ interface FileRendererProps {
           <div className="w-full rounded-lg border border-none p-4">
             <video
               controls
+              autoFocus
               className="max-w-full max-h-[80vh] mx-auto rounded"
               onError={handleError}
             >

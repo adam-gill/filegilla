@@ -19,6 +19,19 @@ import CopyText from "@/app/u/components/copyText";
 import InfoDialog from "@/app/u/components/infoDialog";
 import { getPublicDownloadUrl } from "../actions";
 import { createPublicFileName } from "@/lib/aws/helpers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { authClient } from "@/lib/auth/auth-client";
+import { deleteShareItem } from "@/app/u/actions";
+import { useRouter } from "next/navigation";
 
 interface FileViewerProps {
   file: FolderItem;
@@ -28,9 +41,11 @@ interface FileViewerProps {
 export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  // const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
   const infoRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const filegillaLink = `${process.env.NEXT_PUBLIC_APP_URL!}/s/${shareName}`;
+  const { data: session } = authClient.useSession();
 
   // Close dropdown when clicking outside of the more info alert dialog
   useEffect(() => {
@@ -79,9 +94,42 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
     }
   }, [file.name, shareName]);
 
+  const handleItemDeletion = async () => {
+    try {
+      if (file.etag) {
+        const { success, message } = await deleteShareItem(
+          file.name,
+          shareName,
+          file.etag
+        );
+
+        if (success) {
+          toast({
+            title: "success!",
+            description: message,
+            variant: "good",
+          });
+          router.push("/u");
+        } else {
+          toast({
+            title: "error",
+            description: message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "error",
+        description: `unknown error deleting '${shareName}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div>
-      <div className="text-white p-6 max-md:p-4 bg-neutral-900 rounded-lg">
+      <div className="text-white p-4 max-md:p-4 bg-neutral-900 rounded-lg">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -136,17 +184,21 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
                   <Download className="w-4 h-4" />
                 </Button>
 
-                <Button
-                  onClick={() => {
-                    // setIsDeleteOpen(true);
-                    setIsDropdownOpen(false);
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="!bg-red-600/85 border-gray-600 text-gray-300 hover:!bg-red-600 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                {session &&
+                  session.user.id &&
+                  session.user.id === file.ownerId && (
+                    <Button
+                      onClick={() => {
+                        setIsDeleteOpen(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="!bg-red-600/85 border-gray-600 text-gray-300 hover:!bg-red-600 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
               </div>
 
               {/* Mobile Dropdown Menu - Visible only on mobile */}
@@ -206,16 +258,20 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
                       <Download className="w-4 h-4 mr-2" />
                       download
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        // setIsDeleteOpen(true);
-                        setIsDropdownOpen(false);
-                      }}
-                      className="cursor-pointer text-white bg-red-600/85 focus:bg-gray-700 hover:bg-red-600 focus:text-red-300"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2 text-white" />
-                      delete
-                    </DropdownMenuItem>
+                    {session &&
+                      session.user.id &&
+                      session.user.id === file.ownerId && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setIsDeleteOpen(true);
+                            setIsDropdownOpen(false);
+                          }}
+                          className="cursor-pointer text-white bg-red-600/85 focus:bg-gray-700 hover:bg-red-600 focus:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2 text-white" />
+                          delete
+                        </DropdownMenuItem>
+                      )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -235,29 +291,30 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
       </div>
 
       {/* TODO */}
-      {/* <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-         <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
-           <AlertDialogHeader>
-             <AlertDialogTitle className="text-black text-2xl">
-               {title}
-             </AlertDialogTitle>
-             <AlertDialogDescription className="!text-gray-600 text-base">
-               {description}
-             </AlertDialogDescription>
-           </AlertDialogHeader>
-           <AlertDialogFooter>
-             <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
-               cancel
-             </AlertDialogCancel>
-             <AlertDialogAction
-               onClick={handleItemDeletion}
-               className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
-             >
-               delete
-             </AlertDialogAction>
-           </AlertDialogFooter>
-         </AlertDialogContent>
-       </AlertDialog> */}
+
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-black text-2xl">
+              {`delete /s/${shareName}`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="!text-gray-600 text-base">
+              {"remove this shared file from the public space"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
+              cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleItemDeletion}
+              className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+            >
+              delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <InfoDialog
         isInfoOpen={isInfoOpen}

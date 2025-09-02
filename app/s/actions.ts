@@ -46,6 +46,7 @@ export const getSharedFile = async (
             lastModified: s3Response.LastModified,
             size: s3Response.ContentLength,
             url: response.s3Url,
+            ownerId: response.ownerId ?? undefined,
           },
         };
       } else {

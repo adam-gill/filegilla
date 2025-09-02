@@ -14,6 +14,7 @@ export interface FolderItem {
   etag?: string;
   fileType?: string;
   url?: string;
+  ownerId?: string;
 }
 
 export interface FileData {

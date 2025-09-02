@@ -23,7 +23,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
 
   return (
     <header className="w-full pt-1">
-      <div className="flex h-16 items-center justify-between w-full max-w-6xl px-6 max-md:px-0 mx-auto">
+      <div className="flex h-16 items-center justify-between w-full max-w-6xl px-6 mx-auto">
         <NavigationMenu>
           <NavigationMenuList className="flex items-center gap-3 sm:gap-1">
             <NavigationMenuItem className="flex items-center gap-2 cursor-pointer">
@@ -56,7 +56,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
           <NavigationMenuList>
             <NavigationMenuItem>
                 <NavigationMenuLink
-                  href={!isPending && !userData ? "/" : "/account"}
+                  href={!isPending && !userData ? "/auth" : "/account"}
                   className="max-md:p-0 group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                 >
                   {userData ? (
