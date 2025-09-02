@@ -302,10 +302,10 @@ export default function FileViewer({ location }: FileViewerProps) {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             {file && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 overflow-hidden">
                 <GetFileIcon fileName={file.name} />
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-100">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-xl font-semibold text-gray-100 truncate">
                     {file.name}
                   </h1>
                   <div className="text-sm text-gray-400 flex flex-col max-md:text-xs">
@@ -415,7 +415,13 @@ export default function FileViewer({ location }: FileViewerProps) {
                       rename
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => setIsShareOpen(true)}
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        setTimeout(() => {
+                          setIsShareOpen(true);
+                        }, 100);
+                        setIsDeleteOpen(false);
+                      }}
                       className="focus:bg-gray-700 focus:text-gray-200"
                     >
                       <Share className="w-4 h-4 mr-2" />

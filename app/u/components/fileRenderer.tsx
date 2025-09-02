@@ -8,8 +8,10 @@ import {
   Download,
   Archive,
   File,
+  Info,
 } from "lucide-react";
 import Image from "next/image";
+import InfoDialog from "./infoDialog";
 
 interface FileRendererProps {
   url: string;
@@ -28,7 +30,7 @@ export default function FileRenderer({
   const [pageHeight, setPageHeight] = useState<number>(0);
   const [pageWidth, setPageWidth] = useState<number>(0);
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  
+  const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const calculatePageHeight = () => {
@@ -39,11 +41,11 @@ export default function FileRenderer({
     const calculatePageWidth = () => {
       const width = window.innerWidth;
       setPageWidth(width);
-    }
+    };
 
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
-    }
+    };
 
     calculatePageHeight();
     calculatePageWidth();
@@ -98,7 +100,8 @@ export default function FileRenderer({
         <div className="w-full rounded-lg border border-none p-4">
           <video
             controls
-            autoFocus
+            preload="metadata"
+            playsInline
             className="max-w-full max-h-[80vh] mx-auto rounded"
             onError={handleError}
           >
@@ -123,20 +126,51 @@ export default function FileRenderer({
 
     case "pdf":
       return (
-        <div className="w-full rounded-lg border border-none h-full">
-          <iframe
-            src={isMobile ? `${url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit&zoom=page-fit` : `${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=page-width`}
-            className="w-full rounded-lg"
-            title={fileName}
-            onError={handleError}
-            style={{
-              border: 0,
-              height: "100%",
-              minHeight: `${pageHeight - 350}px`,
-              width: "100%",
-              objectFit: "fill"
-            }}
-          />
+        <div className="w-full rounded-lg border border-none h-full overflow-auto">
+          {isMobile ? (
+            <div className="flex flex-col">
+              <object
+                data={`${url}#scrollbar=1&toolbar=0&navpanes=0&pagemode=none&view=FitV`}
+                type="application/pdf"
+                width="100%"
+                height="100%"
+                className="rounded-lg"
+                style={{
+                  backgroundColor: "white",
+                  overflow: "scroll",
+                }}
+              >
+                <p>
+                  {"Your browser doesn't support PDFs."}
+                  <a href={url} target="_blank" rel="noopener noreferrer">
+                    Download the PDF
+                  </a>
+                </p>
+              </object>
+              <div className="mt-2 flex w-full justify-end">
+                <Info onClick={() => setIsInfoOpen(true)} />
+              </div>
+
+              <InfoDialog isInfoOpen={isInfoOpen} item={undefined} setIsInfoOpen={setIsInfoOpen} />
+
+            </div>
+          ) : (
+            <iframe
+              src={`${url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+              className="w-full rounded-lg"
+              title={fileName}
+              onError={handleError}
+              style={{
+                border: 0,
+                height: "100%",
+                minHeight: isMobile
+                  ? `${pageHeight - 200}px`
+                  : `${pageHeight - 350}px`,
+                width: "100%",
+                overflow: "hidden",
+              }}
+            />
+          )}
         </div>
       );
 

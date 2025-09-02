@@ -12,7 +12,7 @@ import { formatBytes, formatDate } from "@/lib/helpers";
 import { X } from "lucide-react";
 
 interface InfoDialogProps {
-  item: FolderItem;
+  item?: FolderItem;
   isInfoOpen: boolean;
   setIsInfoOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -52,40 +52,42 @@ export default function InfoDialog({
         >
           <AlertDialogHeader>
             <AlertDialogTitle className="text-black text-2xl">
-              {`${item.name}`}
+              {item ? `${item.name}` : "mobile pdf limitations"}
             </AlertDialogTitle>
             <AlertDialogDescription className="!text-gray-600 text-base">
-              {`${item.type} information`}
+              {item ? `${item.type} information` : "download to view pdfs with multiple pages"}
             </AlertDialogDescription>
             <AlertDialogCancel className="!bg-transparent border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
               <X className="text-black stroke-3 hover:scale-110 trans" />
             </AlertDialogCancel>
           </AlertDialogHeader>
-          <div className="w-full max-w-[580px] pb-4 text-gray-600">
-            {item.size && (
-              <div>
-                <strong>item size: </strong>
-                {formatBytes(item.size)}
-              </div>
-            )}
-            {item.lastModified && (
-              <div>
-                <strong>last modified: </strong>
-                {formatDate(item.lastModified)}
-              </div>
-            )}
-            {item.path && (
-              <div className="break-words overflow-hidden">
-                <strong>item path: </strong>
-                {getPath(item.path)}
-              </div>
-            )}
-            {item.etag && (
-              <div>
-                <strong>uid: </strong> {item.etag.slice(1, -1)}
-              </div>
-            )}
-          </div>
+          {item && (
+            <div className="w-full max-w-[580px] pb-4 text-gray-600">
+              {item.size && (
+                <div>
+                  <strong>item size: </strong>
+                  {formatBytes(item.size)}
+                </div>
+              )}
+              {item.lastModified && (
+                <div>
+                  <strong>last modified: </strong>
+                  {formatDate(item.lastModified)}
+                </div>
+              )}
+              {item.path && (
+                <div className="break-words overflow-hidden">
+                  <strong>item path: </strong>
+                  {getPath(item.path)}
+                </div>
+              )}
+              {item.etag && (
+                <div>
+                  <strong>uid: </strong> {item.etag.slice(1, -1)}
+                </div>
+              )}
+            </div>
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </>
