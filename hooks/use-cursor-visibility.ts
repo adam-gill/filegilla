@@ -96,7 +96,6 @@ export function useCursorVisibility({
           // If not enough space, scroll to position cursor in the middle of viewport
           if (!availableSpace) {
             const targetScrollY =
-              // TODO: Needed?
               //   window.scrollY + (cursorCoords.top - windowHeight / 2)
               cursorCoords.top - windowHeight / 2
 

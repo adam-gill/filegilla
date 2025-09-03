@@ -1,69 +1,20 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import Typewriter from "typewriter-effect";
-import { useAuth } from "@/lib/useAuth";
-import { TailSpin } from "react-loading-icons";
-import { useRouter } from "next/navigation";
-import Loading from "@/components/loading";
-import SignInButton from "@/components/signInBtn";
+import Navbar from "@/components/navbar";
 
-export default function Home() {
-  const [hidden, setHidden] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(false);
-  const router = useRouter();
-  const { status } = useAuth();
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
-  useEffect(() => {
-    const delayText = async () => {
-      await delay(4000);
-      setHidden(false);
-    };
-    delayText();
-  }, [hidden]);
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/dashboard");
-    }
-  }, [status, router]);
-
-  if (status === "loading") {
-    return <Loading />;
-  }
-
-  if (status == "unauthenticated") {
-    return (
-      <div className="flex flex-col min-h-screen w-full px-8 mx-auto max-w-7xl">
-        <nav className="w-full px-8 py-4 h-20 flex items-center justify-center">
-          <ul className="w-full flex justify-between">
-            <li className="flex items-center justify-center cursor-pointer">
-              <Image
-                src="/navLogo.png"
-                width={40}
-                height={32}
-                alt="logo"
-                className="mr-4 h-8 w-12"
-              />
-              <h1 className="text-2xl font-bold">FileGilla</h1>
-            </li>
-            <li className="flex cc">
-              <SignInButton loading={loading} setLoading={setLoading} tabIndex={0} content={"Sign In"} />
-            </li>
-          </ul>
-        </nav>
-
+export default function Landing() {
+  return (
+    <main>
+      <Navbar isLanding={true} />
+      <div className="flex flex-col min-h-screen w-full px-6 mx-auto max-w-7xl">
         <main className="flex-grow flex flex-col items-center">
-          <div className="w-full h-[165px] max-w-[900px] mx-auto flex flex-col mt-16 text-7xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">
-            Storage in the Cloud with Privacy and Security
+          <div className="w-full max-w-6xl max-md:text-4xl flex flex-col mt-8 text-6xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">
+            private and secure cloud storage.
           </div>
           <div
-            className={`text-center mt-8 text-3xl transition-opacity duration-1000 ease-in-out `}
+            className={`text-center mt-8 not-visited:text-3xl transition-opacity duration-1000 ease-in-out `}
           >
             <Typewriter
               options={{
@@ -80,50 +31,29 @@ export default function Home() {
             />
           </div>
 
-          <Button
-            disabled={loading}
-            onClick={() => {
-              setLoading(true);
-              signIn("azure-ad-b2c");
-            }}
-            variant={"pretty"}
-            className="mt-36 w-72 py-8 text-3xl px-20 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
+          <Link
+            href={"/auth?signUp=1"}
+            className="bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium mt-36 py-4 text-3xl text-center px-14 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
           >
-            {loading ? (
-              <TailSpin
-                stroke="#000"
-                strokeWidth={2.5}
-                width={48}
-                height={48}
-                speed={2.5}
-              />
-            ) : (
-              "Join Now"
-            )}
-          </Button>
-          <p className="mt-2">{"Join for free!"}</p>
+            join now
+          </Link>
+          <p className="mt-2">{"foin for free!"}</p>
         </main>
 
         <footer className="mt-auto py-4">
           <h1 className="text-center">
-            FileGilla {new Date().getFullYear()}
+            filegilla {new Date().getFullYear()}
             <span className="mx-2">&#x2022;</span>
             <Link href={"/privacy"}>
-              <span className="underline">Privacy Policy</span>
+              <span className="underline">privacy policy</span>
             </Link>
             <span className="mx-2">&#x2022;</span>
             <Link href={"/terms"}>
-              <span className="underline">Terms of Service</span>
+              <span className="underline">terms of service</span>
             </Link>
           </h1>
         </footer>
       </div>
-    );
-  }
-
-  return (
-    <>
-      <Loading />
-    </>
+    </main>
   );
 }

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/next"
+
 
 import { Space_Grotesk } from "next/font/google";
-import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster"
 
 const spaceGrotesk = Space_Grotesk({
@@ -16,9 +17,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: {
     template: "%s",
-    default: "FileGilla",
+    default: "filegilla",
   },
-  description: "Store your stuff in the cloud",
+  description: "store your stuff in the cloud",
   openGraph: {
     images: "/ogLogo.png",
   },
@@ -32,10 +33,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={cn("antialiased", spaceGrotesk.className)}>
-        <Providers>{children}</Providers>
+    <html lang="en" className="dark">
+      <body className={cn("antialiased bg-black", spaceGrotesk.className)}>
+          {children}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );

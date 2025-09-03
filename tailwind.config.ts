@@ -19,6 +19,7 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         grayHover: "#afafaf3f",
+        fgBlack: "#0a0a0a",
       },
       borderRadius: {
         lg: "var(--radius)",

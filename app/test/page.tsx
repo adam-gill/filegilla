@@ -1,7 +1,18 @@
 export default function Test() {
-  return (
-    <div className="w-full h-full">
-      <h1>Test</h1>
-    </div>
-  )
+
+
+    const print = () => {
+        
+        const arr = ["a", "b", "c", "d"]
+
+        
+        return `og: ${JSON.stringify(arr)} new: ${JSON.stringify(arr.slice(0, -1))}`
+    }
+
+    return (
+        <div>
+            Test Page
+            {print()}
+        </div>
+    )
 }

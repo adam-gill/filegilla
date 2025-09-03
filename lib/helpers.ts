@@ -1,157 +1,129 @@
-import React, { JSX } from "react";
-import { FC } from "react";
-import {
-  GrDocumentText,
-  GrDocumentPdf,
-  GrDocumentWord,
-  GrDocumentImage,
-  GrDocumentVideo,
-  GrDocumentZip,
-} from "react-icons/gr";
-import { showToast } from "./showToast";
+import { FolderItem } from "@/app/u/types";
 
-const getFileIcon = (name: string): FC => {
-  const lastPeriodIndex = name.lastIndexOf(".");
-  if (lastPeriodIndex === -1) return GrDocumentText;
-
-  const fileExtension = name.slice(lastPeriodIndex + 1).toLowerCase();
-
-  switch (fileExtension) {
-    case "pdf":
-      return GrDocumentPdf;
-    case "doc":
-    case "docx":
-      return GrDocumentWord;
-    case "png":
-    case "jpg":
-    case "jpeg":
-      return GrDocumentImage;
-    case "mov":
-    case "mp4":
-    case "webm":
-      return GrDocumentVideo;
-    case "zip":
-    case "xz":
-    case "gz":
-      return GrDocumentZip;
-    default:
-      return GrDocumentText;
+export const formatBytes = (bytes: number | undefined): string => {
+  if (bytes === undefined || bytes === null || isNaN(bytes)) {
+    return "";
   }
+
+  if (bytes === 0) {
+    return "0 Bytes";
+  }
+
+  const k = 1024;
+  const units = ["Bytes", "KB", "MB", "GB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const unitIndex = i >= units.length ? units.length - 1 : i;
+
+  const decimals = unitIndex === 0 ? 0 : 1;
+
+  const value = (bytes / Math.pow(k, unitIndex)).toFixed(decimals);
+
+  return `${value} ${units[unitIndex]}`;
 };
 
-// Alternative version that returns the JSX directly
-export const getFileIconJSX = (name: string): JSX.Element => {
-  const Icon = getFileIcon(name);
-  return React.createElement(Icon);
+export const sortItems = (items: FolderItem[]): FolderItem[] => {
+  const sorted = items.sort((a, b) => {
+    if (a.type === b.type) {
+      return 0;
+    }
+    return a.type === "folder" ? -1 : 1;
+  });
+  return sorted;
 };
 
-export function cleanName(name: string): string {
-  if (name.length > 17) {
-    name = name.slice(0, 16) + "...";
-  }
-
-  return name;
-}
-
-export function convertSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  } else if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  } else if (bytes < 1024 * 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  } else {
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  }
-}
-
-export function cleanDate(dateString: string): string {
-  const date = new Date(dateString);
-  const options: Intl.DateTimeFormatOptions = {
-    year: "2-digit",
+export const formatDate = (date: Date): string => {
+  return date.toLocaleDateString("en-US", {
     month: "numeric",
     day: "numeric",
+    year: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-  };
+  });
+};
 
-  return date.toLocaleDateString(undefined, options);
-}
+export const getInitials = (name: string): string => {
+  const nameArray = name.split(" ");
 
-export async function handleDownload(blobUrl: string, name: string) {
-  try {
-    const response = await fetch(blobUrl, {
-      method: "GET",
-      mode: "cors",
-      credentials: "omit",
-      headers: {
-        Accept: "*/*",
-      },
+  if (!nameArray || nameArray.length === 0) {
+    return "";
+  } else if (nameArray.length === 1) {
+    return name.slice(0, 1);
+  } else {
+    return nameArray[0].charAt(0) + nameArray[1].charAt(0);
+  }
+};
+
+export const sortContents = (contents: FolderItem[]): FolderItem[] => {
+  if (contents && contents.length > 0) {
+    const initialContents = contents.sort((a, b) => {
+      if (a.type === b.type) {
+        return 0;
+      }
+      return a.type === "folder" ? -1 : 1;
     });
-    if (!response.ok) throw new Error("Download failed");
 
-    const blob = await response.blob();
-
-    const blobDownloadUrl = window.URL.createObjectURL(blob);
-    name = decodeURIComponent(name);
-
-    const link = document.createElement("a");
-    link.href = blobDownloadUrl;
-    link.download = name;
-    document.body.appendChild(link);
-    link.click();
-
-    // Cleanup
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(blobDownloadUrl);
-    showToast(`Successfully downloaded ${name}`, "", "good");
-  } catch (error) {
-    console.error("Download error:", error);
-    showToast(`Failed to download ${name} :(`, "", "destructive");
-  } finally {
+    return initialContents;
+  } else {
+    return [];
   }
-}
+};
 
-export function ag_uuid() {
+export const validateItemName = (name: string, type: string): string => {
+  if (!name.trim()) {
+    return "";
+  }
+
+  // Check for invalid characters
+  const invalidChars = /[<>:"/\\|?*\x00-\x1f]/;
+  if (invalidChars.test(name)) {
+    return `${type} name cannot contain: < > : " / \\ | ? * or control characters`;
+  }
+
+  // Check for leading/trailing dots
+  if (name.startsWith(" ") || name.endsWith(" ")) {
+    return `${type} name cannot start or end with spaces`;
+  }
+
+  // Check for consecutive spaces
+  if (name.includes("  ")) {
+    return `${type} name cannot contain consecutive spaces`;
+  }
+
+  if (name.length > 255) {
+    return `${type} name cannot exceed 255 characters`;
+  }
+
+  return "";
+};
+
+export const getFileExtension = (fileName: string): string => {
+  return "." + fileName.toLowerCase().split(".").pop();
+};
+
+export const removeFileExtension = (name: string | undefined): string => {
+  if (!name) {
+    return "";
+  }
+
+  const lastDotIndex = name.lastIndexOf(".");
+
+  if (lastDotIndex <= 0 || lastDotIndex === name.length - 1) {
+    return name;
+  }
+
+  return name.substring(0, lastDotIndex);
+};
+
+export const randomId = (length?: number): string => {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const len = length ?? 10;
+  let result = "";
   
-  const numbers = "0123456789";
-  const lowerCase = "abcdefghijklmnopqrstuvwxyz";
-  const upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const allChars = numbers + lowerCase + upperCase;
-
-  // Create Uint32Array for true randomness using crypto
-  const randomValues = new Uint32Array(24);
-  crypto.getRandomValues(randomValues);
-
-  // Generate the random string
-  return Array.from(randomValues)
-    .map((val) => allChars[val % allChars.length])
-    .join("");
-}
-
-export function extractFileExtension(fullFileName: string): string {
-  const lastDotIndex = fullFileName.lastIndexOf(".");
-  if (lastDotIndex === -1) return "";
-  return fullFileName.slice(lastDotIndex);
-};
-
-export function stripToken(fullURL: string): string {
-  return fullURL.split("?")[0];
-};
-
-export function stripFileExtension(file: string): string {
-  const lastDotIndex = file.lastIndexOf('.');
-  if (lastDotIndex === -1) return file;
-  return file.slice(0, lastDotIndex);
-}
-
-export const copyToClipboard = async (text: string): Promise<void> => {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch (err) {
-    console.error("Failed to copy text: ", err);
+  for (let i = 0; i < len; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  
+  return result;
 };
-
-export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));

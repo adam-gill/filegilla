@@ -1,23 +1,35 @@
-import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const { pathname } = req.nextUrl;
+const protectedRoutes = ["/u", "/test", "/note"];
 
-  if (token) {
-    if (pathname === "/") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  let sessionToken;
+
+  // block test page in production
+  if (process.env.NODE_ENV === "production" && pathname === "/test") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    sessionToken = request.cookies.get("__Secure-better-auth.session_token");
+  } else {
+    sessionToken = request.cookies.get("better-auth.session_token");
+  }
+
+  if (isProtectedRoute) {
+    if (!sessionToken) {
+      return NextResponse.redirect(new URL("/", request.url));
     }
   } else {
-    const protectedPaths = ["/dashboard", "/view", "/portal", "/passwords"];
-    const pathMatches = protectedPaths.some((path) =>
-      req.nextUrl.pathname.startsWith(path)
-    );
-
-    if (pathMatches) {
-      return NextResponse.redirect(new URL("/", req.url));
+    if (pathname === "/" && sessionToken) {
+      return NextResponse.redirect(new URL("/u", request.url));
     }
   }
 
@@ -25,5 +37,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/view/:path*", "/view", "/passwords"], // Protects /dashboard, /view and all subpaths, /portal
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
