@@ -53,5 +53,5 @@ TODO
 - move /note to upload the html data to s3 not database (infinite file size compared to 1GB)
   - might have to not use server actions for syncing/fetching data because the limits are low
     and I shouldn't be processing a shit ton of data server side anyway
-    
+  - fix sync icon (not symmetrical - use svg or something)
 */
