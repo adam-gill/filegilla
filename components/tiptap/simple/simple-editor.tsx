@@ -341,7 +341,9 @@ export function SimpleEditor({
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      Image.configure({
+        allowBase64: true,
+      }),
       Typography,
       Superscript,
       Subscript,
