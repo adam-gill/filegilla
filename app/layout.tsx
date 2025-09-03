@@ -42,3 +42,16 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+/*
+
+TODO
+- Move functionality (possibly drag and drop or selecting multiple folders/files)
+- Uploading images to tiptap editor
+- Allowing users to create tiptap documents, save, rename, delete, them etc 
+  (should be the same as other files if) I store them as files like the others
+- Allow users to share those documents and test what the collaboration would look like 
+  - Will be a headache moving embedded images from private storage to public storage
+
+*/
