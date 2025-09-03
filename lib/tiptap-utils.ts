@@ -1,7 +1,7 @@
 import type { Attrs, Node } from "@tiptap/pm/model"
 import type { Editor } from "@tiptap/react"
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+export const MAX_FILE_SIZE = 4 * 1024 * 1024 // 5MB
 
 /**
  * Checks if a mark exists in the editor schema
@@ -154,14 +154,13 @@ export const handleImageUpload = async (
     if (abortSignal?.aborted) {
       throw new Error("Upload cancelled")
     }
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 10))
     onProgress?.({ progress })
   }
 
-  return "/images/placeholder-image.png"
 
   // Uncomment for production use:
-  // return convertFileToBase64(file, abortSignal);
+  return convertFileToBase64(file, abortSignal);
 }
 
 /**
