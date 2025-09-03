@@ -5,6 +5,9 @@ import * as React from "react";
 // --- Hooks ---
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
 
+// --- Components ---
+import { Button } from "@/components/tiptap/tiptap-ui-primitive/button"
+
 // --- Styles ---
 import "./font-size-input.scss";
 
@@ -66,15 +69,15 @@ export function FontSizeInput() {
 
   return (
     <div className="tiptap-font-size-input">
-      <button
+      <Button
         type="button"
+        tooltip={<div>Decrease Font Size</div>}
         onClick={handleDecrement}
         className="tiptap-font-size-button tiptap-button-text"
         aria-label="Decrease font size"
-        title="Decrease font size"
       >
         −
-      </button>
+      </Button>
       <input
         type="text"
         value={inputValue}
@@ -86,15 +89,15 @@ export function FontSizeInput() {
         aria-label="Font size"
         title="Font size"
       />
-      <button
+      <Button
         type="button"
+        tooltip={<div>Increase Font Size</div>}
         onClick={handleIncrement}
         className="tiptap-font-size-button tiptap-button-text"
         aria-label="Increase font size"
-        title="Increase font size"
       >
         +
-      </button>
+      </Button>
     </div>
   );
 } 

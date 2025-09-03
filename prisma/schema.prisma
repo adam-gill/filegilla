@@ -16,6 +16,7 @@ model User {
   username      String?   @unique
   createdAt     DateTime
   updatedAt     DateTime
+  note          String?
   accounts      Account[]
   sessions      Session[]
   share         share[]

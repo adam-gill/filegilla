@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getScopedS3Client } from "@/lib/aws/actions";
-import { createPrivateS3Key } from "@/lib/aws/helpers";
+import { createIntraDocS3Key, createPrivateS3Key } from "@/lib/aws/helpers";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
     const body = await request.json();
-    const { files, location, isFolder } = body;
+    const { files, location, isFolder, isIntraDoc } = body;
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -44,7 +44,13 @@ export async function POST(request: NextRequest) {
         const fileName = isFolder && file.webkitRelativePath 
           ? file.webkitRelativePath 
           : file.name;
-        const fileKey = createPrivateS3Key(userId, location, fileName);
+        let fileKey: string = "";
+        
+        if (isIntraDoc) {
+          fileKey = createIntraDocS3Key(userId, fileName);
+        } else {
+          fileKey = createPrivateS3Key(userId, location, fileName);
+        }
 
         
         

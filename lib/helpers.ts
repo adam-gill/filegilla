@@ -116,11 +116,12 @@ export const removeFileExtension = (name: string | undefined): string => {
   return name.substring(0, lastDotIndex);
 };
 
-export const randomId = (): string => {
+export const randomId = (length?: number): string => {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const len = length ?? 10;
   let result = "";
   
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < len; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   

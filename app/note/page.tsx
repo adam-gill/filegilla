@@ -1,7 +1,13 @@
-import Note from "@/components/note";
+import { fetchNote } from "@/app/note/actions";
+import Note from "@/app/note/components/note"
 
-export default function Page() {
+export default async function NotePage() {
+
+  const { note } = await fetchNote();
+
   return (
-    <Note />
+    <>
+      <Note initialNoteData={note} />
+    </>
   )
 }
