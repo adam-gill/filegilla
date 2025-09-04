@@ -36,7 +36,3 @@ export const createPublicFileName = (itemName: string, shareName: string) => {
 
   return publicItemName;
 }
-
-export const createIntraDocS3Key = (userId: string, fileName: string) => {
-  return `intradoc/${userId}/${fileName}`
-}

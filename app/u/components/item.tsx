@@ -19,6 +19,8 @@ import {
   Info,
   SquareArrowOutUpRight,
   Download,
+  Copy,
+  FolderInput,
 } from "lucide-react";
 import {
   ContextMenu,
@@ -29,6 +31,7 @@ import {
 } from "@/components/ui/context-menu";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  copyAndPasteItem,
   deleteItem,
   getDownloadUrl,
   renameItem,
@@ -46,6 +49,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  addCopyToFileName,
   getFileExtension,
   removeFileExtension,
   sortItems,
@@ -54,6 +58,7 @@ import {
 import ShareDialog from "@/app/u/components/shareDialog";
 import InfoDialog from "@/app/u/components/infoDialog";
 import GetFileIcon from "@/app/u/components/getFileIcon";
+import MoveDialog from "./moveDialog";
 
 // Type for folder contents
 interface FolderItem {
@@ -83,6 +88,7 @@ export default function Item({
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
+  const [isMoveOpen, setIsMoveOpen] = useState<boolean>(false);
   const [renameName, setRenameName] = useState<string>(item.name);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string>("");
@@ -248,14 +254,14 @@ export default function Item({
 
       if (success) {
         toast({
-          title: "Success!",
+          title: "success!",
           description: message,
           variant: "good",
         });
       } else {
         setNewContents(sortItems(savedContents));
         toast({
-          title: "Error",
+          title: "error",
           description: message,
           variant: "destructive",
         });
@@ -263,8 +269,8 @@ export default function Item({
     } catch (error) {
       setNewContents(sortItems(savedContents));
       toast({
-        title: "Error",
-        description: `Unknown error deleting ${item.type}: ${error}`,
+        title: "error",
+        description: `unknown error deleting ${item.type}: ${error}`,
         variant: "destructive",
       });
     }
@@ -282,6 +288,52 @@ export default function Item({
   const handleItemOpen = () => {
     router.push(`${pathname}/${item.name}`);
     setIsOptionsOpen(false);
+  };
+
+  const handleItemCopyAndPaste = async () => {
+    setIsOptionsOpen(false);
+    const savedContents = newContents;
+
+    try {
+      const itemName = item.name;
+
+      setNewContents((prev) => [
+        ...prev,
+        {
+          name: addCopyToFileName(itemName),
+          path: item.path,
+          type: item.type,
+          etag: item.etag,
+          lastModified: item.lastModified,
+          size: item.size,
+        },
+      ]);
+
+      const { success, message } = await copyAndPasteItem(itemName, location);
+
+      if (success) {
+        toast({
+          title: "success!",
+          description: message,
+          variant: "good",
+        });
+      } else {
+        setNewContents(sortItems(savedContents));
+
+        toast({
+          title: "error",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setNewContents(sortItems(savedContents));
+      toast({
+        title: "error",
+        description: `failed to make a copy of file: ${error}`,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -347,6 +399,17 @@ export default function Item({
                           rename
                         </Button>
 
+                        <Button
+                          onClick={() => {
+                            setIsMoveOpen(true);
+                            setIsOptionsOpen(false);
+                          }}
+                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                        >
+                          <FolderInput className="mr-2 h-4 w-4 text-neutral-400" />
+                          move
+                        </Button>
+
                         {item.type === "file" && (
                           <Button
                             onClick={handleDownload}
@@ -354,6 +417,16 @@ export default function Item({
                           >
                             <Download className="mr-2 h-4 w-4 text-neutral-400" />
                             download
+                          </Button>
+                        )}
+
+                        {item.type === "file" && (
+                          <Button
+                            onClick={handleItemCopyAndPaste}
+                            className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                          >
+                            <Copy className="mr-2 h-4 w-4 text-neutral-400" />
+                            make a copy
                           </Button>
                         )}
 
@@ -420,6 +493,17 @@ export default function Item({
             rename
           </ContextMenuItem>
 
+          <ContextMenuItem
+            onClick={() => {
+              setIsMoveOpen(true);
+              setIsOptionsOpen(false);
+            }}
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+          >
+            <FolderInput className="mr-2 h-4 w-4" />
+            move
+          </ContextMenuItem>
+
           {item.type === "file" && (
             <ContextMenuItem
               onClick={handleDownload}
@@ -427,6 +511,16 @@ export default function Item({
             >
               <Download className="mr-2 h-4 w-4" />
               download
+            </ContextMenuItem>
+          )}
+
+          {item.type === "file" && (
+            <ContextMenuItem
+              onClick={handleItemCopyAndPaste}
+              className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              make a copy
             </ContextMenuItem>
           )}
 
@@ -559,9 +653,18 @@ export default function Item({
         </AlertDialogContent>
       </AlertDialog>
 
+      <InfoDialog
+        isInfoOpen={isInfoOpen}
+        setIsInfoOpen={setIsInfoOpen}
+        item={item}
+      />
 
-      <InfoDialog isInfoOpen={isInfoOpen} setIsInfoOpen={setIsInfoOpen} item={item} />
-
+      <MoveDialog
+        isMoveOpen={isMoveOpen}
+        setIsMoveOpen={setIsMoveOpen}
+        item={item}
+        location={location}
+      />
     </>
   );
 }

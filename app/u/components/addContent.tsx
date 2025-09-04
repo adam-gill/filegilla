@@ -577,7 +577,7 @@ export default function AddContent({
             Upload files
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
+            className="max-md:hidden flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
             onSelect={() => {
               folderInputRef.current?.click();
             }}

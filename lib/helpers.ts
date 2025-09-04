@@ -58,10 +58,12 @@ export const getInitials = (name: string): string => {
 export const sortContents = (contents: FolderItem[]): FolderItem[] => {
   if (contents && contents.length > 0) {
     const initialContents = contents.sort((a, b) => {
-      if (a.type === b.type) {
-        return 0;
+      // First, sort by type (folders before files)
+      if (a.type !== b.type) {
+        return a.type === "folder" ? -1 : 1;
       }
-      return a.type === "folder" ? -1 : 1;
+      
+      return a.name.localeCompare(b.name);
     });
 
     return initialContents;
@@ -117,13 +119,48 @@ export const removeFileExtension = (name: string | undefined): string => {
 };
 
 export const randomId = (length?: number): string => {
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const chars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const len = length ?? 10;
   let result = "";
-  
+
   for (let i = 0; i < len; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  
+
   return result;
 };
+
+export const addCopyToFileName = (itemName: string): string => {
+  return `${removeFileExtension(itemName)} copy${getFileExtension(itemName)}`;
+};
+
+export const deepEqual = (a: any, b: any) =>  {
+  // Check for strict equality first (including primitives and reference equality)
+  if (a === b) return true;
+
+  // Handle null or undefined
+  if (a == null || b == null) return false;
+
+  // Check type
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+  // Compare array types
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+
+  // Get keys
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  // Different number of keys
+  if (keysA.length !== keysB.length) return false;
+
+  // Check keys and values recursively
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+      return false;
+    }
+  }
+
+  return true;
+}

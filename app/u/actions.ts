@@ -16,6 +16,7 @@ import { FileMetadata, FolderItem, ShareItemProps } from "./types";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createPrivateS3Key, createPublicS3Key } from "@/lib/aws/helpers";
 import { prisma } from "@/lib/prisma";
+import { addCopyToFileName } from "@/lib/helpers";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
@@ -63,7 +64,7 @@ export const createFolder = async (
   });
 
   if (!session?.user?.id) {
-    return { success: false, message: "User is not authenticated." };
+    return { success: false, message: "user is not authenticated." };
   }
   const userId = session.user.id;
 
@@ -111,12 +112,12 @@ export const deleteItem = async (
   });
 
   if (!session?.user?.id) {
-    return { success: false, message: "User is not authenticated." };
+    return { success: false, message: "user is not authenticated." };
   }
   const userId = session.user.id;
 
   if (!itemName || itemName.includes("/")) {
-    return { success: false, message: "Invalid item name provided." };
+    return { success: false, message: "invalid item name provided." };
   }
 
   try {
@@ -233,7 +234,7 @@ export const renameItem = async (
   });
 
   if (!session?.user?.id) {
-    return { success: false, message: "User is not authenticated." };
+    return { success: false, message: "user is not authenticated." };
   }
   const userId = session.user.id;
 
@@ -469,7 +470,7 @@ export const listFolderContents = async (
     return {
       success: false,
       contents: [],
-      message: "User is not authenticated.",
+      message: "user is not authenticated.",
     };
   }
 
@@ -552,7 +553,7 @@ export const getFile = async (
   if (!userId) {
     return {
       success: false,
-      message: "User is not authenticated.",
+      message: "user is not authenticated.",
     };
   }
   const key = createPrivateS3Key(userId, location);
@@ -610,7 +611,7 @@ export const getDownloadUrl = async (
   if (!userId) {
     return {
       success: false,
-      message: "User is not authenticated.",
+      message: "user is not authenticated.",
     };
   }
   const key = createPrivateS3Key(userId, location);
@@ -658,7 +659,7 @@ export const shareItem = async ({
   });
 
   if (!session?.user?.id) {
-    return { success: false, message: "User is not authenticated." };
+    return { success: false, message: "user is not authenticated." };
   }
 
   const userId = session.user.id;
@@ -734,7 +735,7 @@ export const deleteShareItem = async (
   });
 
   if (!session?.user?.id) {
-    return { success: false, message: "User is not authenticated." };
+    return { success: false, message: "user is not authenticated." };
   }
 
   const userId = session.user.id;
@@ -763,9 +764,8 @@ export const deleteShareItem = async (
         Bucket: S3_PUBLIC_BUCKET_NAME,
         Key: key,
       });
-  
-      await s3Client.send(deleteCommand);
 
+      await s3Client.send(deleteCommand);
 
       return {
         success: true,
@@ -797,7 +797,7 @@ export const checkShareItem = async (
   });
 
   if (!session?.user?.id) {
-    return { success: false, message: "User is not authenticated." };
+    return { success: false, message: "user is not authenticated." };
   }
 
   const userId = session.user.id;
@@ -827,6 +827,103 @@ export const checkShareItem = async (
     };
   }
 };
+
+export const copyAndPasteItem = async (
+  itemName: string,
+  location: string[]
+): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "user is not authenticated." };
+  }
+
+  const userId = session.user.id;
+  const s3Client = await getScopedS3Client(userId);
+
+  try {
+    const newName = addCopyToFileName(itemName);
+
+    const sourceKey = createPrivateS3Key(userId, location, itemName);
+    const destinationKey = createPrivateS3Key(userId, location, newName);
+
+    const copyCommand = new CopyObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      CopySource: `${S3_BUCKET_NAME}/${sourceKey}`,
+      Key: destinationKey,
+    });
+
+    await s3Client.send(copyCommand);
+
+    return {
+      success: true,
+      message: `successfully copied ${itemName}`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: `unknown error checking share status: ${error}`,
+    };
+  }
+};
+
+export const listMoveFolders = async (location: string[]): Promise<{
+  success: boolean;
+  message: string;
+  folders?: string[];
+}> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "user is not authenticated." };
+  }
+
+  const userId = session.user.id;
+  const key = createPrivateS3Key(userId, location, undefined, true);
+
+  try {
+    const s3Client = await getScopedS3Client(userId);
+
+    const command = new ListObjectsV2Command({
+      Bucket: S3_BUCKET_NAME,
+      Prefix: key,
+      Delimiter: "/",
+    });
+
+    const response = await s3Client.send(command);
+
+    const folders: string[] = [];
+
+    // Add folders (CommonPrefixes)
+    if (response.CommonPrefixes) {
+      for (const prefix of response.CommonPrefixes) {
+        if (prefix.Prefix) {
+          const folderName = prefix.Prefix.replace(key, "").replace("/", "");
+          folders.push(folderName);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      folders,
+      message: `found ${folders.length} items in folder.`,
+    };
+  } catch (error) {
+    console.error("Failed to list folder contents:", error);
+    return {
+      success: false,
+      message: `unknown error occurred listing folders ${error}`,
+    };
+  }
+}
 
 // TODO - track folder paths in public buckets and monitor name changes/moving paths
 // When you rename an item, check if its shared then update the etag
