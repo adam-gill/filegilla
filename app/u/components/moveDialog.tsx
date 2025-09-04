@@ -58,7 +58,7 @@ export default function MoveDialog({
     return () => {
       document.removeEventListener("mousedown", handleClickOutsideAlert);
     };
-  }, [setIsMoveOpen]);
+  }, [setIsMoveOpen, location]);
 
   const listFolders = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -79,7 +79,7 @@ export default function MoveDialog({
     } finally {
       setLoading(false);
     }
-  }, [currentLocation]);
+  }, [currentLocation, item.name]);
 
   useEffect(() => {
     if (isMoveOpen) {
@@ -153,7 +153,9 @@ export default function MoveDialog({
               onClick={() => {
                 setCurrentLocation(location);
                 setIsMoveOpen(false);
-                setIsOptionsOpen && setIsOptionsOpen(false);
+                if (setIsOptionsOpen) {
+                  setIsOptionsOpen(false);
+                }
               }}
               className="!bg-transparent border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer"
             >
