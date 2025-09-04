@@ -61,7 +61,6 @@ const LoadingScreen = () => {
 export default async function ShareViewer({ params }: ShareViewerProps) {
   const shareName = (await params).shareName;
   const { file } = await getSharedFile(shareName);
-  console.log(file);
 
   return (
     <main>
