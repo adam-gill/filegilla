@@ -62,7 +62,7 @@ export const getSharedFile = async (
       };
     }
   } catch (error) {
-    console.log(`error getting shared file: ${error}`)
+    console.log(`error getting shared file: ${error}`);
     return {
       success: false,
       message: `unknown error fetching shared file ${shareName}`,
@@ -79,7 +79,7 @@ export const getPublicDownloadUrl = async (
   url?: string;
 }> => {
   const key = createPublicS3Key(itemName, shareName);
-  
+
   try {
     const s3Client = await getScopedS3Client("public");
     const fileName = createPublicFileName(itemName, shareName);
@@ -104,5 +104,41 @@ export const getPublicDownloadUrl = async (
       success: false,
       message: `Error fetching file: ${error}`,
     };
+  }
+};
+
+export const getOgData = async (shareName: string): Promise<{ success: boolean, username?: string, imgUrl?: string }> => {
+  try {
+    const share = await prisma.share.findFirst({
+      where: {
+        shareName: shareName,
+      },
+      select: {
+        itemName: true,
+        s3Url: true,
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+
+    if (!share || !share.s3Url || !share.user?.username) {
+      return { success: false };
+    }
+
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
+    const isImage = imageExtensions.some(ext => share.itemName.toLowerCase().endsWith(ext));
+
+    if (isImage) {
+      return { success: true, username: share.user.username, imgUrl: share.s3Url };
+    }
+
+    return { success: false };
+
+  } catch (error) {
+    console.error(`Failed to fetch OG data for '${shareName}'. Error: ${error}`);
+    return { success: false };
   }
 };

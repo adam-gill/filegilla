@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { getSharedFile } from "../actions";
+import { getOgData, getSharedFile } from "../actions";
 import { Suspense } from "react";
 import SharedFileViewer from "../components/sharedFileViewer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,16 +12,21 @@ export async function generateMetadata({
   params,
 }: ShareViewerProps): Promise<Metadata> {
   const shareName = (await params).shareName;
+  const { username, imgUrl } = await getOgData(shareName);
+
+  const description = username ? `shared by ${username}` : `shared on filegilla`
+  const image = imgUrl ? imgUrl : "/ogLogo.png"
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   return {
     title: `${decodeURIComponent(shareName)} - filegilla`,
     icons: "/logoFav.png",
+    description: description,
     openGraph: {
       title: `${decodeURIComponent(shareName)} - filegilla`,
-      description: `user shared file - ${shareName}`,
-      images: ["/ogLogo.png"],
+      description: description,
+      images: [image],
     },
     metadataBase: new URL(baseUrl),
   };
