@@ -872,7 +872,9 @@ export const copyAndPasteItem = async (
   }
 };
 
-export const listMoveFolders = async (location: string[]): Promise<{
+export const listMoveFolders = async (
+  location: string[]
+): Promise<{
   success: boolean;
   message: string;
   folders?: string[];
@@ -923,7 +925,139 @@ export const listMoveFolders = async (location: string[]): Promise<{
       message: `unknown error occurred listing folders ${error}`,
     };
   }
+};
+
+interface MoveItemsProps {
+  sourceLocation: string[];
+  destinationLocation: string[];
+  itemName: string;
+  itemType: "file" | "folder";
 }
+
+export const moveItem = async ({
+  sourceLocation,
+  destinationLocation,
+  itemName,
+  itemType,
+}: MoveItemsProps): Promise<{ success: boolean; message: string }> => {
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "user is not authenticated." };
+  }
+
+  const userId = session.user.id;
+  const s3Client = await getScopedS3Client(userId);
+
+  try {
+    if (itemType === "file") {
+      const sourceKey = createPrivateS3Key(userId, sourceLocation, itemName, false);
+      const destinationKey = createPrivateS3Key(userId, destinationLocation, itemName, false);
+
+      if (sourceKey === destinationKey) {
+        return { success: true, message: "no changes detected." };
+      }
+
+      await s3Client.send(
+        new CopyObjectCommand({
+          Bucket: S3_BUCKET_NAME,
+          CopySource: `${S3_BUCKET_NAME}/${encodeURI(sourceKey)}`,
+          Key: destinationKey,
+        })
+      );
+
+      await s3Client.send(
+        new DeleteObjectCommand({ 
+          Bucket: S3_BUCKET_NAME, 
+          Key: sourceKey 
+        })
+      );
+
+      return { 
+        success: true, 
+        message: `successfully moved file '${itemName}' to new location.` 
+      };
+
+    } else {
+      // Folder move: recursively copy all objects from source to destination, then delete source
+      const sourcePrefix = createPrivateS3Key(userId, sourceLocation, itemName, true);
+      const destinationPrefix = createPrivateS3Key(userId, destinationLocation, itemName, true);
+
+      if (sourcePrefix === destinationPrefix) {
+        return { success: true, message: "No changes detected." };
+      }
+
+      let continuationToken: string | undefined = undefined;
+      const keysToDelete: { Key: string }[] = [];
+
+      do {
+        const listResp: Awaited<
+          ReturnType<typeof s3Client.send>
+        > extends infer R
+          ? R extends {
+              Contents?: any[];
+              IsTruncated?: boolean;
+              NextContinuationToken?: string;
+            }
+            ? R
+            : any
+          : any = await s3Client.send(
+          new ListObjectsV2Command({
+            Bucket: S3_BUCKET_NAME,
+            Prefix: sourcePrefix,
+            ContinuationToken: continuationToken,
+          })
+        );
+
+        const contents = listResp.Contents || [];
+        for (const obj of contents) {
+          if (!obj.Key) continue;
+          const newKey = obj.Key.replace(sourcePrefix, destinationPrefix);
+
+          await s3Client.send(
+            new CopyObjectCommand({
+              Bucket: S3_BUCKET_NAME,
+              CopySource: `${S3_BUCKET_NAME}/${encodeURI(obj.Key)}`,
+              Key: newKey,
+            })
+          );
+
+          keysToDelete.push({ Key: obj.Key });
+        }
+
+        continuationToken = listResp.IsTruncated
+          ? listResp.NextContinuationToken
+          : undefined;
+      } while (continuationToken);
+
+      for (let i = 0; i < keysToDelete.length; i += 1000) {
+        const chunk = keysToDelete.slice(i, i + 1000);
+        await s3Client.send(
+          new DeleteObjectsCommand({
+            Bucket: S3_BUCKET_NAME,
+            Delete: { Objects: chunk, Quiet: true },
+          })
+        );
+      }
+
+      return { 
+        success: true, 
+        message: `successfully moved folder '${itemName}' to new location.` 
+      };
+    }
+  } catch (error) {
+    console.error(`error moving ${itemType} '${itemName}':`, error);
+    return {
+      success: false,
+      message: `error moving ${itemType} '${itemName}': ${
+        error instanceof Error ? error.message : "unknown error"
+      }`,
+    };
+  }
+};
 
 // TODO - track folder paths in public buckets and monitor name changes/moving paths
 // When you rename an item, check if its shared then update the etag

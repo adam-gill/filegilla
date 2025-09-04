@@ -401,8 +401,10 @@ export default function Item({
 
                         <Button
                           onClick={() => {
-                            setIsMoveOpen(true);
                             setIsOptionsOpen(false);
+                            setTimeout(() => {
+                              setIsMoveOpen(true);
+                            }, 100);
                           }}
                           className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
                         >
@@ -495,8 +497,10 @@ export default function Item({
 
           <ContextMenuItem
             onClick={() => {
-              setIsMoveOpen(true);
               setIsOptionsOpen(false);
+              setTimeout(() => {
+                setIsMoveOpen(true);
+              }, 100);
             }}
             className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
           >
@@ -664,6 +668,9 @@ export default function Item({
         setIsMoveOpen={setIsMoveOpen}
         item={item}
         location={location}
+        setNewContents={setNewContents}
+        newContents={newContents}
+        setIsOptionsOpen={setIsOptionsOpen}
       />
     </>
   );

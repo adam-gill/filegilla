@@ -136,26 +136,19 @@ export const addCopyToFileName = (itemName: string): string => {
 };
 
 export const deepEqual = (a: any, b: any) =>  {
-  // Check for strict equality first (including primitives and reference equality)
   if (a === b) return true;
 
-  // Handle null or undefined
   if (a == null || b == null) return false;
 
-  // Check type
   if (typeof a !== 'object' || typeof b !== 'object') return false;
 
-  // Compare array types
   if (Array.isArray(a) !== Array.isArray(b)) return false;
 
-  // Get keys
   const keysA = Object.keys(a);
   const keysB = Object.keys(b);
 
-  // Different number of keys
   if (keysA.length !== keysB.length) return false;
 
-  // Check keys and values recursively
   for (const key of keysA) {
     if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
       return false;
