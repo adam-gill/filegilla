@@ -35,7 +35,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
                   height={60}
                   className="w-10 h-6"
                 />
-                <span className="text-2xl font-semibold p-2 max-md:hidden">filegilla</span>
+                <span className="text-2xl font-semibold p-2">filegilla</span>
               </NavigationMenuLink>
             </NavigationMenuItem>
             {!isLanding && (
