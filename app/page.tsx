@@ -37,7 +37,7 @@ export default function Landing() {
           >
             join now
           </Link>
-          <p className="mt-2">{"foin for free!"}</p>
+          <p className="mt-2">{"join for free!"}</p>
         </main>
 
         <footer className="mt-auto py-4">
