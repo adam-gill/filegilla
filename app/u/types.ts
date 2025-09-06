@@ -3,6 +3,7 @@ export interface FileMetadata {
   lastModified?: Date;
   etag?: string;
   fileType?: string;
+  isFgDoc?: boolean;
 }
 
 export interface FolderItem {
@@ -15,6 +16,7 @@ export interface FolderItem {
   fileType?: string;
   url?: string;
   ownerId?: string;
+  isFgDoc?: boolean;
 }
 
 export interface FileData {
@@ -33,6 +35,7 @@ export interface ShareItemProps {
 }
 
 export type FileType =
+  | "filegilla"
   | "image"
   | "video"
   | "audio"

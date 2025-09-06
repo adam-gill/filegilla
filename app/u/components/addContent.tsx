@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createFolder } from "../actions";
+import { createDocument, createFolder } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
 import { sortItems } from "@/lib/helpers";
@@ -410,10 +410,6 @@ export default function AddContent({
     event.target.value = "";
   };
 
-  const handleNewDocument = () => {
-    console.log("New document clicked");
-  };
-
   const handleCreateFolder = async () => {
     if (!folderName.trim()) return;
 
@@ -492,6 +488,35 @@ export default function AddContent({
       });
     }
   }, [isFolderDialogOpen]);
+
+  const handleNewDocument = async () => {
+
+    const { success, message, fileName, etag } = await createDocument(location);
+
+    if (success && fileName) {
+
+      const newItem: FolderItem = {
+        name: fileName,
+        path: `private/userid/${location.join("/")}/${fileName}`,
+        type: "file",
+        lastModified: new Date(),
+        etag: etag
+      }
+
+      setNewContents((prev) => sortItems([...prev, newItem]))
+      toast({
+        title: "success!",
+        description: message,
+        variant: "good",
+      })
+    } else {
+      toast({
+        title: "error",
+        description: message,
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
     <>
@@ -597,9 +622,9 @@ export default function AddContent({
             New folder
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="cursor-not-allowed flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded outline-none"
+            className="cursor-pointer flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded outline-none"
             onSelect={handleNewDocument}
-            disabled={isUploading || true}
+            disabled={isUploading}
           >
             <FileText className="w-4 h-4" />
             New document

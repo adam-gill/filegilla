@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import InfoDialog from "./infoDialog";
+import { SimpleEditor } from "@/components/tiptap/simple/simple-editor";
 
 interface FileRendererProps {
   url: string;
@@ -31,6 +32,7 @@ export default function FileRenderer({
   const [pageWidth, setPageWidth] = useState<number>(0);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
+  const [content, setContent] = useState<string>("");
 
   useEffect(() => {
     const calculatePageHeight = () => {
@@ -81,6 +83,8 @@ export default function FileRenderer({
   }
 
   switch (fileType) {
+    case "filegilla":
+      return <SimpleEditor content={content} setContent={setContent} />;
     case "image":
       return (
         <div className="w-full rounded-lg border border-none p-4">
@@ -151,8 +155,11 @@ export default function FileRenderer({
                 <Info onClick={() => setIsInfoOpen(true)} />
               </div>
 
-              <InfoDialog isInfoOpen={isInfoOpen} item={undefined} setIsInfoOpen={setIsInfoOpen} />
-
+              <InfoDialog
+                isInfoOpen={isInfoOpen}
+                item={undefined}
+                setIsInfoOpen={setIsInfoOpen}
+              />
             </div>
           ) : (
             <iframe

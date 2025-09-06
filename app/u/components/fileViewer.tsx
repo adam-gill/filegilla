@@ -8,6 +8,7 @@ import {
   Share,
   MoreVertical,
   Pencil,
+  ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -134,6 +135,7 @@ export default function FileViewer({ location }: FileViewerProps) {
         fileType: fileMetadata?.fileType,
         size: fileMetadata?.size,
         url: url,
+        isFgDoc: fileMetadata?.isFgDoc,
       });
     } catch (error) {
       console.error("Error fetching file URL:", error);
@@ -297,13 +299,23 @@ export default function FileViewer({ location }: FileViewerProps) {
 
   return (
     <div className="h-full">
-      <div className="text-white p-4 bg-neutral-900 rounded-lg h-full">
+      <div
+        className={`text-white ${
+          file?.isFgDoc ? "bg-transparent p-0" : "p-4"
+        } rounded-lg h-full`}
+      >
         <div className="max-w-6xl mx-auto min-h-[calc(100vh-250px)] h-full">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             {file && (
               <div className="flex items-center gap-3 overflow-hidden">
-                <GetFileIcon fileName={file.name} />
+                <ChevronLeft
+                  className="cursor-pointer w-6 h-6 stroke-3 mr-2"
+                  onClick={() =>
+                    router.push(`/u/${location.slice(0, -1).join("/")}`)
+                  }
+                />
+                <GetFileIcon fileName={file.name} isFgDoc={file.isFgDoc} />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-xl font-semibold text-gray-100 truncate">
                     {file.name}
@@ -455,7 +467,7 @@ export default function FileViewer({ location }: FileViewerProps) {
             <FileRenderer
               url={file.url}
               fileName={file.name}
-              fileType={getFileType(file.name)}
+              fileType={getFileType(file.name, file.isFgDoc)}
               onDownload={handleDownload}
             />
           )}

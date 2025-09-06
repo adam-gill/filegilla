@@ -58,17 +58,9 @@ import {
 import ShareDialog from "@/app/u/components/shareDialog";
 import InfoDialog from "@/app/u/components/infoDialog";
 import GetFileIcon from "@/app/u/components/getFileIcon";
-import MoveDialog from "./moveDialog";
+import MoveDialog from "@/app/u/components/moveDialog";
+import { FolderItem } from "@/app/u/types";
 
-// Type for folder contents
-interface FolderItem {
-  name: string;
-  type: "file" | "folder";
-  size?: number;
-  lastModified?: Date;
-  path: string;
-  etag?: string;
-}
 
 interface ItemProps {
   item: FolderItem;
@@ -350,7 +342,7 @@ export default function Item({
                     {item.type === "folder" ? (
                       <Folder className="w-5 h-5 text-blue-400" />
                     ) : (
-                      <GetFileIcon fileName={item.name} />
+                      <GetFileIcon fileName={item.name} isFgDoc={item.isFgDoc} />
                     )}
                   </div>
 

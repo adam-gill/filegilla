@@ -135,7 +135,7 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
             <div className="flex items-center justify-between mb-6">
               {file && (
                 <div className="flex items-center gap-3">
-                  <GetFileIcon fileName={file.name} />
+                  <GetFileIcon fileName={file.name} isFgDoc={file.isFgDoc} />
                   <div>
                     <h1 className="text-xl font-semibold text-gray-100">
                       {file.name}
@@ -283,7 +283,7 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
               <FileRenderer
                 url={file.url}
                 fileName={file.name}
-                fileType={getFileType(file.name)}
+                fileType={getFileType(file.name, file.isFgDoc)}
                 onDownload={handleDownload}
               />
             )}

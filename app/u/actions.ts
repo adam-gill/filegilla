@@ -10,13 +10,15 @@ import {
   DeleteObjectsCommand,
   CopyObjectCommand,
   GetObjectCommand,
+  S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FileMetadata, FolderItem, ShareItemProps } from "./types";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createPrivateS3Key, createPublicS3Key } from "@/lib/aws/helpers";
 import { prisma } from "@/lib/prisma";
-import { addCopyToFileName } from "@/lib/helpers";
+import { addCopyToFileName, randomId } from "@/lib/helpers";
+import { createHTMLDocument } from "@/app/u/helpers";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
@@ -458,6 +460,42 @@ export const validatePath = async (
   }
 };
 
+export const isFileGillaDocument = async (
+  key: string,
+  s3Client: S3Client
+): Promise<boolean> => {
+  if (!key) {
+    return false;
+  }
+
+  try {
+    const headCommand = new HeadObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: key,
+    });
+
+    const headResponse = await s3Client.send(headCommand);
+    const metadata = headResponse.Metadata;
+
+    if (!metadata) {
+      return false;
+    }
+
+    if (
+      metadata &&
+      "customtag" in metadata &&
+      metadata["customtag"] === "filegilla document"
+    ) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("error checking metadata for key: ", key, error);
+    return false;
+  }
+};
+
 export const listFolderContents = async (
   location: string[]
 ): Promise<{ success: boolean; contents: FolderItem[]; message: string }> => {
@@ -508,6 +546,9 @@ export const listFolderContents = async (
       for (const object of response.Contents) {
         if (object.Key && object.Key !== key) {
           const fileName = object.Key.replace(key, "");
+
+          const isFgDoc = await isFileGillaDocument(object.Key, s3Client);
+
           if (fileName && !fileName.includes("/")) {
             contents.push({
               name: fileName,
@@ -516,6 +557,7 @@ export const listFolderContents = async (
               lastModified: object.LastModified,
               path: object.Key,
               etag: object.ETag,
+              isFgDoc: isFgDoc,
             });
           }
         }
@@ -567,6 +609,13 @@ export const getFile = async (
     });
     const metadata = await s3Client.send(headCommand);
 
+    const extraMetadata = metadata.Metadata;
+
+    const isFgDoc =
+      extraMetadata &&
+      "customtag" in extraMetadata &&
+      extraMetadata["customtag"] === "filegilla document";
+
     const urlCommand = new GetObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
@@ -577,6 +626,7 @@ export const getFile = async (
       fileType: metadata.ContentType,
       lastModified: metadata.LastModified,
       size: metadata.ContentLength,
+      isFgDoc: isFgDoc,
     };
 
     const url = await getSignedUrl(s3Client, urlCommand, { expiresIn: 3600 });
@@ -940,7 +990,6 @@ export const moveItem = async ({
   itemName,
   itemType,
 }: MoveItemsProps): Promise<{ success: boolean; message: string }> => {
-
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -954,8 +1003,18 @@ export const moveItem = async ({
 
   try {
     if (itemType === "file") {
-      const sourceKey = createPrivateS3Key(userId, sourceLocation, itemName, false);
-      const destinationKey = createPrivateS3Key(userId, destinationLocation, itemName, false);
+      const sourceKey = createPrivateS3Key(
+        userId,
+        sourceLocation,
+        itemName,
+        false
+      );
+      const destinationKey = createPrivateS3Key(
+        userId,
+        destinationLocation,
+        itemName,
+        false
+      );
 
       if (sourceKey === destinationKey) {
         return { success: true, message: "no changes detected." };
@@ -970,21 +1029,30 @@ export const moveItem = async ({
       );
 
       await s3Client.send(
-        new DeleteObjectCommand({ 
-          Bucket: S3_BUCKET_NAME, 
-          Key: sourceKey 
+        new DeleteObjectCommand({
+          Bucket: S3_BUCKET_NAME,
+          Key: sourceKey,
         })
       );
 
-      return { 
-        success: true, 
-        message: `successfully moved file '${itemName}' to new location.` 
+      return {
+        success: true,
+        message: `successfully moved file '${itemName}' to new location.`,
       };
-
     } else {
       // Folder move: recursively copy all objects from source to destination, then delete source
-      const sourcePrefix = createPrivateS3Key(userId, sourceLocation, itemName, true);
-      const destinationPrefix = createPrivateS3Key(userId, destinationLocation, itemName, true);
+      const sourcePrefix = createPrivateS3Key(
+        userId,
+        sourceLocation,
+        itemName,
+        true
+      );
+      const destinationPrefix = createPrivateS3Key(
+        userId,
+        destinationLocation,
+        itemName,
+        true
+      );
 
       if (sourcePrefix === destinationPrefix) {
         return { success: true, message: "No changes detected." };
@@ -1043,9 +1111,9 @@ export const moveItem = async ({
         );
       }
 
-      return { 
-        success: true, 
-        message: `successfully moved folder '${itemName}' to new location.` 
+      return {
+        success: true,
+        message: `successfully moved folder '${itemName}' to new location.`,
       };
     }
   } catch (error) {
@@ -1059,5 +1127,52 @@ export const moveItem = async ({
   }
 };
 
-// TODO - track folder paths in public buckets and monitor name changes/moving paths
-// When you rename an item, check if its shared then update the etag
+export const createDocument = async (
+  location: string[]
+): Promise<{
+  success: boolean;
+  message: string;
+  fileName?: string;
+  etag?: string;
+}> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "user is not authenticated." };
+  }
+
+  const userId = session.user.id;
+  const s3Client = await getScopedS3Client(userId);
+
+  try {
+    const { fileName, fileBuffer, key } = createHTMLDocument(userId, location);
+    const uploadCommand = new PutObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: key,
+      Body: fileBuffer,
+      ContentType: "text/html",
+      Metadata: {
+        id: randomId(10),
+        createdBy: "filegilla",
+        customTag: "filegilla document",
+      },
+    });
+
+    const response = await s3Client.send(uploadCommand);
+
+    return {
+      success: true,
+      message: "successfully created new document",
+      fileName: fileName,
+      etag: response.ETag,
+    };
+  } catch (error) {
+    console.error(`error trying to create filegilla document: ${error}`);
+    return {
+      success: false,
+      message: `error trying to create document ${error}`,
+    };
+  }
+};

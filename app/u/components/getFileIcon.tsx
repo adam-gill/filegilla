@@ -1,11 +1,27 @@
-import { Images, Video, Music, Archive, FileText, File } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Video,
+  Music,
+  Archive,
+  FileText,
+  File,
+} from "lucide-react";
+import Image from "next/image";
 
 interface props {
   fileName: string;
+  isFgDoc: boolean | undefined;
 }
 
-export default function GetFileIcon({ fileName }: props) {
+export default function GetFileIcon({ fileName, isFgDoc }: props) {
   const extension = fileName.toLowerCase().split(".").pop();
+
+  // FileGilla documents
+  if (isFgDoc) {
+    return (
+      <Image src={"/plainLogo.svg"} alt="filegilla logo" width={30} height={30} className="w-6 h-6" />
+    );
+  }
 
   // Image files
   if (
@@ -13,7 +29,7 @@ export default function GetFileIcon({ fileName }: props) {
       extension || ""
     )
   ) {
-    return <Images className="w-5 h-5 text-blue-400" />;
+    return <ImageIcon className="w-5 h-5 text-blue-400" />;
   }
 
   // Video files
