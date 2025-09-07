@@ -34,7 +34,7 @@ export default function ItemsLayout({
   };
 
   return (
-    <div className={className}>
+    <div className={`mb-6 ${className}`}>
       <div
         className={`w-full flex items-center justify-between max-md:items-start max-md:flex-col-reverse ${
           type === "folder" ? "mb-3" : "mb-0"
