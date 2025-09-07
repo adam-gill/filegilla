@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { FileType } from "../types";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { FileType, SyncStatuses } from "../types";
 import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
@@ -11,21 +11,30 @@ import {
   Info,
 } from "lucide-react";
 import Image from "next/image";
-import InfoDialog from "./infoDialog";
-import { SimpleEditor } from "@/components/tiptap/simple/simple-editor";
+import InfoDialog from "@/app/u/components/infoDialog";
+import { getHTMLContent } from "@/app/u/actions";
+import NoteWrapper from "@/app/u/components/noteWrapper";
 
 interface FileRendererProps {
-  url: string;
+  viewUrl: string;
+  location: string[];
   fileName: string;
   fileType: FileType;
+  isPublic: boolean;
+  shareName?: string;
   onDownload: () => void;
+  setSyncStatus: Dispatch<SetStateAction<SyncStatuses>>;
 }
 
 export default function FileRenderer({
-  url,
+  viewUrl,
+  location,
   fileName,
   fileType,
+  isPublic,
+  shareName,
   onDownload,
+  setSyncStatus,
 }: FileRendererProps) {
   const [error, setError] = useState<boolean>(false);
   const [pageHeight, setPageHeight] = useState<number>(0);
@@ -33,6 +42,8 @@ export default function FileRenderer({
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [content, setContent] = useState<string>("");
+  console.log("location type: ", typeof location)
+  console.log("location value: ", JSON.stringify(location));
 
   useEffect(() => {
     const calculatePageHeight = () => {
@@ -69,6 +80,20 @@ export default function FileRenderer({
     setError(true);
   };
 
+  useEffect(() => {
+    const fetchHTML = async () => {
+      const { html } = await getHTMLContent(location);
+
+      if (html) {
+        setSyncStatus("loaded");
+        setContent(html);
+      }
+    };
+    if (fileType === "filegilla") {
+      fetchHTML();
+    }
+  }, [fileType, location, setSyncStatus]);
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96 rounded-lg border border-none">
@@ -84,14 +109,23 @@ export default function FileRenderer({
 
   switch (fileType) {
     case "filegilla":
-      return <SimpleEditor content={content} setContent={setContent} />;
+      return (
+        <NoteWrapper
+          initialContent={content}
+          isPublic={isPublic}
+          fileName={fileName}
+          shareName={shareName}
+          setSyncStatus={setSyncStatus}
+          location={location}
+        />
+      );
     case "image":
       return (
         <div className="w-full rounded-lg border border-none p-4">
           <Image
             width={1000}
             height={1000}
-            src={url}
+            src={viewUrl}
             alt={fileName}
             className="max-w-full max-h-[70vh] mx-auto rounded"
             onError={handleError}
@@ -109,7 +143,7 @@ export default function FileRenderer({
             className="max-w-full max-h-[80vh] mx-auto rounded"
             onError={handleError}
           >
-            <source src={url} />
+            <source src={viewUrl} />
             Your browser does not support the video tag.
           </video>
         </div>
@@ -121,7 +155,7 @@ export default function FileRenderer({
           <div className="flex flex-col items-center">
             <Music className="w-16 h-16 text-green-400 mb-4" />
             <audio controls className="w-full max-w-md" onError={handleError}>
-              <source src={url} />
+              <source src={viewUrl} />
               Your browser does not support the audio tag.
             </audio>
           </div>
@@ -134,7 +168,7 @@ export default function FileRenderer({
           {isMobile ? (
             <div className="flex flex-col">
               <object
-                data={`${url}#scrollbar=1&toolbar=0&navpanes=0&pagemode=none&view=FitV`}
+                data={`${viewUrl}#scrollbar=1&toolbar=0&navpanes=0&pagemode=none&view=FitV`}
                 type="application/pdf"
                 width="100%"
                 height="100%"
@@ -146,7 +180,7 @@ export default function FileRenderer({
               >
                 <p>
                   {"Your browser doesn't support PDFs."}
-                  <a href={url} target="_blank" rel="noopener noreferrer">
+                  <a href={viewUrl} target="_blank" rel="noopener noreferrer">
                     Download the PDF
                   </a>
                 </p>
@@ -163,7 +197,7 @@ export default function FileRenderer({
             </div>
           ) : (
             <iframe
-              src={`${url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+              src={`${viewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
               className="w-full rounded-lg"
               title={fileName}
               onError={handleError}
@@ -203,7 +237,7 @@ export default function FileRenderer({
       return (
         <div className="rounded-lg border border-none p-4 h-[70vh]">
           <iframe
-            src={url}
+            src={viewUrl}
             className="w-full h-full rounded bg-gray-800"
             title={fileName}
             onError={handleError}

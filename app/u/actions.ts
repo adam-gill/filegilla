@@ -372,12 +372,16 @@ export const validatePath = async (
     const s3Client = await getScopedS3Client(userId);
 
     try {
+      console.log("location used: ", location);
+      console.log("key used: ", key);
       const headCommand = new HeadObjectCommand({
         Bucket: S3_BUCKET_NAME,
         Key: key,
       });
 
       const res = await s3Client.send(headCommand);
+
+      console.log("content length: ", res.ContentLength);
 
       if (res.ContentLength === 0) {
         return {
@@ -1174,5 +1178,35 @@ export const createDocument = async (
       success: false,
       message: `error trying to create document ${error}`,
     };
+  }
+};
+
+export const getHTMLContent = async (location: string[]): Promise<{ success: boolean, message: string, html?: string }> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return { success: false, message: "user is not authenticated." };
+  }
+
+  const userId = session.user.id;
+  const s3Client = await getScopedS3Client(userId);
+  const key = createPrivateS3Key(userId, location, undefined, false);
+
+  try {
+    const getCommand = new GetObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: key,
+    });
+
+    const response = await s3Client.send(getCommand);
+    
+    const htmlContent = await response.Body?.transformToString();
+    
+    return { success: true, message: "successfully fetched HTML content", html: htmlContent };
+  } catch (error) {
+    console.error(`error getting HTML content for key ${key}, error: ${error}`);
+    return { success: false, message: "Failed to fetch HTML content" };
   }
 };

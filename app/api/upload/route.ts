@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const s3Client = await getScopedS3Client(userId);
+
     const presignedUrls: { fileName: string; url: string; key: string }[] = [];
 
     for (const file of files) {
@@ -81,9 +82,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error(`Error generating presigned URLs: ${error}`);
+    console.error(`error generating presigned URL(s): ${error}`);
     return NextResponse.json(
-      { success: false, message: `Error preparing upload: ${error}` },
+      { success: false, message: `error preparing upload: ${error}` },
       { status: 500 }
     );
   }

@@ -55,7 +55,7 @@ export default function Note({ initialNoteData }: NoteProps) {
         <div>personal notepad</div>
         <CloudIcon status={syncStatus} />
       </div>
-      <SimpleEditor content={content} setContent={handleContentChange} />
+      <SimpleEditor content={content} setContent={handleContentChange} canEdit={true} />
     </div>
   );
 }

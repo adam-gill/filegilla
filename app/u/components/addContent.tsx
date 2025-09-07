@@ -500,7 +500,8 @@ export default function AddContent({
         path: `private/userid/${location.join("/")}/${fileName}`,
         type: "file",
         lastModified: new Date(),
-        etag: etag
+        etag: etag,
+        isFgDoc: true,
       }
 
       setNewContents((prev) => sortItems([...prev, newItem]))

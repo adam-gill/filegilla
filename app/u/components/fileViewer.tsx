@@ -50,6 +50,7 @@ import { getFileType } from "@/app/u/helpers";
 import GetFileIcon from "@/app/u/components/getFileIcon";
 import InfoDialog from "@/app/u/components/infoDialog";
 import FileRenderer from "@/app/u/components/fileRenderer";
+import CloudIcon from "@/app/note/components/cloudIcon";
 
 interface FileViewerProps {
   location: string[];
@@ -92,6 +93,9 @@ export default function FileViewer({ location }: FileViewerProps) {
     removeFileExtension(location[location.length - 1]) || ""
   );
   const [validationError, setValidationError] = useState<string>("");
+  const [syncStatus, setSyncStatus] = useState<"loaded" | "loading" | "error">(
+    "loading"
+  );
   const [file, setFile] = useState<FolderItem>();
   const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -156,6 +160,7 @@ export default function FileViewer({ location }: FileViewerProps) {
       try {
         const itemName = file.name;
         const fullRenameName = renameName + getFileExtension(itemName);
+        console.log(fullRenameName);
 
         setFile({
           ...file,
@@ -300,7 +305,7 @@ export default function FileViewer({ location }: FileViewerProps) {
   return (
     <div className="h-full">
       <div
-        className={`text-white ${
+        className={`${
           file?.isFgDoc ? "bg-transparent p-0" : "p-4"
         } rounded-lg h-full`}
       >
@@ -317,16 +322,17 @@ export default function FileViewer({ location }: FileViewerProps) {
                 />
                 <GetFileIcon fileName={file.name} isFgDoc={file.isFgDoc} />
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-xl font-semibold text-gray-100 truncate">
+                  <h1 className="text-xl font-semibold truncate">
                     {file.name}
                   </h1>
-                  <div className="text-sm text-gray-400 flex flex-col max-md:text-xs">
+                  <div className="text-sm text-black dark:text-gray-500 flex flex-col max-md:text-xs">
                     <p>{`${formatBytes(file?.size)} • Modified `}</p>
                     {file.lastModified && (
                       <p>{formatDate(file.lastModified)}</p>
                     )}
                   </div>
                 </div>
+                {file.isFgDoc && <CloudIcon status={syncStatus} />}
               </div>
             )}
 
@@ -465,10 +471,13 @@ export default function FileViewer({ location }: FileViewerProps) {
           {/* File Preview */}
           {file && file.url && (
             <FileRenderer
-              url={file.url}
+              viewUrl={file.url}
+              location={location}
               fileName={file.name}
               fileType={getFileType(file.name, file.isFgDoc)}
               onDownload={handleDownload}
+              isPublic={false}
+              setSyncStatus={setSyncStatus}
             />
           )}
         </div>

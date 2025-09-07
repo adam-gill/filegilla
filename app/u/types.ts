@@ -44,3 +44,5 @@ export type FileType =
   | "text"
   | "archive"
   | "unknown";
+
+export type SyncStatuses = "loaded" | "loading" | "error";

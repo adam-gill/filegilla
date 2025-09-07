@@ -42,6 +42,7 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
+  const [syncStatus, setSyncStatus] = useState<"loaded" | "loading" | "error">("loading");
   const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const filegillaLink = `${process.env.NEXT_PUBLIC_APP_URL!}/s/${shareName}`;
@@ -145,6 +146,7 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
                       {file.lastModified && (
                         <p>{formatDate(file.lastModified)}</p>
                       )}
+                      {syncStatus && "sync needed"}
                     </div>
                   </div>
                 </div>
@@ -281,10 +283,14 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
             {/* File Preview */}
             {file && file.url && (
               <FileRenderer
-                url={file.url}
+                viewUrl={file.url}
+                location={[]}
                 fileName={file.name}
                 fileType={getFileType(file.name, file.isFgDoc)}
                 onDownload={handleDownload}
+                isPublic={true}
+                shareName={shareName}
+                setSyncStatus={setSyncStatus}
               />
             )}
           </div>

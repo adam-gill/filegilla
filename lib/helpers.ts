@@ -101,6 +101,11 @@ export const validateItemName = (name: string, type: string): string => {
 };
 
 export const getFileExtension = (fileName: string): string => {
+
+  if (!fileName.includes(".")) {
+    return ""
+  }
+
   return "." + fileName.toLowerCase().split(".").pop();
 };
 

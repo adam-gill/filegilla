@@ -314,9 +314,11 @@ const MobileToolbarContent = ({
 export function SimpleEditor({
   content,
   setContent,
+  canEdit,
 }: {
   content: string;
   setContent: (content: string) => void;
+  canEdit: boolean;
 }) {
   const isMobile = useMobile();
   const [mobileView, setMobileView] = React.useState<
@@ -377,6 +379,7 @@ export function SimpleEditor({
       setContent(editor.getHTML());
     },
     content: content,
+    editable: canEdit
   });
 
   React.useEffect(() => {
