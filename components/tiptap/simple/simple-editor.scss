@@ -27,7 +27,8 @@ body,
   background-color: var(--tt-bg-color);
 }
 
-body {
+/* Only apply overflow hidden when editor is in standalone mode */
+.simple-editor-standalone body {
   overflow: hidden;
 }
 

@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Download, Info, Trash2, MoreVertical, Copy } from "lucide-react";
+import {
+  Download,
+  Info,
+  Trash2,
+  MoreVertical,
+  Copy,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,17 +38,24 @@ import {
 import { authClient } from "@/lib/auth/auth-client";
 import { deleteShareItem } from "@/app/u/actions";
 import { useRouter } from "next/navigation";
+import CloudIcon from "@/app/note/components/cloudIcon";
 
 interface FileViewerProps {
-  file: FolderItem;
+  initialFile: FolderItem;
   shareName: string;
 }
 
-export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
+export default function SharedFileViewer({
+  initialFile,
+  shareName,
+}: FileViewerProps) {
+  const [file, setFile] = useState<FolderItem | undefined>(initialFile);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
-  const [syncStatus, setSyncStatus] = useState<"loaded" | "loading" | "error">("loading");
+  const [syncStatus, setSyncStatus] = useState<"loaded" | "loading" | "error">(
+    "loading"
+  );
   const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const filegillaLink = `${process.env.NEXT_PUBLIC_APP_URL!}/s/${shareName}`;
@@ -63,6 +76,7 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
   }, []);
 
   const handleDownload = useCallback(async () => {
+    if (!file) return;
     const { success, url } = await getPublicDownloadUrl(file.name, shareName);
 
     if (success && url) {
@@ -78,7 +92,7 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
       toast({
         title: "success!",
         description: `successfully downloaded ${createPublicFileName(
-          file.name,
+          file?.name || "file",
           shareName
         )}`,
         variant: "good",
@@ -87,21 +101,21 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
       toast({
         title: "error",
         description: `failed to download ${createPublicFileName(
-          file.name,
+          file?.name || "file",
           shareName
         )}`,
         variant: "destructive",
       });
     }
-  }, [file.name, shareName]);
+  }, [file, shareName]);
 
   const handleItemDeletion = async () => {
     try {
-      if (file.etag) {
+      if (file?.etag) {
         const { success, message } = await deleteShareItem(
-          file.name,
+          file?.name || "",
           shareName,
-          file.etag
+          file?.etag || ""
         );
 
         if (success) {
@@ -128,203 +142,208 @@ export default function SharedFileViewer({ file, shareName }: FileViewerProps) {
     }
   };
 
-    return (
-      <div>
-        <div className="text-white p-4 max-md:p-4 bg-neutral-900 rounded-lg">
-          <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              {file && (
-                <div className="flex items-center gap-3">
-                  <GetFileIcon fileName={file.name} isFgDoc={file.isFgDoc} />
-                  <div>
-                    <h1 className="text-xl font-semibold text-gray-100">
-                      {file.name}
-                    </h1>
-                    <div className="text-sm text-gray-400 flex flex-col max-md:text-xs">
-                      <p>{`${formatBytes(file?.size)} • Modified `}</p>
-                      {file.lastModified && (
-                        <p>{formatDate(file.lastModified)}</p>
-                      )}
-                      {syncStatus && "sync needed"}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                {/* Desktop Action Buttons - Hidden on mobile */}
-                <div className="hidden md:flex items-center gap-2">
-                  <Button
-                    onClick={() => setIsInfoOpen(true)}
-                    variant="outline"
-                    size="sm"
-                    className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
-                  >
-                    <Info className="w-4 h-4" />
-                  </Button>
-
-                  <div className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:ring-neutral-300 border shadow-sm hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-800 dark:hover:text-neutral-50 h-8 rounded-md w-[52px] text-xs">
-                    {file.url ? (
-                      <CopyText
-                        textToCopy={filegillaLink}
-                        showToast={true}
-                        className="w-full"
-                      />
-                    ) : (
-                      <Copy className="w-4 h-4" />
+  return (
+    <div className="h-full">
+      <div
+        className={`${
+          file?.isFgDoc ? "bg-transparent p-0" : "p-4"
+        } rounded-lg h-full`}
+      >
+        <div className="max-w-6xl mx-auto min-h-[calc(100vh-250px)] h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            {file && (
+              <div className="flex items-center gap-3 overflow-hidden">
+                <GetFileIcon fileName={file.name} isFgDoc={file.isFgDoc} />
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-xl font-semibold truncate">
+                    {file.name}
+                  </h1>
+                  <div className="text-sm text-black dark:text-gray-500 flex flex-col max-md:text-xs">
+                    <p>{`${formatBytes(file?.size)} • Modified `}</p>
+                    {file.lastModified && (
+                      <p>{formatDate(file.lastModified)}</p>
                     )}
                   </div>
+                </div>
+                {file.isFgDoc && <CloudIcon status={syncStatus} />}
+              </div>
+            )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownload}
-                    className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Desktop Action Buttons - Hidden on mobile */}
+              <div className="hidden md:flex items-center gap-2">
+                <Button
+                  onClick={() => setIsInfoOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
+                >
+                  <Info className="w-4 h-4" />
+                </Button>
 
-                  {session &&
-                    session.user.id &&
-                    session.user.id === file.ownerId && (
-                      <Button
-                        onClick={() => {
-                          setIsDeleteOpen(true);
-                          setIsDropdownOpen(false);
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="!bg-red-600/85 border-gray-600 text-gray-300 hover:!bg-red-600 cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
+                <div className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:ring-neutral-300 border shadow-sm hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-800 dark:hover:text-neutral-50 h-8 rounded-md w-[52px] text-xs">
+                  {file?.url ? (
+                    <CopyText
+                      textToCopy={filegillaLink}
+                      showToast={true}
+                      className="w-full"
+                    />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
                 </div>
 
-                {/* Mobile Dropdown Menu - Visible only on mobile */}
-                <div className="md:hidden">
-                  <DropdownMenu
-                    open={isDropdownOpen}
-                    onOpenChange={setIsDropdownOpen}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="bg-gray-800 border-gray-600 text-gray-300"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload}
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+
+                {session &&
+                  session.user.id &&
+                  session.user.id === file?.ownerId && (
+                    <Button
+                      onClick={() => {
+                        setIsDeleteOpen(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="!bg-red-600/85 border-gray-600 text-gray-300 hover:!bg-red-600 cursor-pointer"
                     >
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setIsInfoOpen(true);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="focus:bg-gray-700 focus:text-gray-200"
-                      >
-                        <Info className="w-4 h-4 mr-2" />
-                        info
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          toast({
-                            title: "success!",
-                            description: `copied share link: ${filegillaLink}`,
-                            variant: "good",
-                          })
-                        }
-                        className="focus:bg-gray-700 focus:text-gray-200"
-                      >
-                        {file.url ? (
-                          <CopyText
-                            textToCopy={file.url}
-                            className="mr-2"
-                            isMinWidth={true}
-                          />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                        copy
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="focus:bg-gray-700 focus:text-gray-200 cursor-pointer"
-                        onClick={handleDownload}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        download
-                      </DropdownMenuItem>
-                      {session &&
-                        session.user.id &&
-                        session.user.id === file.ownerId && (
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setIsDeleteOpen(true);
-                              setIsDropdownOpen(false);
-                            }}
-                            className="cursor-pointer text-white bg-red-600/85 focus:bg-gray-700 hover:bg-red-600 focus:text-red-300"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2 text-white" />
-                            delete
-                          </DropdownMenuItem>
-                        )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+              </div>
+
+              {/* Mobile Dropdown Menu - Visible only on mobile */}
+              <div className="md:hidden">
+                <DropdownMenu
+                  open={isDropdownOpen}
+                  onOpenChange={setIsDropdownOpen}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-gray-800 border-gray-600 text-gray-300"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setIsInfoOpen(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="focus:bg-gray-700 focus:text-gray-200"
+                    >
+                      <Info className="w-4 h-4 mr-2" />
+                      info
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        toast({
+                          title: "success!",
+                          description: `copied share link: ${filegillaLink}`,
+                          variant: "good",
+                        })
+                      }
+                      className="focus:bg-gray-700 focus:text-gray-200"
+                    >
+                      {file?.url ? (
+                        <CopyText
+                          textToCopy={file?.url || ""}
+                          className="mr-2"
+                          isMinWidth={true}
+                        />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                      copy
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="focus:bg-gray-700 focus:text-gray-200 cursor-pointer"
+                      onClick={handleDownload}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      download
+                    </DropdownMenuItem>
+                    {session &&
+                      session.user.id &&
+                      session.user.id === file?.ownerId && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setIsDeleteOpen(true);
+                            setIsDropdownOpen(false);
+                          }}
+                          className="cursor-pointer text-white bg-red-600/85 focus:bg-gray-700 hover:bg-red-600 focus:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2 text-white" />
+                          delete
+                        </DropdownMenuItem>
+                      )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-
-            {/* File Preview */}
-            {file && file.url && (
-              <FileRenderer
-                viewUrl={file.url}
-                location={[]}
-                fileName={file.name}
-                fileType={getFileType(file.name, file.isFgDoc)}
-                onDownload={handleDownload}
-                isPublic={true}
-                shareName={shareName}
-                setSyncStatus={setSyncStatus}
-              />
-            )}
           </div>
+
+          {/* File Preview */}
+          {file && file.url && (
+            <FileRenderer
+              viewUrl={file.url}
+              location={[]}
+              fileName={file.name}
+              fileType={getFileType(file.name, file.isFgDoc)}
+              onDownload={handleDownload}
+              isPublic={true}
+              shareName={shareName}
+              setSyncStatus={setSyncStatus}
+              setFile={setFile}
+            />
+          )}
         </div>
-
-        <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-          <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-black text-2xl">
-                {`delete /s/${shareName}`}
-              </AlertDialogTitle>
-              <AlertDialogDescription className="!text-gray-600 text-base">
-                {"remove this shared file from the public space"}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
-                cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleItemDeletion}
-                className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
-              >
-                delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        <InfoDialog
-          isInfoOpen={isInfoOpen}
-          setIsInfoOpen={setIsInfoOpen}
-          item={file}
-        />
       </div>
-    );
-  }
+
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-black text-2xl">
+              {`delete /s/${shareName}`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="!text-gray-600 text-base">
+              {"remove this shared file from the public space"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
+              cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleItemDeletion}
+              className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+            >
+              delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <InfoDialog
+        isInfoOpen={isInfoOpen}
+        setIsInfoOpen={setIsInfoOpen}
+        item={file}
+      />
+    </div>
+  );
+}

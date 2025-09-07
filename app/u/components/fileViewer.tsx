@@ -478,6 +478,7 @@ export default function FileViewer({ location }: FileViewerProps) {
               onDownload={handleDownload}
               isPublic={false}
               setSyncStatus={setSyncStatus}
+              setFile={setFile}
             />
           )}
         </div>

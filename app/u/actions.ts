@@ -372,8 +372,6 @@ export const validatePath = async (
     const s3Client = await getScopedS3Client(userId);
 
     try {
-      console.log("location used: ", location);
-      console.log("key used: ", key);
       const headCommand = new HeadObjectCommand({
         Bucket: S3_BUCKET_NAME,
         Key: key,
@@ -1181,32 +1179,48 @@ export const createDocument = async (
   }
 };
 
-export const getHTMLContent = async (location: string[]): Promise<{ success: boolean, message: string, html?: string }> => {
+export const getHTMLContent = async (
+  location: string[],
+  isPublic: boolean,
+  fileName?: string,
+  shareName?: string
+): Promise<{ success: boolean; message: string; html?: string }> => {
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if (!session?.user?.id) {
+  if (!isPublic && !session?.user?.id) {
     return { success: false, message: "user is not authenticated." };
   }
 
-  const userId = session.user.id;
+  const id = session?.user.id ?? ""
+
+  const userId = isPublic ? "public" : id;
+
   const s3Client = await getScopedS3Client(userId);
-  const key = createPrivateS3Key(userId, location, undefined, false);
+  const key =
+    isPublic && fileName && shareName
+      ? createPublicS3Key(fileName, shareName)
+      : createPrivateS3Key(userId, location, undefined, false);
 
   try {
     const getCommand = new GetObjectCommand({
-      Bucket: S3_BUCKET_NAME,
+      Bucket: isPublic ? S3_PUBLIC_BUCKET_NAME : S3_BUCKET_NAME,
       Key: key,
     });
 
     const response = await s3Client.send(getCommand);
-    
+
     const htmlContent = await response.Body?.transformToString();
-    
-    return { success: true, message: "successfully fetched HTML content", html: htmlContent };
+
+    return {
+      success: true,
+      message: "successfully fetched HTML content",
+      html: htmlContent,
+    };
   } catch (error) {
     console.error(`error getting HTML content for key ${key}, error: ${error}`);
-    return { success: false, message: "Failed to fetch HTML content" };
+    return { success: false, message: `Failed to fetch HTML content ${error}` };
   }
 };

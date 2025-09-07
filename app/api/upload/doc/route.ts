@@ -5,6 +5,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createPrivateS3Key, createPublicS3Key } from "@/lib/aws/helpers";
+import { randomId } from "@/lib/helpers";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
@@ -46,6 +47,11 @@ export async function POST(request: NextRequest) {
       Bucket: bucket,
       Key: key,
       ContentType: "text/html",
+      Metadata: {
+        id: randomId(10),
+        createdBy: "filegilla",
+        customTag: "filegilla document",
+      },
     });
 
     const presignedUrl = await getSignedUrl(s3Client, uploadCommand, {

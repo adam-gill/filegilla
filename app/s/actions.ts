@@ -9,7 +9,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export const getSharedFile = async (
   shareName: string
-): Promise<{ success: boolean; message: string; file?: FolderItem }> => {
+): Promise<{ success: boolean; message: string; initialFile?: FolderItem }> => {
   try {
     const response = await prisma.share.findFirst({
       where: {
@@ -29,6 +29,13 @@ export const getSharedFile = async (
 
       const s3Response = await s3Client.send(headCommand);
 
+      const metadata = s3Response.Metadata;
+
+      const isFgDoc =
+        metadata &&
+        "customtag" in metadata &&
+        metadata["customtag"] === "filegilla document";
+
       if (
         s3Response.ContentLength &&
         s3Response.ContentType &&
@@ -37,7 +44,7 @@ export const getSharedFile = async (
         return {
           success: true,
           message: `successfully retrieved shared file ${shareName}`,
-          file: {
+          initialFile: {
             name: response.itemName,
             path: "",
             type: "file",
@@ -47,6 +54,7 @@ export const getSharedFile = async (
             size: s3Response.ContentLength,
             url: response.s3Url,
             ownerId: response.ownerId ?? undefined,
+            isFgDoc: isFgDoc
           },
         };
       } else {
@@ -107,7 +115,9 @@ export const getPublicDownloadUrl = async (
   }
 };
 
-export const getOgData = async (shareName: string): Promise<{ success: boolean, username?: string, imgUrl?: string }> => {
+export const getOgData = async (
+  shareName: string
+): Promise<{ success: boolean; username?: string; imgUrl?: string }> => {
   try {
     const share = await prisma.share.findFirst({
       where: {
@@ -128,17 +138,24 @@ export const getOgData = async (shareName: string): Promise<{ success: boolean, 
       return { success: false };
     }
 
-    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
-    const isImage = imageExtensions.some(ext => share.itemName.toLowerCase().endsWith(ext));
+    const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
+    const isImage = imageExtensions.some((ext) =>
+      share.itemName.toLowerCase().endsWith(ext)
+    );
 
     if (isImage) {
-      return { success: true, username: share.user.username, imgUrl: share.s3Url };
+      return {
+        success: true,
+        username: share.user.username,
+        imgUrl: share.s3Url,
+      };
     }
 
     return { success: false };
-
   } catch (error) {
-    console.error(`Failed to fetch OG data for '${shareName}'. Error: ${error}`);
+    console.error(
+      `Failed to fetch OG data for '${shareName}'. Error: ${error}`
+    );
     return { success: false };
   }
 };

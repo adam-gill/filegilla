@@ -60,15 +60,15 @@ const LoadingScreen = () => {
 
 export default async function ShareViewer({ params }: ShareViewerProps) {
   const shareName = (await params).shareName;
-  const { file } = await getSharedFile(shareName);
+  const { initialFile } = await getSharedFile(shareName);
 
   return (
     <main>
       <Suspense fallback={<LoadingScreen />}>
-        {file && <SharedFileViewer file={file} shareName={shareName} />}
+        {initialFile && <SharedFileViewer initialFile={initialFile} shareName={shareName} />}
       </Suspense>
 
-      {!file && (
+      {!initialFile && (
         <div className="min-h-[70vh] w-full flex items-center justify-center text-center">
           <div className="text-2xl font-medium">{`404 - '${shareName}' not found`}</div>
         </div>

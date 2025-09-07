@@ -50,7 +50,7 @@ export default function Note({ initialNoteData }: NoteProps) {
   }, []);
 
   return (
-    <div style={{ height: "calc(100vh - 64px)", overflow: "hidden" }}>
+    <div className="simple-editor-standalone" style={{ height: "calc(100vh - 64px)", overflow: "hidden" }}>
       <div className="px-6 font-bold text-lg flex items-center gap-2 w-full max-w-6xl mx-auto">
         <div>personal notepad</div>
         <CloudIcon status={syncStatus} />

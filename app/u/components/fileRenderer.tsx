@@ -1,5 +1,5 @@
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
-import { FileType, SyncStatuses } from "../types";
+import { FileType, FolderItem, SyncStatuses } from "../types";
 import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
@@ -24,6 +24,7 @@ interface FileRendererProps {
   shareName?: string;
   onDownload: () => void;
   setSyncStatus: Dispatch<SetStateAction<SyncStatuses>>;
+  setFile: Dispatch<SetStateAction<FolderItem | undefined>>;
 }
 
 export default function FileRenderer({
@@ -35,6 +36,7 @@ export default function FileRenderer({
   shareName,
   onDownload,
   setSyncStatus,
+  setFile,
 }: FileRendererProps) {
   const [error, setError] = useState<boolean>(false);
   const [pageHeight, setPageHeight] = useState<number>(0);
@@ -42,8 +44,6 @@ export default function FileRenderer({
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [content, setContent] = useState<string>("");
-  console.log("location type: ", typeof location)
-  console.log("location value: ", JSON.stringify(location));
 
   useEffect(() => {
     const calculatePageHeight = () => {
@@ -82,17 +82,23 @@ export default function FileRenderer({
 
   useEffect(() => {
     const fetchHTML = async () => {
-      const { html } = await getHTMLContent(location);
-
+      const { success, message, html } = await getHTMLContent(
+        location,
+        isPublic,
+        fileName,
+        shareName
+      );
+      console.log(success, message);
       if (html) {
         setSyncStatus("loaded");
         setContent(html);
       }
     };
+    console.log(fileType);
     if (fileType === "filegilla") {
       fetchHTML();
     }
-  }, [fileType, location, setSyncStatus]);
+  }, [fileType, location, setSyncStatus, fileName, isPublic, shareName]);
 
   if (error) {
     return (
@@ -117,6 +123,7 @@ export default function FileRenderer({
           shareName={shareName}
           setSyncStatus={setSyncStatus}
           location={location}
+          setFile={setFile}
         />
       );
     case "image":

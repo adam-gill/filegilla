@@ -9,7 +9,8 @@ import React, {
   SetStateAction,
 } from "react";
 import { filegillaHTMLId } from "@/app/u/helpers";
-import { SyncStatuses } from "@/app/u/types";
+import { FolderItem, SyncStatuses } from "@/app/u/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NoteWrapperProps {
   location: string[];
@@ -18,6 +19,7 @@ interface NoteWrapperProps {
   isPublic: boolean;
   shareName?: string;
   setSyncStatus: Dispatch<SetStateAction<SyncStatuses>>;
+  setFile: Dispatch<SetStateAction<FolderItem | undefined>>;
 }
 
 export default function NoteWrapper({
@@ -27,27 +29,30 @@ export default function NoteWrapper({
   shareName,
   fileName,
   setSyncStatus,
+  setFile,
 }: NoteWrapperProps) {
-  const [content, setContent] = useState<string>(initialContent);
+  const [content, setContent] = useState<string>(
+    initialContent.replace(/<div data-filegilla="[^"]*"><\/div>/g, "") ?? ""
+  );
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { data: session } = authClient.useSession();
   const canEdit = !!session?.user.id;
 
-  const createFileBuffer = () => {
-    const html = content.includes(filegillaHTMLId)
-      ? content
-      : content + `<div data-filegilla="${filegillaHTMLId}"></div>`;
+  const createFileBuffer = (html: string) => {
+    const htmlWithMarker = html.includes(filegillaHTMLId)
+      ? html
+      : html + `<div data-filegilla="${filegillaHTMLId}"></div>`;
 
-    const fileBuffer = Buffer.from(html, "utf-8");
+    const fileBuffer = Buffer.from(htmlWithMarker, "utf-8");
 
     return { fileBuffer };
   };
 
-  const handleSave = async () => {
+  const handleSave = async (htmlToSave: string) => {
     setSyncStatus("loading");
 
     try {
-      const { fileBuffer } = createFileBuffer();
+      const { fileBuffer } = createFileBuffer(htmlToSave);
 
       const presignedResponse = await fetch("/api/upload/doc", {
         method: "POST",
@@ -62,18 +67,18 @@ export default function NoteWrapper({
         }),
       });
 
-      const presignedUrl = await presignedResponse.json();
+      const data = await presignedResponse.json();
 
-      if (!presignedUrl.success) {
+      if (!data.success) {
         toast({
           title: "Error",
-          description: presignedUrl.message,
+          description: data.message,
           variant: "destructive",
         });
         return;
       }
 
-      const uploadResponse = await fetch(presignedUrl, {
+      const uploadResponse = await fetch(data.presignedUrl, {
         method: "PUT",
         body: fileBuffer,
         headers: {
@@ -88,10 +93,22 @@ export default function NoteWrapper({
           description: "failed to sync document",
           variant: "destructive",
         });
+      } else {
+        setFile((prevFile) => {
+          if (prevFile) {
+            return {
+              ...prevFile,
+              size: fileBuffer.byteLength,
+              lastModified: new Date(),
+            };
+          }
+          return prevFile;
+        });
+        setSyncStatus("loaded");
       }
     } catch (error) {
       setSyncStatus("error");
-      console.error(`error syncing document: ${error}`)
+      console.error(`error syncing document: ${error}`);
       toast({
         title: "error",
         description: "failed to sync document",
@@ -108,8 +125,8 @@ export default function NoteWrapper({
     }
 
     timeoutRef.current = setTimeout(() => {
-      handleSave();
-    }, 500);
+      handleSave(newContent);
+    }, 400);
   };
 
   useEffect(() => {
@@ -120,13 +137,39 @@ export default function NoteWrapper({
     };
   }, []);
 
+  useEffect(() => {
+    const cleanedContent = initialContent.replace(
+      /<div data-filegilla="[^"]*"><\/div>/g,
+      ""
+    );
+    if (cleanedContent) {
+      setContent(cleanedContent);
+    }
+  }, [initialContent]);
+
   return (
     <>
-      <SimpleEditor
-        content={content}
-        setContent={handleContentChange}
-        canEdit={canEdit}
-      />
+      {content ? (
+        <SimpleEditor
+          content={content}
+          setContent={handleContentChange}
+          canEdit={canEdit}
+        />
+      ) : (
+        <div className="flex flex-col">
+          <div className="flex px- w-full">
+            <Skeleton className="h-8 w-full !bg-neutral-700/30" />
+          </div>
+          <div className="flex flex-col gap-y-4 mt-10">
+            <Skeleton className="h-8 w-[90%] !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-[50%] !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-[40%] !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-[60%] !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-[30%] !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-[40%] !bg-neutral-700/30" />
+          </div>
+        </div>
+      )}
     </>
   );
 }
