@@ -149,7 +149,7 @@ export default function NoteWrapper({
 
   return (
     <>
-      {content ? (
+      {content !== undefined ? (
         <SimpleEditor
           content={content}
           setContent={handleContentChange}
