@@ -28,14 +28,12 @@ export default function DashboardLayout({
 }
 /*
 
-All the todos I can think of right now:
 
-TODO - list/rename/delete folders (folder cards)
-TODO - upload/list/rename/delete file(s)
-TODO - upload folder
-TODO - edit username
-TODO - edit profile picture
-TODO - make alert dialog with input a reuseable component
+Current TODOs
+
+- Image previews for files (future)
+- Download folder as archives
+- Add friends and posts (future)
 
 
 */
