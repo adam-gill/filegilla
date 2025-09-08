@@ -126,7 +126,7 @@ export default function NoteWrapper({
 
     timeoutRef.current = setTimeout(() => {
       handleSave(newContent);
-    }, 400);
+    }, 900);
   };
 
   useEffect(() => {
