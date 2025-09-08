@@ -23,8 +23,8 @@ export function FontSizeInput() {
     }
   }, [currentFontSize, editor]);
 
-  if (!editor) {
-    return null;
+  if (!editor || !editor.isEditable) {
+    return null
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

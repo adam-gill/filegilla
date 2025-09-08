@@ -379,8 +379,6 @@ export const validatePath = async (
 
       const res = await s3Client.send(headCommand);
 
-      console.log("content length: ", res.ContentLength);
-
       if (res.ContentLength === 0) {
         return {
           valid: true,

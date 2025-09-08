@@ -104,7 +104,10 @@ const mentionSuggestion = {
     let popup: Instance;
     let selectedIndex: number = 0;
     let currentItems: User[] = [];
-    let currentCommand: (attrs: { id: number; label: string }) => void = () => {};
+    let currentCommand: (attrs: {
+      id: number;
+      label: string;
+    }) => void = () => {};
 
     return {
       onStart: (props: SuggestionProps<User>) => {
@@ -151,7 +154,8 @@ const mentionSuggestion = {
         }
 
         if (props.event.key === "ArrowUp") {
-          selectedIndex = (selectedIndex + currentItems.length - 1) % currentItems.length;
+          selectedIndex =
+            (selectedIndex + currentItems.length - 1) % currentItems.length;
           renderItems();
           return true;
         }
@@ -358,7 +362,9 @@ export function SimpleEditor({
         renderHTML: ({ options, node }) => {
           return [
             "span",
-            mergeAttributes(options.HTMLAttributes, { "data-id": node.attrs.id }),
+            mergeAttributes(options.HTMLAttributes, {
+              "data-id": node.attrs.id,
+            }),
             `@${node.attrs.label ?? node.attrs.id}`,
           ];
         },
@@ -379,7 +385,7 @@ export function SimpleEditor({
       setContent(editor.getHTML());
     },
     content: content,
-    editable: canEdit
+    editable: canEdit,
   });
 
   React.useEffect(() => {
@@ -394,31 +400,44 @@ export function SimpleEditor({
     }
   }, [isMobile, mobileView]);
 
+  React.useEffect(() => {
+    console.log("editable: ", editor?.isEditable)
+    console.log("canEdit: ", canEdit);
+    if (editor) {
+      editor.setEditable(canEdit, false);
+      console.log("editable: ", editor?.isEditable)
+    console.log("canEdit: ", canEdit);
+    }
+  }, [editor, canEdit]);
+
   return (
     <EditorContext.Provider value={{ editor }}>
-      <Toolbar
-        ref={toolbarRef}
-        style={
-          isMobile
-            ? {
-                bottom: `0px`,
-              }
-            : {}
-        }
-      >
-        {mobileView === "main" ? (
-          <MainToolbarContent
-            onHighlighterClick={() => setMobileView("highlighter")}
-            onLinkClick={() => setMobileView("link")}
-            isMobile={isMobile}
-          />
-        ) : (
-          <MobileToolbarContent
-            type={mobileView === "highlighter" ? "highlighter" : "link"}
-            onBack={() => setMobileView("main")}
-          />
-        )}
-      </Toolbar>
+      {canEdit && (
+        <Toolbar
+          key={`toolbar-${editor?.isEditable}`}
+          ref={toolbarRef}
+          style={
+            isMobile
+              ? {
+                  bottom: `0px`,
+                }
+              : {}
+          }
+        >
+          {mobileView === "main" ? (
+            <MainToolbarContent
+              onHighlighterClick={() => setMobileView("highlighter")}
+              onLinkClick={() => setMobileView("link")}
+              isMobile={isMobile}
+            />
+          ) : (
+            <MobileToolbarContent
+              type={mobileView === "highlighter" ? "highlighter" : "link"}
+              onBack={() => setMobileView("main")}
+            />
+          )}
+        </Toolbar>
+      )}
 
       <div className="content-wrapper">
         <EditorContent

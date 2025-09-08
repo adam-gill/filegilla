@@ -82,19 +82,17 @@ export default function FileRenderer({
 
   useEffect(() => {
     const fetchHTML = async () => {
-      const { success, message, html } = await getHTMLContent(
+      const { html } = await getHTMLContent(
         location,
         isPublic,
         fileName,
         shareName
       );
-      console.log(success, message);
       if (html) {
         setSyncStatus("loaded");
         setContent(html);
       }
     };
-    console.log(fileType);
     if (fileType === "filegilla") {
       fetchHTML();
     }
