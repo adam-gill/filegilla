@@ -128,7 +128,6 @@ export const deleteItem = async (
     if (type === "file") {
       // Delete a single file
       const fileKey = createPrivateS3Key(userId, location, itemName);
-      console.log(fileKey);
 
       try {
         const deleteCommand = new DeleteObjectCommand({

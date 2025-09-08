@@ -298,6 +298,7 @@ export default function Item({
           etag: item.etag,
           lastModified: item.lastModified,
           size: item.size,
+          isFgDoc: item.isFgDoc
         },
       ]);
 
