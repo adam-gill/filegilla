@@ -142,9 +142,3 @@ export const changeAvatar = async (
     return { success: false, message: "Failed to prepare avatar upload" };
   }
 };
-
-/*
-
-TODO - make alert dialog for deleting files
-
-*/

@@ -43,15 +43,14 @@ export default function RootLayout({
   );
 }
 
-
 /*
 
-TODO
-- Move functionality (possibly drag and drop or selecting multiple folders/files)
-- Allowing users to create tiptap documents, save, rename, delete, them etc 
-  (should be the same as other files if) I store them as files like the others
-- move /note to upload the html data to s3 not database (infinite file size compared to 1GB)
-  - might have to not use server actions for syncing/fetching data because the limits are low
-    and I shouldn't be processing a shit ton of data server side anyway
-  - fix sync icon (not symmetrical - use svg or something)
+Current TODOs
+
+  TODO - Image previews for files (future)
+  TODO - Download folder as archives
+  TODO - Add friends and posts (future)
+  TODO - Need global search function (file names) - will involve beefy script
+
+
 */

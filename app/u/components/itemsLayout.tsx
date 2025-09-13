@@ -50,8 +50,6 @@ export default function ItemsLayout({
         )}
       </div>
 
-      {/* TODO - Need global search function (file names) - will involve beefy script */}
-
       {/* path not valid */}
       {!valid && (
         <div className="w-full items-center justify-center text-center text-xl mt-6">

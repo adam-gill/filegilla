@@ -26,13 +26,4 @@ export default function DashboardLayout({
     </>
   );
 }
-/*
 
-
-Current TODOs
-
-- Image previews for files (future)
-- Download folder as archives
-- Add friends and posts (future)
-
-*/
