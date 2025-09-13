@@ -185,37 +185,91 @@ export default function Item({
   const handleDownload = useCallback(async () => {
     setIsOptionsOpen(false);
 
-    try {
-      const { success, url } = await getDownloadUrl([...location, item.name]);
+    if (item.type === "folder") {
 
-      if (success && url) {
-        // Download the file from the download url
+      try {
+        toast({
+          title: "preparing download",
+          description: "creating zip file for folder...",
+          variant: "default",
+        });
+
+        const response = await fetch('/api/download-folder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            location: [...location, item.name],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Download failed');
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = item.name || "download";
+        link.download = `${item.name}.zip`;
         link.style.display = "none";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
+        window.URL.revokeObjectURL(url);
+
         toast({
           title: "success!",
-          description: `successfully downloaded ${item.name}`,
+          description: `successfully downloaded ${item.name} as zip file`,
           variant: "good",
         });
-      } else {
+
+      } catch (error) {
+        console.log(error);
         toast({
           title: "error",
-          description: `failed to download ${item.name}`,
+          description: `download failed: ${error}`,
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.log(error);
-      toast({
-        title: "error",
-        description: `download failed: ${error}`,
-      });
+
+    } else {
+      try {
+        const { success, url } = await getDownloadUrl([...location, item.name]);
+
+        if (success && url) {
+          // Download the file from the download url
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = item.name || "download";
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          toast({
+            title: "success!",
+            description: `successfully downloaded ${item.name}`,
+            variant: "good",
+          });
+        } else {
+          toast({
+            title: "error",
+            description: `failed to download ${item.name}`,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        toast({
+          title: "error",
+          description: `download failed: ${error}`,
+        });
+      }
     }
   }, [location, item.name]);
 
@@ -405,15 +459,13 @@ export default function Item({
                           move
                         </Button>
 
-                        {item.type === "file" && (
-                          <Button
-                            onClick={handleDownload}
-                            className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
-                          >
-                            <Download className="mr-2 h-4 w-4 text-neutral-400" />
-                            download
-                          </Button>
-                        )}
+                        <Button
+                          onClick={handleDownload}
+                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                        >
+                          <Download className="mr-2 h-4 w-4 text-neutral-400" />
+                          download
+                        </Button>
 
                         {item.type === "file" && (
                           <Button
@@ -501,15 +553,13 @@ export default function Item({
             move
           </ContextMenuItem>
 
-          {item.type === "file" && (
-            <ContextMenuItem
-              onClick={handleDownload}
-              className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              download
-            </ContextMenuItem>
-          )}
+          <ContextMenuItem
+            onClick={handleDownload}
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            download
+          </ContextMenuItem>
 
           {item.type === "file" && (
             <ContextMenuItem
@@ -577,11 +627,10 @@ export default function Item({
                 setValidationError(validateItemName(newName, item.type));
               }}
               onKeyDown={handleKeyPress}
-              className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${
-                validationError
-                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                  : ""
-              }`}
+              className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${validationError
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : ""
+                }`}
               autoFocus
               disabled={isLoading}
             />

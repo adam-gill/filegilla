@@ -289,19 +289,19 @@ export const renameItem = async (
           ReturnType<typeof s3Client.send>
         > extends infer R
           ? R extends {
-              Contents?: any[];
-              IsTruncated?: boolean;
-              NextContinuationToken?: string;
-            }
-            ? R
-            : any
+            Contents?: any[];
+            IsTruncated?: boolean;
+            NextContinuationToken?: string;
+          }
+          ? R
+          : any
           : any = await s3Client.send(
-          new ListObjectsV2Command({
-            Bucket: S3_BUCKET_NAME,
-            Prefix: oldPrefix,
-            ContinuationToken: continuationToken,
-          })
-        );
+            new ListObjectsV2Command({
+              Bucket: S3_BUCKET_NAME,
+              Prefix: oldPrefix,
+              ContinuationToken: continuationToken,
+            })
+          );
 
         const contents = listResp.Contents || [];
         for (const obj of contents) {
@@ -646,7 +646,7 @@ export const getFile = async (
 };
 
 export const getDownloadUrl = async (
-  location: string[]
+  location: string[],
 ): Promise<{
   success: boolean;
   message: string;
@@ -663,6 +663,9 @@ export const getDownloadUrl = async (
       message: "user is not authenticated.",
     };
   }
+
+
+
   const key = createPrivateS3Key(userId, location);
 
   try {
@@ -671,9 +674,8 @@ export const getDownloadUrl = async (
     const urlCommand = new GetObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
-      ResponseContentDisposition: `attachment; filename="${
-        location[location.length - 1]
-      }"`,
+      ResponseContentDisposition: `attachment; filename="${location[location.length - 1]
+        }"`,
       ResponseContentType: "application/octet-stream",
     });
 
@@ -691,6 +693,7 @@ export const getDownloadUrl = async (
       message: `Error fetching file: ${error}`,
     };
   }
+
 };
 
 export const shareItem = async ({
@@ -767,9 +770,8 @@ export const shareItem = async ({
     console.error("Error sharing file:", error);
     return {
       success: false,
-      message: `failed to share file: ${
-        error instanceof Error ? error.message : "unknown error"
-      }`,
+      message: `failed to share file: ${error instanceof Error ? error.message : "unknown error"
+        }`,
     };
   }
 };
@@ -1065,19 +1067,19 @@ export const moveItem = async ({
           ReturnType<typeof s3Client.send>
         > extends infer R
           ? R extends {
-              Contents?: any[];
-              IsTruncated?: boolean;
-              NextContinuationToken?: string;
-            }
-            ? R
-            : any
+            Contents?: any[];
+            IsTruncated?: boolean;
+            NextContinuationToken?: string;
+          }
+          ? R
+          : any
           : any = await s3Client.send(
-          new ListObjectsV2Command({
-            Bucket: S3_BUCKET_NAME,
-            Prefix: sourcePrefix,
-            ContinuationToken: continuationToken,
-          })
-        );
+            new ListObjectsV2Command({
+              Bucket: S3_BUCKET_NAME,
+              Prefix: sourcePrefix,
+              ContinuationToken: continuationToken,
+            })
+          );
 
         const contents = listResp.Contents || [];
         for (const obj of contents) {
@@ -1119,9 +1121,8 @@ export const moveItem = async ({
     console.error(`error moving ${itemType} '${itemName}':`, error);
     return {
       success: false,
-      message: `error moving ${itemType} '${itemName}': ${
-        error instanceof Error ? error.message : "unknown error"
-      }`,
+      message: `error moving ${itemType} '${itemName}': ${error instanceof Error ? error.message : "unknown error"
+        }`,
     };
   }
 };

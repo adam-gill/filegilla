@@ -35,5 +35,4 @@ Current TODOs
 - Download folder as archives
 - Add friends and posts (future)
 
-
 */
