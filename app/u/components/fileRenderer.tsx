@@ -226,7 +226,7 @@ export default function FileRenderer({
           <FileText className="w-16 h-16 text-red-400 mb-4" />
           <p className="text-gray-300 font-medium mb-2">{fileName}</p>
           <p className="text-gray-500 text-sm text-center mb-4">
-            Word/PowersPoint documents require download to view
+            Download Word/PowerPoint documents to view them
           </p>
           <Button
             variant="outline"
