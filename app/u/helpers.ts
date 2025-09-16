@@ -10,7 +10,7 @@ export const getFileType = (fileName: string, isFgDoc: boolean | undefined): Fil
   }
 
   if (
-    ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico", "heif", "heic"].includes(
+    ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico"].includes(
       extension || ""
     )
   ) {
