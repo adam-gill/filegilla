@@ -100,6 +100,16 @@ model share {
   user       User?          @relation(fields: [ownerId], references: [id], onUpdate: NoAction, map: "fk_shares_owner")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model verificationCode {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String
+  name             String
+  verificationCode String   @db.Char(6)
+  createdAt        DateTime @default(now()) @db.Timestamptz(6)
+  expiresAt        DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)")) @db.Timestamptz(6)
+}
+
 enum item_type_enum {
   file
   folder

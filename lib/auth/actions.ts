@@ -48,8 +48,9 @@ export const createUserFolder = async (userId: string) => {
 
     await s3Client.send(command);
 
-    console.log("Successfully created initial user folder");
+    console.log(`Successfully created initial user folder for user-${userId}`);
   } catch (error) {
-    console.error("Failed to create initial user folder:", error);
+    console.log(`Failed to created initial user folder for user-${userId}`);
+    console.error(error);
   }
 };

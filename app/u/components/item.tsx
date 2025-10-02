@@ -271,7 +271,7 @@ export default function Item({
         });
       }
     }
-  }, [location, item.name]);
+  }, [location, item.name, item.type]);
 
   const handleDeletionClick = () => {
     setIsDeleteOpen(true);
