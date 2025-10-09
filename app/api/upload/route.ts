@@ -47,13 +47,15 @@ export async function POST(request: NextRequest) {
           : file.name;
         const fileKey = createPrivateS3Key(userId, location, fileName);
         
-
-        
+        const previewId = crypto.randomUUID();
         
         const uploadCommand = new PutObjectCommand({
           Bucket: S3_BUCKET_NAME,
           Key: fileKey,
           ContentType: file.type || 'application/octet-stream',
+          Metadata: {
+            preview: previewId
+          }
         });
 
         // Generate presigned URL (valid for 15 minutes)

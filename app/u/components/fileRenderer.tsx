@@ -171,12 +171,12 @@ export default function FileRenderer({
       return (
         <div className="w-full rounded-lg border border-none h-full overflow-auto">
           {isMobile ? (
-            <div className="flex flex-col">
+            <div className="flex flex-col h-full">
               <object
                 data={`${viewUrl}#scrollbar=1&toolbar=0&navpanes=0&pagemode=none&view=FitV`}
                 type="application/pdf"
                 width="100%"
-                height="100%"
+                height={pageHeight - 285}
                 className="rounded-lg"
                 style={{
                   backgroundColor: "white",

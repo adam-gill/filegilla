@@ -8,8 +8,8 @@ export default function Landing() {
   return (
     <main>
       <Navbar isLanding={true} />
-      <div className="flex flex-col min-h-screen w-full px-6 mx-auto max-w-7xl">
-        <main className="flex-grow flex flex-col items-center">
+      <div className="flex flex-col min-h-screen w-full px-6 mx-auto max-w-7xl justify-between">
+        <main className="flex flex-col items-center">
           <div className="w-full max-w-6xl max-md:text-4xl flex flex-col mt-8 text-6xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">
             private and secure cloud storage.
           </div>
@@ -40,7 +40,7 @@ export default function Landing() {
           <p className="mt-2">{"join for free!"}</p>
         </main>
 
-        <footer className="mt-auto py-4">
+        <footer className=" absolute bottom-0 mt-auto py-4">
           <h1 className="text-center">
             filegilla {new Date().getFullYear()}
             <span className="mx-2">&#x2022;</span>
