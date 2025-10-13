@@ -208,7 +208,7 @@ export default function FileRenderer({
               onError={handleError}
               style={{
                 border: 0,
-                height: "100%",
+                height: pageHeight,
                 minHeight: isMobile
                   ? `${pageHeight - 200}px`
                   : `${pageHeight - 350}px`,

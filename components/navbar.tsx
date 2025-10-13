@@ -22,7 +22,7 @@ export default function Navbar({ isLanding }: NavbarProps) {
   const userData = session?.user;
 
   return (
-    <header className="w-full pt-1">
+    <header className="w-full sticky top-0 z-50 bg-inherit">
       <div className="flex h-16 items-center justify-between w-full max-w-6xl px-6 mx-auto">
         <NavigationMenu>
           <NavigationMenuList className="flex items-center gap-3 sm:gap-1">
