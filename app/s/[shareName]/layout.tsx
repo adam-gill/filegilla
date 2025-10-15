@@ -8,7 +8,6 @@ export default function DashboardLayout({
 }>) {
   return (
     <>
-      <Navbar />
       <Container>
         <div className="mt-4">{children}</div>
       </Container>

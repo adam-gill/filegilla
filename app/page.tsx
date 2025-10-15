@@ -7,7 +7,6 @@ import Navbar from "@/components/navbar";
 export default function Landing() {
   return (
     <main>
-      <Navbar isLanding={true} />
       <div className="flex flex-col min-h-screen w-full px-6 mx-auto max-w-7xl justify-between">
         <main className="flex flex-col items-center">
           <div className="w-full max-w-6xl max-md:text-4xl flex flex-col mt-8 text-6xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">

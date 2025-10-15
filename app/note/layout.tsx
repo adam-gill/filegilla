@@ -1,5 +1,3 @@
-import Navbar from "@/components/navbar";
-
 export default function NotesLayout({
   children,
 }: Readonly<{
@@ -7,7 +5,6 @@ export default function NotesLayout({
 }>) {
   return (
     <>
-      <Navbar />
         <div>{children}</div>
     </>
   );

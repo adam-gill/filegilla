@@ -149,7 +149,7 @@ export default function SharedFileViewer({
           file?.isFgDoc ? "bg-transparent p-0" : "p-4"
         } rounded-lg h-full`}
       >
-        <div className="max-w-6xl mx-auto min-h-[calc(100vh-250px)] h-full">
+        <div className="max-w-6xl mx-auto min-h-[calc(100vh-250px-64px)] h-full">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             {file && (

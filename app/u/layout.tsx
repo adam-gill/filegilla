@@ -19,7 +19,6 @@ export default function DashboardLayout({
 }>) {
   return (
     <>
-      <Navbar />
       <Container>
         {children}
       </Container>
