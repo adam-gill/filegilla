@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const s3Client = await getScopedS3Client(userId);
 
-    const presignedUrls: { fileName: string; url: string; key: string }[] = [];
+    const presignedUrls: { fileName: string; url: string; key: string; previewId?: string }[] = [];
 
     for (const file of files) {
       try {
@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
           fileName: file.name,
           url: presignedUrl,
           key: fileKey,
+          previewId: previewId,
         });
       } catch (error) {
         console.error(`Failed to generate presigned URL for ${file.name}:`, error);
