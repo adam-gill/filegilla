@@ -1,5 +1,4 @@
 import Container from "@/components/container";
-import Navbar from "@/components/navbar";
 import type { Metadata } from "next";
 
 export function metadata(): Metadata {
@@ -19,7 +18,7 @@ export default function DashboardLayout({
 }>) {
   return (
     <>
-      <Container>
+      <Container className="pt-16">
         {children}
       </Container>
     </>

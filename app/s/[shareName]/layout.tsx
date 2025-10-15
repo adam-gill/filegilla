@@ -1,5 +1,4 @@
 import Container from "@/components/container";
-import Navbar from "@/components/navbar";
 
 export default function DashboardLayout({
   children,
@@ -9,7 +8,7 @@ export default function DashboardLayout({
   return (
     <>
       <Container>
-        <div className="mt-4">{children}</div>
+        <div className="mt-4 pt-16">{children}</div>
       </Container>
     </>
   );

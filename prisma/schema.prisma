@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime
   note          String?
   accounts      Account[]
+  preview       preview[]
   sessions      Session[]
   share         share[]
 
@@ -108,6 +109,21 @@ model verificationCode {
   verificationCode String   @db.Char(6)
   createdAt        DateTime @default(now()) @db.Timestamptz(6)
   expiresAt        DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '00:30:00'::interval)")) @db.Timestamptz(6)
+}
+
+model apiKey {
+  hash      String
+  createdAt DateTime? @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
+  id        String    @id @db.Uuid
+}
+
+model preview {
+  id        String    @id @db.Uuid
+  ownerId   String
+  objectKey String
+  createdAt DateTime? @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
+  updatedAt DateTime? @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
+  user      User      @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum item_type_enum {

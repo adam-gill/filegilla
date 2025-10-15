@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createDocument, createFolder } from "../actions";
+import { createDocument, createFolder, setFilePreviewBackend } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
 import { sortItems } from "@/lib/helpers";
@@ -126,6 +126,41 @@ export default function AddContent({
     });
   };
 
+  const setFilePreview = async (file: File, previewId: string) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("https://api.filegilla.com/previewImage", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filenameMatch = contentDisposition?.match(/filename="?(.+)"?/i);
+      const filename = filenameMatch?.[1] || "preview.webp";
+      
+      const { success, message } = await setFilePreviewBackend(
+        arrayBuffer,
+        filename,
+        blob.type || "image/webp",
+        previewId
+      );
+
+      console.log(success, message);
+
+    } catch (error) {
+      console.error("Error setting file preview:", error);
+    }
+  }
+
   const handleFilesUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -181,13 +216,16 @@ export default function AddContent({
         const file = files[i];
         const presignedUrlData = presignedResult.presignedUrls[i];
         const presignedUrl = presignedUrlData.url || presignedUrlData;
+        const previewId = presignedUrlData.previewId;
 
         const success = await uploadFileWithProgress(
           file,
           presignedUrl,
           i,
-          totalBytes
+          totalBytes,
         );
+
+        setFilePreview(file, previewId);
 
         if (success) {
           const folderItem: FolderItem = {
