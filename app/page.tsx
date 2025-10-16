@@ -29,19 +29,19 @@ export default function Landing() {
             />
           </div>
 
-          <Link
-            href={"/auth?signUp=1"}
-            className="bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium mt-[300px] py-4 text-3xl text-center px-14 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
-          >
-            join now
-          </Link>
-          <p className="mt-2">{"join for free!"}</p>
+          <div className="w-full absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center ">
+            <Link
+              href={"/auth?signUp=1"}
+              className="w-full max-w-[300px] bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium py-4 text-3xl text-center px-14 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
+            >
+              join now
+            </Link>
+            <p className="mt-2">{"for free!"}</p>
+          </div>
         </main>
 
-        <footer className="left-1/2 -translate-x-1/2 absolute bottom-0 mt-auto py-4">
+        <footer className="w-full left-1/2 -translate-x-1/2 absolute bottom-0 mt-auto py-4">
           <h1 className="text-center">
-            filegilla {new Date().getFullYear()}
-            <span className="mx-2">&#x2022;</span>
             <Link href={"/privacy"}>
               <span className="underline">privacy policy</span>
             </Link>
