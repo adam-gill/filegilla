@@ -23,7 +23,7 @@ import {
 import { createDocument, createFolder, setFilePreviewBackend } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
-import { delay, sortItems } from "@/lib/helpers";
+import { sortItems } from "@/lib/helpers";
 import { useRouter } from "next/navigation";
 
 interface AddContentProps {
