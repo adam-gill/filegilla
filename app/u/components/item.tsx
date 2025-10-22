@@ -60,7 +60,7 @@ import InfoDialog from "@/app/u/components/infoDialog";
 import GetFileIcon from "@/app/u/components/getFileIcon";
 import MoveDialog from "@/app/u/components/moveDialog";
 import { FolderItem } from "@/app/u/types";
-
+import Image from "next/image";
 
 interface ItemProps {
   item: FolderItem;
@@ -186,7 +186,6 @@ export default function Item({
     setIsOptionsOpen(false);
 
     if (item.type === "folder") {
-
       try {
         toast({
           title: "preparing download",
@@ -194,10 +193,10 @@ export default function Item({
           variant: "default",
         });
 
-        const response = await fetch('/api/download-folder', {
-          method: 'POST',
+        const response = await fetch("/api/download-folder", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             location: [...location, item.name],
@@ -206,7 +205,7 @@ export default function Item({
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Download failed');
+          throw new Error(errorData.message || "Download failed");
         }
 
         const blob = await response.blob();
@@ -227,7 +226,6 @@ export default function Item({
           description: `successfully downloaded ${item.name} as zip file`,
           variant: "good",
         });
-
       } catch (error) {
         console.log(error);
         toast({
@@ -236,7 +234,6 @@ export default function Item({
           variant: "destructive",
         });
       }
-
     } else {
       try {
         const { success, url } = await getDownloadUrl([...location, item.name]);
@@ -352,7 +349,7 @@ export default function Item({
           etag: item.etag,
           lastModified: item.lastModified,
           size: item.size,
-          isFgDoc: item.isFgDoc
+          isFgDoc: item.isFgDoc,
         },
       ]);
 
@@ -388,7 +385,17 @@ export default function Item({
       <ContextMenu>
         <ContextMenuTrigger>
           <Card className="max-w-full group relative w-xs max-md:w-3xs border !border-neutral-700 hover:border-blue-400 transition-all duration-200 shadow-md shadow-neutral-900 hover:shadow-xl">
-            <CardContent className="p-0 h-full flex flex-col">
+            <CardContent className="p-0 h-full flex flex-col relative">
+              {item.type === "file" && (
+                <Image
+                  src={"/defaultAvatar.png"}
+                  alt="default avatar"
+                  width={320}
+                  height={320}
+                  className=" w-full h-full"
+                />
+              )}
+
               {/* Top Banner */}
               <div className="flex items-center justify-between p-3">
                 {/* Icon and Name */}
@@ -397,7 +404,10 @@ export default function Item({
                     {item.type === "folder" ? (
                       <Folder className="w-5 h-5 text-blue-400" />
                     ) : (
-                      <GetFileIcon fileName={item.name} isFgDoc={item.isFgDoc} />
+                      <GetFileIcon
+                        fileName={item.name}
+                        isFgDoc={item.isFgDoc}
+                      />
                     )}
                   </div>
 
@@ -627,10 +637,11 @@ export default function Item({
                 setValidationError(validateItemName(newName, item.type));
               }}
               onKeyDown={handleKeyPress}
-              className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${validationError
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                : ""
-                }`}
+              className={`text-base border-gray-600 text-black placeholder:text-gray-400 focus:border-gray-500 focus:ring-gray-500 ${
+                validationError
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  : ""
+              }`}
               autoFocus
               disabled={isLoading}
             />
