@@ -405,7 +405,7 @@ export default function Item({
 
               {/* Top Banner */}
               <div
-                className={`flex items-center justify-between p-3 ${item.type === "file" ? "w-full max-w-full z-10 bg-neutral-950/90" : ""}`}
+                className={`flex items-center justify-between p-3 ${item.type === "file" ? "rounded-t-xl w-full max-w-full z-10 bg-neutral-950/90" : ""}`}
               >
                 {/* Icon and Name */}
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
