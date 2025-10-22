@@ -105,6 +105,7 @@ export const createFolder = async (
 };
 
 // TODO - need to add functionality here to delete the previews of the images from s3 and postgres
+// TODO - add logic on frontend preview upload to only try previews of supported file types (images, videos, pdfs right now)
 export const deleteItem = async (
   type: "file" | "folder",
   itemName: string,
