@@ -162,3 +162,6 @@ export const deepEqual = (a: any, b: any) =>  {
 
   return true;
 }
+
+
+export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

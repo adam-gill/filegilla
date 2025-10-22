@@ -17,6 +17,7 @@ export interface FolderItem {
   url?: string;
   ownerId?: string;
   isFgDoc?: boolean;
+  previewUrl?: string;
 }
 
 export interface FileData {

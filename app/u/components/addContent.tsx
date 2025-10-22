@@ -23,7 +23,8 @@ import {
 import { createDocument, createFolder, setFilePreviewBackend } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
-import { sortItems } from "@/lib/helpers";
+import { delay, sortItems } from "@/lib/helpers";
+import { useRouter } from "next/navigation";
 
 interface AddContentProps {
   location: string[];
@@ -48,6 +49,7 @@ export default function AddContent({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const folderNameInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   // Folder name validation function
   const validateFolderName = (name: string): string => {
@@ -154,7 +156,9 @@ export default function AddContent({
         previewId
       );
 
-      console.log(success, message);
+      if (success && message) {
+        router.refresh();
+      }
 
     } catch (error) {
       console.error("Error setting file preview:", error);

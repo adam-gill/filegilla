@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { FolderItem } from "../types";
 import Item from "./item";
 import { BrushCleaning, UnlinkIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigator from "./navigator";
 import AddContent from "./addContent";
 import FileViewer from "./fileViewer";
@@ -28,6 +28,11 @@ export default function ItemsLayout({
 }: ItemsLayoutProps) {
   const initialContents = sortContents(contents);
   const [newContents, setNewContents] = useState<FolderItem[]>(initialContents);
+
+  // Sync state with server data when contents prop changes
+  useEffect(() => {
+    setNewContents(sortContents(contents));
+  }, [contents]);
 
   const getPath = (slug: string[]) => {
     return "/u/" + slug.join("/");

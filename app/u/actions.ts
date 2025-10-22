@@ -104,6 +104,7 @@ export const createFolder = async (
   }
 };
 
+// TODO - need to add functionality here to delete the previews of the images from s3 and postgres
 export const deleteItem = async (
   type: "file" | "folder",
   itemName: string,
@@ -459,15 +460,18 @@ export const validatePath = async (
   }
 };
 
-export const isFileGillaDocument = async (
+export const getFileMetadata = async (
   key: string,
   s3Client: S3Client
-): Promise<boolean> => {
+): Promise<{ isFgDoc: boolean; previewUrl?: string }> => {
   if (!key) {
-    return false;
+    return { isFgDoc: false };
   }
 
   try {
+    let isFgDoc = false;
+    let previewUrl = "";
+
     const headCommand = new HeadObjectCommand({
       Bucket: S3_BUCKET_NAME,
       Key: key,
@@ -477,21 +481,31 @@ export const isFileGillaDocument = async (
     const metadata = headResponse.Metadata;
 
     if (!metadata) {
-      return false;
+      return { isFgDoc: false };
     }
 
     if (
-      metadata &&
       "customtag" in metadata &&
       metadata["customtag"] === "filegilla document"
     ) {
-      return true;
+      isFgDoc = true;
     }
 
-    return false;
+    if ("previewkey" in metadata && metadata["previewkey"]) {
+      const previewKey = metadata["previewkey"];
+
+      const urlCommand = new GetObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: previewKey,
+      });
+
+      previewUrl = await getSignedUrl(s3Client, urlCommand, { expiresIn: 3600 });
+    }
+
+    return { isFgDoc, previewUrl };
   } catch (error) {
     console.error("error checking metadata for key: ", key, error);
-    return false;
+    return { isFgDoc: false };
   }
 };
 
@@ -546,7 +560,10 @@ export const listFolderContents = async (
         if (object.Key && object.Key !== key) {
           const fileName = object.Key.replace(key, "");
 
-          const isFgDoc = await isFileGillaDocument(object.Key, s3Client);
+          const { isFgDoc, previewUrl } = await getFileMetadata(
+            object.Key,
+            s3Client
+          );
 
           if (fileName && !fileName.includes("/")) {
             contents.push({
@@ -557,6 +574,7 @@ export const listFolderContents = async (
               path: object.Key,
               etag: object.ETag,
               isFgDoc: isFgDoc,
+              previewUrl: previewUrl,
             });
           }
         }

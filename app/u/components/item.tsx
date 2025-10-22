@@ -84,6 +84,7 @@ export default function Item({
   const [renameName, setRenameName] = useState<string>(item.name);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string>("");
+  const previewUrl = item.previewUrl;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -350,6 +351,7 @@ export default function Item({
           lastModified: item.lastModified,
           size: item.size,
           isFgDoc: item.isFgDoc,
+          previewUrl: item.previewUrl,
         },
       ]);
 
@@ -385,19 +387,26 @@ export default function Item({
       <ContextMenu>
         <ContextMenuTrigger>
           <Card className="max-w-full group relative w-xs max-md:w-3xs border !border-neutral-700 hover:border-blue-400 transition-all duration-200 shadow-md shadow-neutral-900 hover:shadow-xl">
-            <CardContent className="p-0 h-full flex flex-col relative">
+            <CardContent
+              className={`p-0 h-full flex flex-col-reverse relative ${item.type === "file" ? "flex-col-reverse" : "flex-col"}`}
+            >
               {item.type === "file" && (
-                <Image
-                  src={"/defaultAvatar.png"}
-                  alt="default avatar"
-                  width={320}
-                  height={320}
-                  className=" w-full h-full"
-                />
+                <div className="w-full h-[320px] overflow-hidden rounded-b-xl flex justify-center">
+                  <Image
+                    onClick={handleItemOpen}
+                    src={previewUrl || "/defaultPreview.png"}
+                    alt="default preview"
+                    width={320}
+                    height={320}
+                    className="w-full h-full object-cover object-top cursor-pointer"
+                  />
+                </div>
               )}
 
               {/* Top Banner */}
-              <div className="flex items-center justify-between p-3">
+              <div
+                className={`flex items-center justify-between p-3 ${item.type === "file" ? "w-full max-w-full z-10 bg-neutral-950/90" : ""}`}
+              >
                 {/* Icon and Name */}
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <div className="flex-shrink-0">
