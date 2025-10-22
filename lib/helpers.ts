@@ -25,7 +25,7 @@ export const formatBytes = (bytes: number | undefined): string => {
 export const sortItems = (items: FolderItem[]): FolderItem[] => {
   const sorted = items.sort((a, b) => {
     if (a.type === b.type) {
-      return 0;
+      return a.name.localeCompare(b.name);
     }
     return a.type === "folder" ? -1 : 1;
   });

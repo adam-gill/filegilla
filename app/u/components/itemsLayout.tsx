@@ -88,7 +88,7 @@ export default function ItemsLayout({
               ) : (
                 <div
                   className={cn(
-                    "flex flex-wrap w-full gap-4 items-center justify-start max-md:justify-center",
+                    "flex flex-wrap w-full gap-4 items-start justify-center",
                     className
                   )}
                 >

@@ -391,14 +391,15 @@ export default function Item({
               className={`p-0 h-full flex flex-col-reverse relative ${item.type === "file" ? "flex-col-reverse" : "flex-col"}`}
             >
               {item.type === "file" && (
-                <div className="w-full h-[320px] overflow-hidden rounded-b-xl flex justify-center">
+                <div className="w-full h-[320px] overflow-hidden rounded-b-xl flex justify-center relative">
                   <Image
                     onClick={handleItemOpen}
-                    src={previewUrl || "/defaultPreview.png"}
-                    alt="default preview"
-                    width={320}
-                    height={320}
-                    className="w-full h-full object-cover object-top cursor-pointer"
+                    src={previewUrl || "/defaultPreview.svg"}
+                    alt={ previewUrl ? "default file preview" : "file preview"}
+                    fill
+                    className="object-cover object-top cursor-pointer"
+                    sizes="(max-width: 1px) 100%"
+                    unoptimized
                   />
                 </div>
               )}
