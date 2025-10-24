@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
+
 export const getSharedFile = async (
   shareName: string
 ): Promise<{ success: boolean; message: string; initialFile?: FolderItem }> => {
@@ -19,7 +21,6 @@ export const getSharedFile = async (
 
     if (response?.s3Url && response.sourceEtag) {
       const s3Client = await getScopedS3Client("public");
-      const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
       const key = createPublicS3Key(response.itemName, shareName);
 
       const headCommand = new HeadObjectCommand({
@@ -54,7 +55,7 @@ export const getSharedFile = async (
             size: s3Response.ContentLength,
             url: response.s3Url,
             ownerId: response.ownerId ?? undefined,
-            isFgDoc: isFgDoc
+            isFgDoc: isFgDoc,
           },
         };
       } else {
@@ -136,10 +137,9 @@ export const getOgData = async (
       },
     });
 
-    
     if (share?.previewKey && share?.user?.username) {
-      const fullUrl = `https://filegilla-public.s3.us-east-1.amazonaws.com/${previewUrl}`;
-    return {
+      const fullUrl = `https://${S3_PUBLIC_BUCKET_NAME}.s3.us-east-1.amazonaws.com/${share.previewKey}`;
+      return {
         success: true,
         username: share.user.username,
         imgUrl: fullUrl,
