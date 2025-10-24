@@ -104,8 +104,7 @@ export const createFolder = async (
   }
 };
 
-// TODO - need to add functionality here to delete the previews of the images from s3 and postgres
-// TODO - add logic on frontend preview upload to only try previews of supported file types (images, videos, pdfs right now)
+// TODO - need to add functionality here to delete the previews of the images from s3
 export const deleteItem = async (
   type: "file" | "folder",
   itemName: string,
@@ -132,6 +131,25 @@ export const deleteItem = async (
       const fileKey = createPrivateS3Key(userId, location, itemName);
 
       try {
+        const headCommand = new HeadObjectCommand({
+          Bucket: S3_BUCKET_NAME,
+          Key: fileKey,
+        });
+
+        const headResponse = await s3Client.send(headCommand);
+
+        const metadata = headResponse.Metadata;
+        const previewKey = metadata?.["previewkey"];
+
+        if (previewKey) {
+          const deletePreviewCommand = new DeleteObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: previewKey,
+          });
+          await s3Client.send(deletePreviewCommand);
+          console.log(`preview deleted (${previewKey})`);
+        }
+
         const deleteCommand = new DeleteObjectCommand({
           Bucket: S3_BUCKET_NAME,
           Key: fileKey,
@@ -186,6 +204,28 @@ export const deleteItem = async (
         // Handle large folders by deleting in batches of 1000
         for (let i = 0; i < objectsToDelete.length; i += 1000) {
           const batch = objectsToDelete.slice(i, i + 1000);
+
+          for (let j = 0; j < batch.length; j++) {
+            const object = batch[j];
+            const headCommand = new HeadObjectCommand({
+              Bucket: S3_BUCKET_NAME,
+              Key: object.Key,
+            });
+
+            const headResponse = await s3Client.send(headCommand);
+
+            const metadata = headResponse.Metadata;
+            const previewKey = metadata?.["previewkey"];
+
+            if (previewKey) {
+              const deletePreviewCommand = new DeleteObjectCommand({
+                Bucket: S3_BUCKET_NAME,
+                Key: previewKey,
+              });
+              await s3Client.send(deletePreviewCommand);
+              console.log(`preview deleted (${previewKey})`);
+            }
+          }
 
           const deleteCommand = new DeleteObjectsCommand({
             Bucket: S3_BUCKET_NAME,
@@ -500,7 +540,9 @@ export const getFileMetadata = async (
         Key: previewKey,
       });
 
-      previewUrl = await getSignedUrl(s3Client, urlCommand, { expiresIn: 3600 });
+      previewUrl = await getSignedUrl(s3Client, urlCommand, {
+        expiresIn: 3600,
+      });
     }
 
     return { isFgDoc, previewUrl };
@@ -713,6 +755,20 @@ export const getDownloadUrl = async (
   }
 };
 
+const removeUserIdFromPreviewKey = (key: string): string => {
+  try {
+    const parts = key.split('/');
+    
+    if (parts.length !== 3) {
+      throw new Error(`Invalid key format: expected 3 segments, got ${parts.length}`);
+    }
+    
+    return `${parts[0]}/${parts[2]}`;
+  } catch (error) {
+    throw new Error(`Failed to process key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
 export const shareItem = async ({
   itemName,
   location,
@@ -739,11 +795,12 @@ export const shareItem = async ({
     const publicKey = createPublicS3Key(itemName, shareName);
 
     try {
-      const headCommand = new HeadObjectCommand({
-        Bucket: S3_PUBLIC_BUCKET_NAME,
-        Key: publicKey,
-      });
-      await s3Client.send(headCommand);
+      await s3Client.send(
+        new HeadObjectCommand({
+          Bucket: S3_PUBLIC_BUCKET_NAME,
+          Key: publicKey,
+        })
+      );
       return {
         success: false,
         message: "share name already exists. please choose a different name.",
@@ -754,6 +811,16 @@ export const shareItem = async ({
       }
     }
 
+    const headCommand = new HeadObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: privateKey,
+    });
+
+    const headResponse = await s3Client.send(headCommand);
+
+    const metadata = headResponse.Metadata;
+    const previewKey = metadata?.["previewkey"];
+
     const copyCommand = new CopyObjectCommand({
       Bucket: S3_PUBLIC_BUCKET_NAME,
       Key: publicKey,
@@ -762,6 +829,19 @@ export const shareItem = async ({
     });
 
     await s3Client.send(copyCommand);
+
+    if (previewKey) {
+      const newPreviewKey = removeUserIdFromPreviewKey(previewKey);
+      const copyPreviewCommand = new CopyObjectCommand({
+        Bucket: S3_PUBLIC_BUCKET_NAME,
+        Key: newPreviewKey,
+        CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
+        MetadataDirective: "COPY",
+      });
+
+      await s3Client.send(copyPreviewCommand);
+      console.log("preview copied to public bucket: ", newPreviewKey);
+    }
 
     const shareUrl = `https://${S3_PUBLIC_BUCKET_NAME}.s3.amazonaws.com/${publicKey}`;
 
@@ -775,6 +855,7 @@ export const shareItem = async ({
         itemType: "file",
         sourceEtag: sourceEtag,
         views: 0,
+        previewKey: previewKey || null,
       },
     });
 
@@ -1241,12 +1322,20 @@ export const getHTMLContent = async (
   }
 };
 
+const createPreviewKey = (
+  previewId: string,
+  fileName: string,
+  userId: string
+) => {
+  return `preview/${userId}/${previewId}${getFileExtension(fileName)}`;
+};
+
 export const setFilePreviewBackend = async (
   fileData: ArrayBuffer,
   fileName: string,
   contentType: string,
   previewId: string
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string; url?: string }> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -1258,11 +1347,7 @@ export const setFilePreviewBackend = async (
 
     const userId = session.user.id;
 
-    const createPreviewKey = (previewId: string, fileName: string) => {
-      return `preview/${userId}/${previewId}${getFileExtension(fileName)}`;
-    };
-
-    const previewKey = createPreviewKey(previewId, fileName);
+    const previewKey = createPreviewKey(previewId, fileName, userId);
     const s3Client = await getScopedS3Client(userId);
 
     const uploadCommand = new PutObjectCommand({
@@ -1274,7 +1359,20 @@ export const setFilePreviewBackend = async (
 
     await s3Client.send(uploadCommand);
 
-    return { success: true, message: "successfully set file preview" };
+    const urlCommand = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: previewKey,
+    });
+
+    const previewUrl = await getSignedUrl(s3Client, urlCommand, {
+      expiresIn: 3600,
+    });
+
+    return {
+      success: true,
+      message: "successfully set file preview",
+      url: previewUrl,
+    };
   } catch (error) {
     console.error(`error setting file preview. error: ${error}`);
     return { success: false, message: `Failed to set file preview ${error}` };

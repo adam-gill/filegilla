@@ -115,6 +115,8 @@ export const getPublicDownloadUrl = async (
   }
 };
 
+// TODO - add extra deleteShareItem logic to delete preview
+// TODO - bump next to 16
 export const getOgData = async (
   shareName: string
 ): Promise<{ success: boolean; username?: string; imgUrl?: string }> => {
@@ -125,7 +127,7 @@ export const getOgData = async (
       },
       select: {
         itemName: true,
-        s3Url: true,
+        previewKey: true,
         user: {
           select: {
             username: true,
@@ -134,20 +136,12 @@ export const getOgData = async (
       },
     });
 
-    if (!share || !share.s3Url || !share.user?.username) {
-      return { success: false };
-    }
-
-    const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
-    const isImage = imageExtensions.some((ext) =>
-      share.itemName.toLowerCase().endsWith(ext)
-    );
-
-    if (isImage) {
+    
+    if (share?.previewKey && share?.user?.username) {
       return {
         success: true,
         username: share.user.username,
-        imgUrl: share.s3Url,
+        imgUrl: share.previewKey,
       };
     }
 

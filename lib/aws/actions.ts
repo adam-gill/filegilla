@@ -7,7 +7,7 @@ const S3_ACCESS_ROLE_ARN = process.env.S3_ACCESS_ROLE_ARN!;
 const AWS_REGION = process.env.AWS_REGION!;
 
 export const getScopedS3Client = async (userId: string): Promise<S3Client> => {
-  const stsClient = new STSClient({ region: AWS_REGION });
+  const stsClient = new STSClient({ region: AWS_REGION, maxAttempts: 5 });
   const assumeRoleCommand = new AssumeRoleCommand({
     RoleArn: S3_ACCESS_ROLE_ARN,
     RoleSessionName: `s3-access-${userId}`,

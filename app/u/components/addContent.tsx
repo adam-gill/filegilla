@@ -20,11 +20,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createDocument, createFolder, setFilePreviewBackend } from "../actions";
+import {
+  createDocument,
+  createFolder,
+  setFilePreviewBackend,
+} from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
 import { sortItems } from "@/lib/helpers";
-import { useRouter } from "next/navigation";
+import crypto from "crypto";
+import { isFileTypeSupported } from "../helpers";
 
 interface AddContentProps {
   location: string[];
@@ -49,7 +54,6 @@ export default function AddContent({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const folderNameInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   // Folder name validation function
   const validateFolderName = (name: string): string => {
@@ -106,7 +110,7 @@ export default function AddContent({
 
       xhr.addEventListener("load", () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          setFilesUploaded(prev => prev + 1);
+          setFilesUploaded((prev) => prev + 1);
           resolve(true);
         } else {
           console.error(`Upload failed with status: ${xhr.status}`);
@@ -128,11 +132,16 @@ export default function AddContent({
     });
   };
 
-  const setFilePreview = async (file: File, previewId: string) => {
+  const setFilePreview = async (file: File, previewId: string, etag: string) => {
     try {
+
+      if (!isFileTypeSupported(file.type)) {
+        return;
+      }
+
       const formData = new FormData();
       formData.append("file", file);
-      
+
       const response = await fetch("https://api.filegilla.com/previewImage", {
         method: "POST",
         body: formData,
@@ -144,26 +153,38 @@ export default function AddContent({
 
       const blob = await response.blob();
       const arrayBuffer = await blob.arrayBuffer();
-      
+
       const contentDisposition = response.headers.get("Content-Disposition");
       const filenameMatch = contentDisposition?.match(/filename="?(.+)"?/i);
       const filename = filenameMatch?.[1] || "preview.webp";
-      
-      const { success, message } = await setFilePreviewBackend(
+
+      const { success, url } = await setFilePreviewBackend(
         arrayBuffer,
         filename,
         blob.type || "image/webp",
         previewId
       );
 
-      if (success && message) {
-        router.refresh();
+      if (success && url) {
+        setNewContents((prev) =>
+          prev.map((file) =>
+            file.etag === etag
+              ? { ...file, previewUrl: url}
+              : file
+          )
+        );
       }
-
     } catch (error) {
       console.error("Error setting file preview:", error);
     }
-  }
+  };
+
+  const computeEtag = async (file: File) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const etag = crypto.createHash("md5").update(buffer).digest("hex");
+    return etag;
+  };
 
   const handleFilesUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -218,6 +239,7 @@ export default function AddContent({
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const etag = await computeEtag(file);
         const presignedUrlData = presignedResult.presignedUrls[i];
         const presignedUrl = presignedUrlData.url || presignedUrlData;
         const previewId = presignedUrlData.previewId;
@@ -226,21 +248,21 @@ export default function AddContent({
           file,
           presignedUrl,
           i,
-          totalBytes,
+          totalBytes
         );
 
-        setFilePreview(file, previewId);
+        setFilePreview(file, previewId, etag);
 
         if (success) {
           const folderItem: FolderItem = {
             name: file.name,
+            etag: etag,
             type: "file",
             size: file.size,
             lastModified: new Date(file.lastModified),
             path: "private/userId/" + location.join("/") + "/" + file.name,
             fileType: file.type || "application/octet-stream",
           };
-          console.log(folderItem);
           uploadedFiles.push(folderItem);
         } else {
           failedFiles.push(file.name);
@@ -532,11 +554,9 @@ export default function AddContent({
   }, [isFolderDialogOpen]);
 
   const handleNewDocument = async () => {
-
     const { success, message, fileName, etag } = await createDocument(location);
 
     if (success && fileName) {
-
       const newItem: FolderItem = {
         name: fileName,
         path: `private/userid/${location.join("/")}/${fileName}`,
@@ -544,22 +564,22 @@ export default function AddContent({
         lastModified: new Date(),
         etag: etag,
         isFgDoc: true,
-      }
+      };
 
-      setNewContents((prev) => sortItems([...prev, newItem]))
+      setNewContents((prev) => sortItems([...prev, newItem]));
       toast({
         title: "success!",
         description: message,
         variant: "good",
-      })
+      });
     } else {
       toast({
         title: "error",
         description: message,
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   return (
     <>

@@ -59,3 +59,37 @@ export const createHTMLDocument = (
 
   return { fileName, fileBuffer, key };
 };
+
+export const isFileTypeSupported = (fileType: string): boolean => {
+  /* supported file types: 
+    - any popular image files (jpg, png, gif, bmp, svg, webp, ico)
+    - popular video formats (mp4, avi, mov, wmv, flv, webm, mkv, m4v)
+    - pdf 
+  */
+  
+  const supportedTypes = [
+    // Images
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/bmp',
+    'image/svg+xml',
+    'image/webp',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    // Videos
+    'video/mp4',
+    'video/x-msvideo', // avi
+    'video/quicktime', // mov
+    'video/x-ms-wmv', // wmv
+    'video/x-flv', // flv
+    'video/webm',
+    'video/x-matroska', // mkv
+    'video/x-m4v', // m4v
+    // PDF
+    'application/pdf'
+  ];
+  
+  return supportedTypes.includes(fileType.toLowerCase());
+};

@@ -98,6 +98,7 @@ model share {
   updatedAt  DateTime       @default(now()) @db.Timestamp(6)
   sourceEtag String?
   views      BigInt         @default(0)
+  previewKey String?
   user       User?          @relation(fields: [ownerId], references: [id], onUpdate: NoAction, map: "fk_shares_owner")
 }
 
