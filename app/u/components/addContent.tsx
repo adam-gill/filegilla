@@ -167,11 +167,11 @@ export default function AddContent({
 
       if (success && url) {
         setNewContents((prev) =>
-          prev.map((file) =>
+          sortItems(prev.map((file) =>
             file.etag === etag
               ? { ...file, previewUrl: url}
               : file
-          )
+          ))
         );
       }
     } catch (error) {
