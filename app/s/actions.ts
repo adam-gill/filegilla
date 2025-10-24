@@ -138,10 +138,11 @@ export const getOgData = async (
 
     
     if (share?.previewKey && share?.user?.username) {
-      return {
+      const fullUrl = `https://filegilla-public.s3.us-east-1.amazonaws.com/${previewUrl}`;
+    return {
         success: true,
         username: share.user.username,
-        imgUrl: share.previewKey,
+        imgUrl: fullUrl,
       };
     }
 
