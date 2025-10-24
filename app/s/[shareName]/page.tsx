@@ -16,6 +16,7 @@ export async function generateMetadata({
 
   const description = username ? `shared by ${username}` : `shared on filegilla`
   const image = imgUrl ? imgUrl : "/ogLogo.png"
+  console.log("ogImage", image);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 

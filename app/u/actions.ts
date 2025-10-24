@@ -760,12 +760,14 @@ const removeUserIdFromPreviewKey = (key: string): string => {
     const parts = key.split('/');
     
     if (parts.length !== 3) {
-      throw new Error(`Invalid key format: expected 3 segments, got ${parts.length}`);
+      console.error(`Invalid key format: expected 3 segments, got ${parts.length}`);
+      return "";
     }
     
     return `${parts[0]}/${parts[2]}`;
   } catch (error) {
-    throw new Error(`Failed to process key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error(`Failed to process key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return "";
   }
 };
 
@@ -820,23 +822,29 @@ export const shareItem = async ({
 
     const metadata = headResponse.Metadata;
     const previewKey = metadata?.["previewkey"];
+    const newPreviewKey = removeUserIdFromPreviewKey(previewKey || "");
 
     const copyCommand = new CopyObjectCommand({
       Bucket: S3_PUBLIC_BUCKET_NAME,
       Key: publicKey,
       CopySource: `${S3_BUCKET_NAME}/${privateKey}`,
-      MetadataDirective: "COPY",
+      MetadataDirective: "REPLACE",
+      Metadata: {
+        "previewkey": newPreviewKey,
+      },
     });
 
     await s3Client.send(copyCommand);
 
-    if (previewKey) {
-      const newPreviewKey = removeUserIdFromPreviewKey(previewKey);
+    if (previewKey && newPreviewKey) {
       const copyPreviewCommand = new CopyObjectCommand({
         Bucket: S3_PUBLIC_BUCKET_NAME,
         Key: newPreviewKey,
         CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
-        MetadataDirective: "COPY",
+        MetadataDirective: "REPLACE",
+        Metadata: {
+          "previewkey": newPreviewKey,
+        },
       });
 
       await s3Client.send(copyPreviewCommand);
@@ -855,7 +863,7 @@ export const shareItem = async ({
         itemType: "file",
         sourceEtag: sourceEtag,
         views: 0,
-        previewKey: previewKey || null,
+        previewKey: newPreviewKey || null,
       },
     });
 
@@ -909,6 +917,26 @@ export const deleteShareItem = async (
       });
 
       const key = createPublicS3Key(itemName, shareName);
+
+      const headCommand = new HeadObjectCommand({
+          Bucket: S3_PUBLIC_BUCKET_NAME,
+          Key: key,
+        });
+
+        const headResponse = await s3Client.send(headCommand);
+
+        const metadata = headResponse.Metadata;
+        const previewKey = metadata?.["previewkey"];
+        console.log("preview key: ", previewKey);
+
+        if (previewKey) {
+          const deletePreviewCommand = new DeleteObjectCommand({
+            Bucket: S3_PUBLIC_BUCKET_NAME,
+            Key: previewKey,
+          });
+          await s3Client.send(deletePreviewCommand);
+          console.log(`preview deleted (${previewKey})`);
+        }
 
       const deleteCommand = new DeleteObjectCommand({
         Bucket: S3_PUBLIC_BUCKET_NAME,

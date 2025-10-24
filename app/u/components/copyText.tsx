@@ -12,7 +12,12 @@ interface CopyTextProps {
   isMinWidth?: boolean;
 }
 
-export default function CopyText({ textToCopy, className, showToast, isMinWidth }: CopyTextProps) {
+export default function CopyText({
+  textToCopy,
+  className,
+  showToast,
+  isMinWidth,
+}: CopyTextProps) {
   const [showingAnimation, setShowingAnimation] = useState<boolean>(false);
 
   const delay = (ms: number): Promise<void> => {
@@ -21,11 +26,11 @@ export default function CopyText({ textToCopy, className, showToast, isMinWidth 
 
   const handleCopy = async () => {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(textToCopy);
-        console.log("Copied using Clipboard API");
+      if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        throw new Error("Clipboard API not supported");
       }
 
+      await navigator.clipboard.writeText(textToCopy);
       if (showToast) {
         toast({
           title: "success!",
