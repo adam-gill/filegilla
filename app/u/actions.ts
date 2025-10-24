@@ -1274,13 +1274,14 @@ export const setFilePreviewBackend = async (
 
     await s3Client.send(uploadCommand);
 
-    await prisma.preview.create({
-      data: {
-        id: previewId,
-        ownerId: userId,
-        objectKey: previewKey,
-      },
-    });
+    // don't need to create preview in postgres
+    // await prisma.preview.create({
+    //   data: {
+    //     id: previewId,
+    //     ownerId: userId,
+    //     objectKey: previewKey,
+    //   },
+    // });
 
     return { success: true, message: "successfully set file preview" };
   } catch (error) {
