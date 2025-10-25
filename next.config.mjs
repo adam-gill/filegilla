@@ -23,6 +23,10 @@ const nextConfig = {
       },
     ],
   },
+  outputFileTracingIncludes: {
+    '/**': ['./node_modules/.prisma/client/libquery_engine-*'],
+  },
+  serverExternalPackages: ['@prisma/client', 'prisma'],
 };
 
 export default nextConfig;
