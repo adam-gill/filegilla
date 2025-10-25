@@ -284,9 +284,8 @@ export default function SignInForm() {
 
     if (modeFromUrl === "1") {
       setMode("signup");
+      router.replace("/auth");
     }
-
-    router.replace("/auth");
   }, [router, searchParams]);
 
   useEffect(() => {

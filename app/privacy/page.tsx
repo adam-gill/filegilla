@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 
-export function metadata(): Metadata {
-  return {
-    title: "Privacy Policy",
-    description: "Privacy Policy for the FileGilla App",
-    openGraph: {
-      images: "/ogLogo.png",
-    },
-  };
-}
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Privacy Policy for the FileGilla App",
+  openGraph: {
+    images: "/ogLogo.png",
+  },
+};
+
 const Privacy = () => {
   return (
     <>
@@ -27,11 +26,12 @@ const Privacy = () => {
               1. Introduction
             </h2>
             <p className="text-gray-300">
-              Welcome to FileGilla (&#34;we,&#34; &#34;our,&#34; or &#34;us&#34;). We are
-              committed to protecting your privacy and personal information.
-              This Privacy Policy explains how we collect, use, disclose, and
-              safeguard your information when you use our web application and
-              related services (collectively, the &#34;Service&#34;).
+              Welcome to FileGilla (&#34;we,&#34; &#34;our,&#34; or
+              &#34;us&#34;). We are committed to protecting your privacy and
+              personal information. This Privacy Policy explains how we collect,
+              use, disclose, and safeguard your information when you use our web
+              application and related services (collectively, the
+              &#34;Service&#34;).
             </p>
           </section>
 

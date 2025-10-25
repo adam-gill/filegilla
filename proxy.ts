@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const protectedRoutes = ["/u", "/test", "/note"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtectedRoute = protectedRoutes.some((route) =>

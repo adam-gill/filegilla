@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 
-export function metadata(): Metadata {
-  return {
-    title: "Terms of Service",
-    description: "Terms of Service for the FileGilla App",
-    openGraph: {
-      images: "/ogLogo.png",
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Terms of Service for the FileGilla App",
+  openGraph: {
+    images: "/ogLogo.png",
     },
-  };
-}
+};
 
 const Terms = () => {
   return (

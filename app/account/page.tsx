@@ -1,6 +1,8 @@
 import AccountCard from "@/app/account/components/accountCard";
 
-const Account = () => {
+export const dynamic = "force-dynamic";
+
+export default function Account() {
   return (
     <>
       <div className="w-full py-10 pt-16">
@@ -10,6 +12,4 @@ const Account = () => {
       </div>
     </>
   );
-};
-
-export default Account;
+}

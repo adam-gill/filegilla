@@ -1,15 +1,13 @@
 import Container from "@/components/container";
 import type { Metadata } from "next";
 
-export function metadata(): Metadata {
-  return {
-    title: "dashboard",
-    description: "fileGilla dashboard",
-    openGraph: {
-      images: "/ogLogo.png",
+export const metadata: Metadata = {
+  title: "dashboard",
+  description: "fileGilla dashboard",
+  openGraph: {
+    images: "/ogLogo.png",
     },
-  };
-}
+};
 
 export default function DashboardLayout({
   children,
