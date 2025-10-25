@@ -104,7 +104,6 @@ export const createFolder = async (
   }
 };
 
-// TODO - need to add functionality here to delete the previews of the images from s3
 export const deleteItem = async (
   type: "file" | "folder",
   itemName: string,

@@ -49,9 +49,9 @@ export default function RootLayout({
 
 Current TODOs
 
-  TODO - Image previews for files (future)
+  TODO - Page to view shared files
+  TODO - Shared files view counter
   TODO - Add friends and posts (future)
   TODO - Need global search function (file names) - will involve beefy script
-
 
 */

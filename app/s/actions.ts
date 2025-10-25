@@ -116,8 +116,6 @@ export const getPublicDownloadUrl = async (
   }
 };
 
-// TODO - add extra deleteShareItem logic to delete preview
-// TODO - bump next to 16
 export const getOgData = async (
   shareName: string
 ): Promise<{ success: boolean; username?: string; imgUrl?: string }> => {
