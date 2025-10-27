@@ -12,11 +12,15 @@ export async function generateMetadata({
   params,
 }: ShareViewerProps): Promise<Metadata> {
   const shareName = (await params).shareName;
-  const { username, imgUrl } = await getOgData(shareName);
+  const { username, imgUrl, views } = await getOgData(shareName);
 
-  const description = username ? `shared by ${username}` : `shared on filegilla`
-  const image = imgUrl ? imgUrl : "/ogLogo.png"
-  console.log("ogImage", image);
+  const sharedBy = username
+    ? `shared by ${username}`
+    : `shared on filegilla`;
+
+  const viewsText = views === 1 ? ` | ${views} view` : ` | ${views} views`;
+  const description = `${sharedBy}${viewsText}`;
+  const image = imgUrl ? imgUrl : "/ogLogo.png";
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -63,10 +67,27 @@ export default async function ShareViewer({ params }: ShareViewerProps) {
   const shareName = (await params).shareName;
   const { initialFile } = await getSharedFile(shareName);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const response = await fetch(`${baseUrl}/api/views`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ shareName: shareName }),
+  });
+  const data = await response.json();
+  const views = data.views;
+
   return (
     <main>
       <Suspense fallback={<LoadingScreen />}>
-        {initialFile && <SharedFileViewer initialFile={initialFile} shareName={shareName} />}
+        {initialFile && (
+          <SharedFileViewer
+            initialFile={initialFile}
+            shareName={shareName}
+            views={views}
+          />
+        )}
       </Suspense>
 
       {!initialFile && (

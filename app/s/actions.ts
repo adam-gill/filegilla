@@ -118,7 +118,7 @@ export const getPublicDownloadUrl = async (
 
 export const getOgData = async (
   shareName: string
-): Promise<{ success: boolean; username?: string; imgUrl?: string }> => {
+): Promise<{ success: boolean; username?: string; imgUrl?: string; views?: number }> => {
   try {
     const share = await prisma.share.findFirst({
       where: {
@@ -132,6 +132,7 @@ export const getOgData = async (
             username: true,
           },
         },
+        views: true,
       },
     });
 
@@ -141,6 +142,7 @@ export const getOgData = async (
         success: true,
         username: share.user.username,
         imgUrl: fullUrl,
+        views: Number(share.views),
       };
     }
 

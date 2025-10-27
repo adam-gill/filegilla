@@ -43,11 +43,13 @@ import CloudIcon from "@/app/note/components/cloudIcon";
 interface FileViewerProps {
   initialFile: FolderItem;
   shareName: string;
+  views?: number;
 }
 
 export default function SharedFileViewer({
   initialFile,
   shareName,
+  views,
 }: FileViewerProps) {
   const [file, setFile] = useState<FolderItem | undefined>(initialFile);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
@@ -165,6 +167,9 @@ export default function SharedFileViewer({
                       <p>{formatDate(file.lastModified)}</p>
                     )}
                   </div>
+                  {views && (
+                    <p>{views === 1 ? `${views} view` : `${views} views`}</p>
+                  )}
                 </div>
                 {file.isFgDoc && <CloudIcon status={syncStatus} />}
               </div>

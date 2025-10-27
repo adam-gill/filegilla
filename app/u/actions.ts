@@ -792,6 +792,20 @@ export const shareItem = async ({
   const s3Client = await getScopedS3Client(userId);
 
   try {
+
+    const checkShareItem = await prisma.share.findFirst({
+      where: {
+        shareName: shareName,
+      },
+    });
+
+    if (checkShareItem) {
+      return {
+        success: false,
+        message: "share name already exists. please choose a different name.",
+      };
+    }
+
     const privateKey = createPrivateS3Key(userId, location, itemName);
     const publicKey = createPublicS3Key(itemName, shareName);
 
@@ -822,6 +836,7 @@ export const shareItem = async ({
     const metadata = headResponse.Metadata;
     const previewKey = metadata?.["previewkey"];
     const newPreviewKey = removeUserIdFromPreviewKey(previewKey || "");
+    const isFgDoc = metadata?.["customtag"] === "filegilla document";
 
     const copyCommand = new CopyObjectCommand({
       Bucket: S3_PUBLIC_BUCKET_NAME,
@@ -830,6 +845,7 @@ export const shareItem = async ({
       MetadataDirective: "REPLACE",
       Metadata: {
         "previewkey": newPreviewKey,
+        "customtag": isFgDoc ? "filegilla document" : "",
       },
     });
 
@@ -926,7 +942,6 @@ export const deleteShareItem = async (
 
         const metadata = headResponse.Metadata;
         const previewKey = metadata?.["previewkey"];
-        console.log("preview key: ", previewKey);
 
         if (previewKey) {
           const deletePreviewCommand = new DeleteObjectCommand({
