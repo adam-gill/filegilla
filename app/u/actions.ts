@@ -846,6 +846,8 @@ export const shareItem = async ({
       Metadata: {
         "previewkey": newPreviewKey,
         "customtag": isFgDoc ? "filegilla document" : "",
+        "ogwidth": "1200",
+        "ogheight": "630",
       },
     });
 

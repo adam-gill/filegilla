@@ -31,7 +31,13 @@ export async function generateMetadata({
     openGraph: {
       title: `${decodeURIComponent(shareName)} - filegilla`,
       description: description,
-      images: [image],
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
     metadataBase: new URL(baseUrl),
   };
