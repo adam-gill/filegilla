@@ -18,8 +18,8 @@ export async function generateMetadata({
     ? `shared by ${username}`
     : `shared on filegilla`;
 
-  const viewsText = views === 1 ? ` | ${views} view` : ` | ${views} views`;
-  const description = `${sharedBy}${viewsText}`;
+  const viewsText = views ? (views === 1 ? ` | ${views} view` : ` | ${views} views`) : "";
+  const description = `${sharedBy}${viewsText ? viewsText : ""}`;
   const image = imgUrl ? imgUrl : "/ogLogo.png";
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
