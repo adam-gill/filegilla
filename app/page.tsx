@@ -12,7 +12,7 @@ export default function Landing() {
             private and secure cloud storage.
           </div>
           <div
-            className={`text-center mt-8 not-visited:text-3xl transition-opacity duration-1000 ease-in-out `}
+            className={`text-center mt-8 text-3xl max-md:text-xl transition-opacity duration-1000 ease-in-out `}
           >
             <Typewriter
               options={{
@@ -29,7 +29,7 @@ export default function Landing() {
             />
           </div>
 
-          <div className="w-full absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center ">
+          <div className="w-full mt-[200px] flex flex-col items-center justify-center ">
             <Link
               href={"/auth?signUp=1"}
               className="w-full max-w-[300px] bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium py-4 text-3xl text-center px-14 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
