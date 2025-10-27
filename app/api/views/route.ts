@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: `Views incremented successfully. ${shareName} now has ${updatedViews} views.`,
-        views: updatedViews,
+        views: updatedViews - 1,
       },
       { status: 200 }
     );

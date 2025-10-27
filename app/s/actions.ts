@@ -144,6 +144,12 @@ export const getOgData = async (
         imgUrl: fullUrl,
         views: Number(share.views),
       };
+    } else if (share?.views && share.user?.username) {
+      return {
+        success: true,
+        username: share.user.username,
+        views: Number(share.views),
+      };
     }
 
     return { success: false };
