@@ -3,6 +3,7 @@
 import { FolderItem } from "@/app/u/types";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createPublicFileName, createPublicS3Key } from "@/lib/aws/helpers";
+import { createFullPreviewUrl } from "@/lib/helpers";
 import { prisma } from "@/lib/prisma";
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -137,7 +138,7 @@ export const getOgData = async (
     });
 
     if (share?.previewKey && share?.user?.username) {
-      const fullUrl = `https://${S3_PUBLIC_BUCKET_NAME}.s3.us-east-1.amazonaws.com/${share.previewKey}`;
+      const fullUrl = createFullPreviewUrl(S3_PUBLIC_BUCKET_NAME, share.previewKey);
       return {
         success: true,
         username: share.user.username,

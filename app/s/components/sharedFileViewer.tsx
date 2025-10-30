@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Download,
-  Info,
-  Trash2,
-  MoreVertical,
-  Copy,
-} from "lucide-react";
+import { Download, Info, Trash2, MoreVertical, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FolderItem } from "@/app/u/types";
-import { formatBytes, formatDate } from "@/lib/helpers";
+import { formatBytes, formatDate, viewsText } from "@/lib/helpers";
 import { toast } from "@/hooks/use-toast";
 import { getFileType } from "@/app/u/helpers";
 import GetFileIcon from "@/app/u/components/getFileIcon";
@@ -62,6 +56,8 @@ export default function SharedFileViewer({
   const router = useRouter();
   const filegillaLink = `${process.env.NEXT_PUBLIC_APP_URL!}/s/${shareName}`;
   const { data: session } = authClient.useSession();
+
+  console.log(views, typeof views, !!views);
 
   // Close dropdown when clicking outside of the more info alert dialog
   useEffect(() => {
@@ -167,9 +163,7 @@ export default function SharedFileViewer({
                       <p>{formatDate(file.lastModified)}</p>
                     )}
                   </div>
-                  {views && (
-                    <p>{views === 1 ? `${views} view` : `${views} views`}</p>
-                  )}
+                  <p>{viewsText(Number(views))}</p>
                 </div>
                 {file.isFgDoc && <CloudIcon status={syncStatus} />}
               </div>

@@ -18,6 +18,9 @@ import { FolderItem } from "../types";
 import { checkShareItem, deleteShareItem, shareItem } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { useCallback, useEffect, useState } from "react";
+import { truncateFileName } from "../helpers";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ShareDialogProps {
   item: FolderItem;
@@ -179,7 +182,7 @@ export default function ShareDialog({
             {itemShareUrl ? (
               <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-black text-2xl">
+                  <AlertDialogTitle className="text-black text-2xl truncate">
                     {`${
                       item.type === "file"
                         ? `${item.name} aka /s/${itemShareName}`
@@ -228,24 +231,24 @@ export default function ShareDialog({
                     confirm delete?
                   </AlertDialogAction>
                 </AlertDialogFooter>
-                  {isConfirmDelete && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full text-center pb-2 text-black text-sm">
-                      {"(this will only delete the shared version)"}
-                    </span>
-                  )}
+                {isConfirmDelete && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full text-center pb-2 text-black text-sm">
+                    {"(this will only delete the shared version)"}
+                  </span>
+                )}
               </AlertDialogContent>
             ) : (
               <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-black text-2xl">
-                    {`share ${item.name}`}
+                    {`share ${truncateFileName(item.name)}`}
                   </AlertDialogTitle>
-                  <AlertDialogDescription className="!text-gray-600 text-base">
-                    create a permalink for <strong>{item.name}</strong>, or
-                    leave it random. this will be accessible to anyone with the
-                    link.
+                  <AlertDialogDescription className="!text-gray-600 text-base text-left">
+                    create a permalink for{" "}
+                    <strong>{truncateFileName(item.name)}</strong>, or leave it
+                    random. this will be accessible to anyone with the link.
                   </AlertDialogDescription>
-                  <div className="text-black">
+                  <div className="text-black text-left text-wrap max-w-[380px]">
                     {`preview:`}{" "}
                     <strong>{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</strong>
                   </div>
@@ -275,6 +278,19 @@ export default function ShareDialog({
                       {validationError}
                     </p>
                   )}
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 border border-gray-300"
+                      id="feature-in-posts"
+                    />
+                    <Label
+                      className="text-neutral-800"
+                      htmlFor="feature-in-posts"
+                    >
+                      {"feature in /posts?"}
+                    </Label>
+                  </div>
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel

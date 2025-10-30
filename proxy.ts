@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const protectedRoutes = ["/u", "/test", "/note"];
+const protectedRoutes = ["/u", "/test", "/note", "/posts"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,7 +14,7 @@ export function proxy(request: NextRequest) {
 
   // block test page in production
   if (process.env.NODE_ENV === "production" && pathname === "/test") {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/auth", request.url));
   }
 
   if (process.env.NODE_ENV === "production") {
@@ -25,7 +25,7 @@ export function proxy(request: NextRequest) {
 
   if (isProtectedRoute) {
     if (!sessionToken) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/auth", request.url));
     }
   } else {
     if (pathname === "/" && sessionToken) {

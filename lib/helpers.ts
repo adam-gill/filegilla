@@ -163,5 +163,19 @@ export const deepEqual = (a: any, b: any) =>  {
   return true;
 }
 
-
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export const createFullPreviewUrl = (bucketName: string, previewKey?: string): string | undefined => {
+    if (!previewKey) {
+        return undefined;
+    }
+    return `https://${bucketName}.s3.us-east-1.amazonaws.com/${previewKey}`;
+}
+
+export const viewsText = (views: number): string => {
+    if (views === 1) {
+        return "1 view";
+    } else {
+        return `${views} views`;
+    }
+}

@@ -1,8 +1,11 @@
-import { randomId } from "@/lib/helpers";
+import { getFileExtension, randomId } from "@/lib/helpers";
 import { FileType } from "./types";
 import { createPrivateS3Key } from "@/lib/aws/helpers";
 
-export const getFileType = (fileName: string, isFgDoc: boolean | undefined): FileType => {
+export const getFileType = (
+  fileName: string,
+  isFgDoc: boolean | undefined
+): FileType => {
   const extension = fileName.toLowerCase().split(".").pop();
 
   if (isFgDoc) {
@@ -66,30 +69,56 @@ export const isFileTypeSupported = (fileType: string): boolean => {
     - popular video formats (mp4, avi, mov, wmv, flv, webm, mkv, m4v)
     - pdf 
   */
-  
+
   const supportedTypes = [
     // Images
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-    'image/bmp',
-    'image/svg+xml',
-    'image/webp',
-    'image/x-icon',
-    'image/vnd.microsoft.icon',
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/bmp",
+    "image/svg+xml",
+    "image/webp",
+    "image/x-icon",
+    "image/vnd.microsoft.icon",
     // Videos
-    'video/mp4',
-    'video/x-msvideo', // avi
-    'video/quicktime', // mov
-    'video/x-ms-wmv', // wmv
-    'video/x-flv', // flv
-    'video/webm',
-    'video/x-matroska', // mkv
-    'video/x-m4v', // m4v
+    "video/mp4",
+    "video/x-msvideo", // avi
+    "video/quicktime", // mov
+    "video/x-ms-wmv", // wmv
+    "video/x-flv", // flv
+    "video/webm",
+    "video/x-matroska", // mkv
+    "video/x-m4v", // m4v
     // PDF
-    'application/pdf'
+    "application/pdf",
   ];
-  
+
   return supportedTypes.includes(fileType.toLowerCase());
+};
+
+export const hasFileExtension = (fileName: string): boolean => {
+  // Check if there's a dot and it's not at the start or end
+  const lastDotIndex = fileName.lastIndexOf(".");
+  return lastDotIndex > 0 && lastDotIndex < fileName.length - 1;
+};
+
+export const removeFileExtension = (fileName: string) => {
+  const lastDotIndex = fileName.lastIndexOf(".");
+  return fileName.substring(0, lastDotIndex);
+};
+
+export const truncateFileName = (fileName: string) => {
+  if (fileName.length < 20) {
+    return fileName;
+  } else {
+    if (hasFileExtension(fileName)) {
+      const fileExtension = getFileExtension(fileName);
+      const fileNameWithoutExtension = removeFileExtension(fileName);
+
+      return `${fileName.substring(0, 14)}...${fileNameWithoutExtension.substring(fileNameWithoutExtension.length - 4)}${fileExtension}`;
+    } else {
+      return `${fileName.substring(0, 20)}...`;
+    }
+  }
 };

@@ -61,6 +61,7 @@ import GetFileIcon from "@/app/u/components/getFileIcon";
 import MoveDialog from "@/app/u/components/moveDialog";
 import { FolderItem } from "@/app/u/types";
 import Image from "next/image";
+import { truncateFileName } from "../helpers";
 
 interface ItemProps {
   item: FolderItem;
@@ -632,10 +633,10 @@ export default function Item({
               {`rename ${item.type}`}
             </AlertDialogTitle>
             <AlertDialogDescription className="!text-gray-600 text-base">
-              {`enter a new name for ${item.name}`}
+              {`enter a new name for ${truncateFileName(item.name)}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
+          <div className="py-4 max-w-[380px]">
             <Input
               type="text"
               tabIndex={0}
