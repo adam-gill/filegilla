@@ -756,16 +756,20 @@ export const getDownloadUrl = async (
 
 const removeUserIdFromPreviewKey = (key: string): string => {
   try {
-    const parts = key.split('/');
-    
+    const parts = key.split("/");
+
     if (parts.length !== 3) {
-      console.error(`Invalid key format: expected 3 segments, got ${parts.length}`);
+      console.error(
+        `Invalid key format: expected 3 segments, got ${parts.length}`
+      );
       return "";
     }
-    
+
     return `${parts[0]}/${parts[2]}`;
   } catch (error) {
-    console.error(`Failed to process key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error(
+      `Failed to process key: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
     return "";
   }
 };
@@ -775,6 +779,7 @@ export const shareItem = async ({
   location,
   shareName,
   sourceEtag,
+  isFeatured,
 }: ShareItemProps): Promise<{
   success: boolean;
   message: string;
@@ -792,7 +797,6 @@ export const shareItem = async ({
   const s3Client = await getScopedS3Client(userId);
 
   try {
-
     const checkShareItem = await prisma.share.findFirst({
       where: {
         shareName: shareName,
@@ -844,10 +848,10 @@ export const shareItem = async ({
       CopySource: `${S3_BUCKET_NAME}/${privateKey}`,
       MetadataDirective: "REPLACE",
       Metadata: {
-        "previewkey": newPreviewKey,
-        "customtag": isFgDoc ? "filegilla document" : "",
-        "ogwidth": "1200",
-        "ogheight": "630",
+        previewkey: newPreviewKey,
+        customtag: isFgDoc ? "filegilla document" : "",
+        ogwidth: "1200",
+        ogheight: "630",
       },
     });
 
@@ -860,7 +864,7 @@ export const shareItem = async ({
         CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
         MetadataDirective: "REPLACE",
         Metadata: {
-          "previewkey": newPreviewKey,
+          previewkey: newPreviewKey,
         },
       });
 
@@ -870,6 +874,7 @@ export const shareItem = async ({
 
     const shareUrl = `https://${S3_PUBLIC_BUCKET_NAME}.s3.amazonaws.com/${publicKey}`;
 
+    const featured = !!isFeatured;
     await prisma.share.create({
       data: {
         shareName: shareName,
@@ -881,6 +886,7 @@ export const shareItem = async ({
         sourceEtag: sourceEtag,
         views: 0,
         previewKey: newPreviewKey || null,
+        isFeatured: featured,
       },
     });
 
@@ -897,6 +903,41 @@ export const shareItem = async ({
         error instanceof Error ? error.message : "unknown error"
       }`,
     };
+  }
+};
+
+export const changeShareFeaturedStatus = async (
+  shareName: string,
+  isFeatured: boolean
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return { success: false, message: "user is not authenticated." };
+    }
+
+    const userId = session.user.id;
+
+    await prisma.share.update({
+      where: {
+        shareName: shareName,
+        user: {
+          id: userId,
+        },
+      },
+      data: {
+        isFeatured: isFeatured,
+      },
+    });
+
+    console.log(`successfully changed ${shareName}'s feature status to ${isFeatured}`);
+    return { success: true };
+  } catch (error) {
+    console.log("error setting share featured status: ", error);
+    return { success: false };
   }
 };
 
@@ -936,23 +977,24 @@ export const deleteShareItem = async (
       const key = createPublicS3Key(itemName, shareName);
 
       const headCommand = new HeadObjectCommand({
+        Bucket: S3_PUBLIC_BUCKET_NAME,
+        Key: key,
+      });
+
+      const headResponse = await s3Client.send(headCommand);
+
+      const metadata = headResponse.Metadata;
+      const previewKey = metadata?.["previewkey"];
+      leorn
+
+      if (previewKey) {
+        const deletePreviewCommand = new DeleteObjectCommand({
           Bucket: S3_PUBLIC_BUCKET_NAME,
-          Key: key,
+          Key: previewKey,
         });
-
-        const headResponse = await s3Client.send(headCommand);
-
-        const metadata = headResponse.Metadata;
-        const previewKey = metadata?.["previewkey"];
-
-        if (previewKey) {
-          const deletePreviewCommand = new DeleteObjectCommand({
-            Bucket: S3_PUBLIC_BUCKET_NAME,
-            Key: previewKey,
-          });
-          await s3Client.send(deletePreviewCommand);
-          console.log(`preview deleted (${previewKey})`);
-        }
+        await s3Client.send(deletePreviewCommand);
+        console.log(`preview deleted (${previewKey})`);
+      }
 
       const deleteCommand = new DeleteObjectCommand({
         Bucket: S3_PUBLIC_BUCKET_NAME,
@@ -985,6 +1027,7 @@ export const checkShareItem = async (
   message: string;
   shareUrl?: string;
   shareName?: string;
+  isFeatured?: boolean;
 }> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -1004,12 +1047,13 @@ export const checkShareItem = async (
       },
     });
 
-    if (response?.s3Url && response.shareName) {
+    if (response?.s3Url && response.shareName && response.isFeatured) {
       return {
         success: true,
         message: `${itemName} shareUrl found`,
         shareUrl: response.s3Url,
         shareName: response.shareName,
+        isFeatured: response.isFeatured
       };
     } else {
       return { success: true, message: `${itemName} is not shared` };

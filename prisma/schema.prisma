@@ -100,6 +100,7 @@ model share {
   sourceEtag String?
   views      BigInt         @default(0)
   previewKey String?
+  isFeatured Boolean?       @default(false)
   user       User?          @relation(fields: [ownerId], references: [id], onUpdate: NoAction, map: "fk_shares_owner")
 }
 

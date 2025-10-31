@@ -182,7 +182,12 @@ export default function SharedFileViewer({
                   <Info className="w-4 h-4" />
                 </Button>
 
-                <div className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:ring-neutral-300 border shadow-sm hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:bg-neutral-800 dark:hover:text-neutral-50 h-8 rounded-md w-[52px] text-xs">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
+                  disabled={!file?.url}
+                >
                   {file?.url ? (
                     <CopyText
                       textToCopy={filegillaLink}
@@ -192,7 +197,7 @@ export default function SharedFileViewer({
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
-                </div>
+                </Button>
 
                 <Button
                   variant="outline"

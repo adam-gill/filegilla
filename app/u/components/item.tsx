@@ -331,7 +331,11 @@ export default function Item({
   };
 
   const handleItemOpen = () => {
-    router.push(`${pathname}/${item.name}`);
+    if (item.isFgDoc) {
+      router.push(`${pathname}/${item.name}?fg=1`);
+    } else {
+      router.push(`${pathname}/${item.name}`);
+    }
     setIsOptionsOpen(false);
   };
 

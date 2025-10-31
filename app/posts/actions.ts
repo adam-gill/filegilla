@@ -1,10 +1,9 @@
-import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
-import { headers } from "next/headers";
 import type { share } from "@prisma/client";
 import { HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createFullPreviewUrl } from "@/lib/helpers";
+import { unstable_noStore as noStore } from "next/cache";
 
 export interface Posts extends share {
   previewUrl?: string;
@@ -23,29 +22,21 @@ export const fetchPosts = async (): Promise<{
   message: string;
   posts?: share[];
 }> => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
 
-  if (!session?.user?.id) {
-    return { success: false, message: "user is not authenticated." };
-  }
+  noStore();
 
   try {
-    const userId = session.user.id;
-    const s3Client = await getScopedS3Client(userId);
+    const s3Client = await getScopedS3Client("public");
 
     const posts = await prisma.share.findMany({
       where: {
-        user: {
-          id: userId,
-        },
+        isFeatured: true,
       },
       orderBy: {
         views: "desc",
       },
     });
-
+    
     const postsWithMetaData: Posts[] = await Promise.all(
       posts.map(async (post) => {
         const headCommand = new HeadObjectCommand({

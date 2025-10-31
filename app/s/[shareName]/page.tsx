@@ -3,6 +3,7 @@ import { getOgData, getSharedFile } from "../actions";
 import { Suspense } from "react";
 import SharedFileViewer from "../components/sharedFileViewer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { viewsText } from "@/lib/helpers";
 
 interface ShareViewerProps {
   params: Promise<{ shareName: string }>;
@@ -18,8 +19,8 @@ export async function generateMetadata({
     ? `shared by ${username}`
     : `shared on filegilla`;
 
-  const viewsText = views ? (views === 1 ? ` | ${views} view` : ` | ${views} views`) : "";
-  const description = `${sharedBy}${viewsText ? viewsText : ""}`;
+  const viewsLabel = viewsText(Number(views));
+  const description = `${sharedBy}${viewsLabel ? ` | ${viewsLabel}` : ""}`;
   const image = imgUrl ? imgUrl : "/ogLogo.png";
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -69,8 +70,7 @@ const LoadingScreen = () => {
   );
 };
 
-export default async function ShareViewer({ params }: ShareViewerProps) {
-  const shareName = (await params).shareName;
+async function ShareContent({ shareName }: { shareName: string }) {
   const { initialFile } = await getSharedFile(shareName);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -84,23 +84,31 @@ export default async function ShareViewer({ params }: ShareViewerProps) {
   const data = await response.json();
   const views = data.views;
 
+  if (!initialFile) {
+    return (
+      <div className="min-h-[70vh] w-full flex items-center justify-center text-center">
+        <div className="text-2xl font-medium">{`404 - '${shareName}' not found`}</div>
+      </div>
+    );
+  }
+
+  return (
+    <SharedFileViewer
+      initialFile={initialFile}
+      shareName={shareName}
+      views={views}
+    />
+  );
+}
+
+export default async function ShareViewer({ params }: ShareViewerProps) {
+  const shareName = (await params).shareName;
+
   return (
     <main>
       <Suspense fallback={<LoadingScreen />}>
-        {initialFile && (
-          <SharedFileViewer
-            initialFile={initialFile}
-            shareName={shareName}
-            views={views}
-          />
-        )}
+        <ShareContent shareName={shareName} />
       </Suspense>
-
-      {!initialFile && (
-        <div className="min-h-[70vh] w-full flex items-center justify-center text-center">
-          <div className="text-2xl font-medium">{`404 - '${shareName}' not found`}</div>
-        </div>
-      )}
     </main>
   );
 }

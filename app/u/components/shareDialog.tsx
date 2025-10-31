@@ -12,15 +12,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { validateItemName, randomId } from "@/lib/helpers";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Info } from "lucide-react";
 import CopyText from "./copyText";
 import { FolderItem } from "../types";
-import { checkShareItem, deleteShareItem, shareItem } from "../actions";
+import {
+  changeShareFeaturedStatus,
+  checkShareItem,
+  deleteShareItem,
+  shareItem,
+} from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { useCallback, useEffect, useState } from "react";
 import { truncateFileName } from "../helpers";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import MobileTooltip from "@/components/mobileTooltip";
 
 interface ShareDialogProps {
   item: FolderItem;
@@ -40,6 +46,7 @@ export default function ShareDialog({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [itemShareName, setItemShareName] = useState<string>("");
   const [itemShareUrl, setItemShareUrl] = useState<string>("");
+  const [isFeatured, setIsFeatured] = useState<boolean>(false);
 
   const handleItemShare = async () => {
     setIsLoading(true);
@@ -74,6 +81,31 @@ export default function ShareDialog({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleShareFeatureChange = async () => {
+    try {
+      const tempIsFeatured = !isFeatured;
+      setIsFeatured((prev) => !prev);
+      const { success, message } = await changeShareFeaturedStatus(
+        itemShareName,
+        tempIsFeatured
+      );
+
+      if (!success) {
+        toast({
+          title: "error",
+          description: `error changing share's featured status: ${message}`,
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "error",
+        description: "unknown error changing share's featured status",
+        variant: "destructive",
+      });
     }
   };
 
@@ -115,14 +147,13 @@ export default function ShareDialog({
     setIsLoading(true);
     if (item.type === "file" && item.etag && item.name) {
       try {
-        const { success, shareUrl, shareName } = await checkShareItem(
-          item.name,
-          item.etag
-        );
+        const { success, shareUrl, shareName, isFeatured } =
+          await checkShareItem(item.name, item.etag);
 
-        if (success && shareUrl && shareName) {
+        if (success && shareUrl && shareName && isFeatured) {
           setItemShareUrl(shareUrl);
           setItemShareName(shareName);
+          setIsFeatured(isFeatured);
         } else {
           setItemShareUrl("");
         }
@@ -145,6 +176,10 @@ export default function ShareDialog({
   useEffect(() => {
     setItemShareName(randomId());
   }, []);
+
+  useEffect(() => {
+    console.log("isFeatured", isFeatured);
+  }, [isFeatured]);
 
   return (
     <>
@@ -193,11 +228,43 @@ export default function ShareDialog({
                     shared with the world
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="flex flex-row  items-center text-black gap-2">
-                  <div className="text-black">{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</div>
-                  <CopyText
-                    textToCopy={`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}
-                  />
+                <div className="flex flex-col  items-start text-black gap-2">
+                  <div className="flex flex-row items-center gap-2">
+                    <div className="text-black">{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</div>
+                    <CopyText
+                      textToCopy={`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}
+                    />
+                  </div>
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="h-[20px] w-[125px]" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="feature-in-posts"
+                        onClick={handleShareFeatureChange}
+                        checked={isFeatured}
+                      />
+                      <Label
+                        className="text-neutral-800"
+                        htmlFor="feature-in-posts"
+                      >
+                        {"feature in /posts?"}
+                      </Label>
+                      <MobileTooltip
+                        trigger={<Info className="w-4 h-4 text-neutral-800" />}
+                        content={
+                          <p>
+                            Checking this box will feature this item in the
+                            /posts page. If you don't check it, the file will
+                            still be public, but only users with the link will
+                            be able to access it.
+                          </p>
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel
@@ -253,7 +320,7 @@ export default function ShareDialog({
                     <strong>{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</strong>
                   </div>
                 </AlertDialogHeader>
-                <div className="pb-4">
+                <div>
                   {itemShareUrl && <p className="text-black">{itemShareUrl}</p>}
                   <Input
                     type="text"
@@ -279,10 +346,11 @@ export default function ShareDialog({
                     </p>
                   )}
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 mt-2">
                     <Switch
-                      className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 border border-gray-300"
                       id="feature-in-posts"
+                      onClick={() => setIsFeatured((prev) => !prev)}
+                      checked={isFeatured}
                     />
                     <Label
                       className="text-neutral-800"
@@ -290,6 +358,17 @@ export default function ShareDialog({
                     >
                       {"feature in /posts?"}
                     </Label>
+                    <MobileTooltip
+                      trigger={<Info className="w-4 h-4 text-neutral-800" />}
+                      content={
+                        <p>
+                          Checking this box will feature this item in the /posts
+                          page. If you don't check it, the file will still be
+                          public, but only users with the link will be able to
+                          access it.
+                        </p>
+                      }
+                    />
                   </div>
                 </div>
                 <AlertDialogFooter>

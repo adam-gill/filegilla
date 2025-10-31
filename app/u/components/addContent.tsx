@@ -604,7 +604,7 @@ export default function AddContent({
             type="button"
             variant={"pretty"}
             className="cursor-pointer w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
-            disabled={isUploading}
+            disabled={isUploading || !newContents || !setNewContents}
           >
             {isUploading ? (
               <div className="flex items-center justify-center w-full h-full">

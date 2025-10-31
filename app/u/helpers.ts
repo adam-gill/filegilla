@@ -122,3 +122,8 @@ export const truncateFileName = (fileName: string) => {
     }
   }
 };
+
+export const isFilePage = (path: string[]) => {
+  const lastItem = path[path.length - 1];
+  return hasFileExtension(lastItem);
+};

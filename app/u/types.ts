@@ -33,6 +33,7 @@ export interface ShareItemProps {
   location: string[];
   shareName: string;
   sourceEtag?: string;
+  isFeatured?: boolean;
 }
 
 export type FileType =

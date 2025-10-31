@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Space_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import Navbar from "@/components/navbar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -37,7 +38,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={cn("antialiased bg-black", spaceGrotesk.className)}>
         <Navbar />
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
         <Analytics />
       </body>
