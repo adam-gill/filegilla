@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/ogLogo.png",
-        width: 1200,
-        height: 630,
+        width: 244,
+        height: 144,
         alt: "filegilla posts",
       },
     ],
