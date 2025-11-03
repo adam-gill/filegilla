@@ -3,6 +3,15 @@ import { fetchPosts } from "./actions";
 import PostItem from "./components/postItem";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "posts",
+  description: "view the public posts of filegilla",
+  openGraph: {
+    images: "/ogLogo.png",
+  },
+};
 
 async function PostsList() {
   const { success, message, posts } = await fetchPosts();
