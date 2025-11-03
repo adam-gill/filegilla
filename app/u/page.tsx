@@ -21,7 +21,7 @@ export default function Dashboard() {
       <Suspense
         fallback={
           <div>
-            <div className="flex w-full justify-between items-center ">
+            <div className="flex w-full justify-between items-center max-md:flex-col-reverse max-md:items-start">
               <Navigator location={[]} />
               <Button
                 type="button"
@@ -37,7 +37,10 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-wrap w-full gap-4 items-start justify-center mt-4">
               {new Array(9).fill(0).map((_, index) => (
-                <Skeleton className="w-xs h-[366px] rounded-xl" key={index} />
+                <Skeleton
+                  className="w-xs h-[366px] max-md:h-[374px] max-md:w-[254px] rounded-xl"
+                  key={index}
+                />
               ))}
             </div>
           </div>

@@ -2,13 +2,30 @@
 
 import { FolderItem } from "@/app/u/types";
 import { getScopedS3Client } from "@/lib/aws/actions";
-import { createPublicFileName, createPublicS3Key } from "@/lib/aws/helpers";
+import { createPublicFileName } from "@/lib/aws/helpers";
 import { createFullPreviewUrl } from "@/lib/helpers";
 import { prisma } from "@/lib/prisma";
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
+
+export const getPublicS3Key = async (shareName: string) => {
+  const share = await prisma.share.findFirst({
+    where: {
+      shareName: shareName,
+    },
+  });
+
+  if (!share) {
+    throw new Error("getPublicS3Key: share not found");
+  }
+
+  if (share.s3Url) {
+    const key = new URL(share.s3Url).pathname.substring(1);
+    return key;
+  }
+};
 
 export const getSharedFile = async (
   shareName: string
@@ -22,7 +39,7 @@ export const getSharedFile = async (
 
     if (response?.s3Url && response.sourceEtag) {
       const s3Client = await getScopedS3Client("public");
-      const key = createPublicS3Key(response.itemName, shareName);
+      const key = await getPublicS3Key(shareName);
 
       const headCommand = new HeadObjectCommand({
         Bucket: S3_PUBLIC_BUCKET_NAME,
@@ -37,6 +54,18 @@ export const getSharedFile = async (
         metadata &&
         "customtag" in metadata &&
         metadata["customtag"] === "filegilla document";
+
+      // Generate signed URL for inline viewing (no attachment disposition)
+      const viewCommand = new GetObjectCommand({
+        Bucket: S3_PUBLIC_BUCKET_NAME,
+        Key: key,
+        ResponseContentType: s3Response.ContentType,
+        ResponseContentDisposition: "inline",
+      });
+
+      const viewUrl = await getSignedUrl(s3Client, viewCommand, {
+        expiresIn: 3600,
+      });
 
       if (
         s3Response.ContentLength &&
@@ -54,7 +83,7 @@ export const getSharedFile = async (
             fileType: s3Response.ContentType,
             lastModified: s3Response.LastModified,
             size: s3Response.ContentLength,
-            url: response.s3Url,
+            url: viewUrl,
             ownerId: response.ownerId ?? undefined,
             isFgDoc: isFgDoc,
           },
@@ -88,9 +117,9 @@ export const getPublicDownloadUrl = async (
   message: string;
   url?: string;
 }> => {
-  const key = createPublicS3Key(itemName, shareName);
-
   try {
+    const key = await getPublicS3Key(shareName);
+
     const s3Client = await getScopedS3Client("public");
     const fileName = createPublicFileName(itemName, shareName);
 
@@ -109,7 +138,7 @@ export const getPublicDownloadUrl = async (
       url: url,
     };
   } catch (error) {
-    console.log(`Error fetching file at location '${key}', error: ${error}`);
+    console.log(`Error fetching file at error: ${error}`);
     return {
       success: false,
       message: `Error fetching file: ${error}`,
@@ -119,7 +148,12 @@ export const getPublicDownloadUrl = async (
 
 export const getOgData = async (
   shareName: string
-): Promise<{ success: boolean; username?: string; imgUrl?: string; views?: number }> => {
+): Promise<{
+  success: boolean;
+  username?: string;
+  imgUrl?: string;
+  views?: number;
+}> => {
   try {
     const share = await prisma.share.findFirst({
       where: {
@@ -138,7 +172,10 @@ export const getOgData = async (
     });
 
     if (share?.previewKey && share?.user?.username) {
-      const fullUrl = createFullPreviewUrl(S3_PUBLIC_BUCKET_NAME, share.previewKey);
+      const fullUrl = createFullPreviewUrl(
+        S3_PUBLIC_BUCKET_NAME,
+        share.previewKey
+      );
       return {
         success: true,
         username: share.user.username,

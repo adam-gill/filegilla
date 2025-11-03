@@ -847,11 +847,10 @@ export const shareItem = async ({
       Key: publicKey,
       CopySource: `${S3_BUCKET_NAME}/${privateKey}`,
       MetadataDirective: "REPLACE",
+      ContentType: headResponse.ContentType,
       Metadata: {
         previewkey: newPreviewKey,
         customtag: isFgDoc ? "filegilla document" : "",
-        ogwidth: "1200",
-        ogheight: "630",
       },
     });
 
@@ -863,6 +862,7 @@ export const shareItem = async ({
         Key: newPreviewKey,
         CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
         MetadataDirective: "REPLACE",
+        ContentType: "image/webp", // image api always creates webp images
         Metadata: {
           previewkey: newPreviewKey,
         },
@@ -906,6 +906,67 @@ export const shareItem = async ({
   }
 };
 
+export const editShareName = async (
+  oldShareName: string,
+  newShareName: string
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    console.log("oldShareName: ", oldShareName);
+    console.log("newShareName: ", newShareName);
+
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return { success: false, message: "user is not authenticated." };
+    }
+
+    const userId = session.user.id;
+
+    const checkShareItemOwner = await prisma.share.findFirst({
+      where: {
+        shareName: oldShareName,
+        ownerId: userId,
+      },
+    });
+
+    if (!checkShareItemOwner) {
+      return { success: false, message: "share not found." };
+    }
+
+    const checkShareNameAvailability = await prisma.share.findFirst({
+      where: {
+        shareName: newShareName,
+      },
+    });
+
+    if (checkShareNameAvailability) {
+      return { success: false, message: "share name already exists." };
+    }
+
+    await prisma.share.update({
+      where: {
+        shareName: oldShareName,
+        user: {
+          id: userId,
+        },
+      },
+      data: {
+        shareName: newShareName,
+      },
+    });
+
+    console.log(
+      `successfully changed ${oldShareName}'s share name to ${newShareName}`
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Error editing share name:", error);
+    return { success: false, message: "failed to edit share name." };
+  }
+};
+
 export const changeShareFeaturedStatus = async (
   shareName: string,
   isFeatured: boolean
@@ -933,7 +994,9 @@ export const changeShareFeaturedStatus = async (
       },
     });
 
-    console.log(`successfully changed ${shareName}'s feature status to ${isFeatured}`);
+    console.log(
+      `successfully changed ${shareName}'s feature status to ${isFeatured}`
+    );
     return { success: true };
   } catch (error) {
     console.log("error setting share featured status: ", error);
@@ -951,6 +1014,7 @@ export const deleteShareItem = async (
   });
 
   if (!session?.user?.id) {
+    console.log(itemName);
     return { success: false, message: "user is not authenticated." };
   }
 
@@ -966,6 +1030,8 @@ export const deleteShareItem = async (
     });
 
     if (response) {
+      const key = new URL(response.s3Url).pathname.substring(1);
+
       await prisma.share.delete({
         where: {
           shareName: shareName,
@@ -973,8 +1039,6 @@ export const deleteShareItem = async (
           ownerId: userId,
         },
       });
-
-      const key = createPublicS3Key(itemName, shareName);
 
       const headCommand = new HeadObjectCommand({
         Bucket: S3_PUBLIC_BUCKET_NAME,
@@ -985,7 +1049,6 @@ export const deleteShareItem = async (
 
       const metadata = headResponse.Metadata;
       const previewKey = metadata?.["previewkey"];
-      leorn
 
       if (previewKey) {
         const deletePreviewCommand = new DeleteObjectCommand({
@@ -1047,13 +1110,13 @@ export const checkShareItem = async (
       },
     });
 
-    if (response?.s3Url && response.shareName && response.isFeatured) {
+    if (response?.s3Url && response.shareName) {
       return {
         success: true,
         message: `${itemName} shareUrl found`,
         shareUrl: response.s3Url,
         shareName: response.shareName,
-        isFeatured: response.isFeatured
+        isFeatured: response.isFeatured || false,
       };
     } else {
       return { success: true, message: `${itemName} is not shared` };

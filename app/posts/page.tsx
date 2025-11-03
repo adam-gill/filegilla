@@ -4,8 +4,6 @@ import PostItem from "./components/postItem";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const revalidate = 0;
-
 async function PostsList() {
   const { success, message, posts } = await fetchPosts();
 

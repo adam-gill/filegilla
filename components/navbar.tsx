@@ -11,15 +11,23 @@ import { authClient } from "@/lib/auth/auth-client";
 import { getInitials } from "@/lib/helpers";
 import Image from "next/image";
 import { Skeleton } from "./ui/skeleton";
-import { LogIn } from "lucide-react";
-import { usePathname } from "next/navigation";
-
+import { LogIn, ChevronDown } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
   const { data: session, isPending } = authClient.useSession();
   const userData = session?.user;
   const pathname = usePathname();
   const isLanding = pathname === "/";
+  const isMobile = useMobile();
+  const router = useRouter();
 
   if (pathname === "/auth") {
     return;
@@ -38,7 +46,32 @@ export default function Navbar() {
                     height={60}
                     className="w-10 h-6"
                   />
-                  <span className="text-2xl font-semibold p-2">filegilla</span>
+                  {isMobile && !isLanding ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="flex items-center gap-1 text-xl font-semibold p-2 focus:outline-none">
+                        filegilla
+                        <ChevronDown className="w-4 h-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="text-xl">
+                        <DropdownMenuItem
+                          onClick={() => router.push("/u")}
+                          className="cursor-pointer"
+                        >
+                          dashboard
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => router.push("/posts")}
+                          className="cursor-pointer"
+                        >
+                          posts
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <span className="text-2xl font-semibold p-2">
+                      filegilla
+                    </span>
+                  )}
                 </NavigationMenuLink>
               </NavigationMenuItem>
               {!isLanding && (

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Download, Info, Trash2, MoreVertical, Copy } from "lucide-react";
+import { Download, Info, MoreVertical, Copy, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,20 +19,11 @@ import CopyText from "@/app/u/components/copyText";
 import InfoDialog from "@/app/u/components/infoDialog";
 import { getPublicDownloadUrl } from "../actions";
 import { createPublicFileName } from "@/lib/aws/helpers";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { authClient } from "@/lib/auth/auth-client";
 import { deleteShareItem } from "@/app/u/actions";
 import { useRouter } from "next/navigation";
 import CloudIcon from "@/app/note/components/cloudIcon";
+import ShareDialog from "@/app/u/components/shareDialog";
 
 interface FileViewerProps {
   initialFile: FolderItem;
@@ -48,16 +39,20 @@ export default function SharedFileViewer({
   const [file, setFile] = useState<FolderItem | undefined>(initialFile);
   const [isInfoOpen, setIsInfoOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
+  const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [syncStatus, setSyncStatus] = useState<"loaded" | "loading" | "error">(
     "loading"
   );
+  const [mounted, setMounted] = useState(false);
   const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const filegillaLink = `${process.env.NEXT_PUBLIC_APP_URL!}/s/${shareName}`;
   const { data: session } = authClient.useSession();
 
-  console.log(views, typeof views, !!views);
+  // Set mounted to true on client to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close dropdown when clicking outside of the more info alert dialog
   useEffect(() => {
@@ -208,19 +203,20 @@ export default function SharedFileViewer({
                   <Download className="w-4 h-4" />
                 </Button>
 
-                {session &&
+                {mounted &&
+                  session &&
                   session.user.id &&
                   session.user.id === file?.ownerId && (
                     <Button
                       onClick={() => {
-                        setIsDeleteOpen(true);
+                        setIsShareOpen(true);
                         setIsDropdownOpen(false);
                       }}
                       variant="outline"
                       size="sm"
-                      className="!bg-red-600/85 border-gray-600 text-gray-300 hover:!bg-red-600 cursor-pointer"
+                      className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 cursor-pointer"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Settings className="w-4 h-4" />
                     </Button>
                   )}
               </div>
@@ -282,18 +278,19 @@ export default function SharedFileViewer({
                       <Download className="w-4 h-4 mr-2" />
                       download
                     </DropdownMenuItem>
-                    {session &&
+                    {mounted &&
+                      session &&
                       session.user.id &&
                       session.user.id === file?.ownerId && (
                         <DropdownMenuItem
                           onClick={() => {
-                            setIsDeleteOpen(true);
+                            setIsShareOpen(true);
                             setIsDropdownOpen(false);
                           }}
-                          className="cursor-pointer text-white bg-red-600/85 focus:bg-gray-700 hover:bg-red-600 focus:text-red-300"
+                          className="focus:bg-gray-700 focus:text-gray-200 cursor-pointer"
                         >
-                          <Trash2 className="w-4 h-4 mr-2 text-white" />
-                          delete
+                          <Settings className="w-4 h-4 mr-2" />
+                          settings
                         </DropdownMenuItem>
                       )}
                   </DropdownMenuContent>
@@ -319,35 +316,21 @@ export default function SharedFileViewer({
         </div>
       </div>
 
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-black text-2xl">
-              {`delete /s/${shareName}`}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="!text-gray-600 text-base">
-              {"remove this shared file from the public space"}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
-              cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleItemDeletion}
-              className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
-            >
-              delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <InfoDialog
         isInfoOpen={isInfoOpen}
         setIsInfoOpen={setIsInfoOpen}
         item={file}
       />
+
+      {file && (
+        <ShareDialog
+          item={file}
+          location={undefined}
+          isShareOpen={isShareOpen}
+          setIsShareOpen={setIsShareOpen}
+          isSharePage={true}
+        />
+      )}
     </div>
   );
 }

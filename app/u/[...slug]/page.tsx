@@ -66,7 +66,7 @@ export default async function PathPage({
               </div>
             ) : (
               <div>
-                <div className="flex w-full justify-between items-center">
+                <div className="flex w-full justify-between items-center max-md:flex-col-reverse max-md:items-start">
                   <Navigator location={cleanSlug} />
                   <Button
                     type="button"
@@ -83,7 +83,7 @@ export default async function PathPage({
                 <div className="flex flex-wrap w-full gap-4 items-start justify-center mt-4">
                   {new Array(9).fill(0).map((_, index) => (
                     <Skeleton
-                      className="w-xs h-[366px] rounded-xl"
+                      className="w-xs h-[366px] max-md:h-[374px] max-md:w-[254px] rounded-xl"
                       key={index}
                     />
                   ))}

@@ -12,27 +12,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { validateItemName, randomId } from "@/lib/helpers";
-import { X, Trash2, Info } from "lucide-react";
+import { X, Trash2, Info, Pencil, Check } from "lucide-react";
 import CopyText from "./copyText";
 import { FolderItem } from "../types";
 import {
   changeShareFeaturedStatus,
   checkShareItem,
   deleteShareItem,
+  editShareName,
   shareItem,
 } from "../actions";
 import { toast } from "@/hooks/use-toast";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { truncateFileName } from "../helpers";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import MobileTooltip from "@/components/mobileTooltip";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ShareDialogProps {
   item: FolderItem;
-  location: string[];
+  location: string[] | undefined;
   isShareOpen: boolean;
   setIsShareOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isSharePage?: boolean;
 }
 
 export default function ShareDialog({
@@ -40,6 +44,7 @@ export default function ShareDialog({
   location,
   isShareOpen,
   setIsShareOpen,
+  isSharePage,
 }: ShareDialogProps) {
   const [isConfirmDelete, setIsConfirmDelete] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string>("");
@@ -47,8 +52,19 @@ export default function ShareDialog({
   const [itemShareName, setItemShareName] = useState<string>("");
   const [itemShareUrl, setItemShareUrl] = useState<string>("");
   const [isFeatured, setIsFeatured] = useState<boolean>(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [shareNameError, setShareNameError] = useState<string | undefined>(
+    undefined
+  );
+  const [isEditingShareName, setIsEditingShareName] = useState<boolean>(false);
+  const [savedShareName, setSavedShareName] = useState<string>("");
+  const router = useRouter();
 
   const handleItemShare = async () => {
+    if (location === undefined) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -58,6 +74,7 @@ export default function ShareDialog({
         location: location,
         shareName: itemShareName,
         sourceEtag: item.etag,
+        isFeatured: isFeatured,
       });
 
       if (success && shareUrl) {
@@ -126,6 +143,10 @@ export default function ShareDialog({
           });
           setItemShareName(randomId());
           setItemShareUrl("");
+          setIsFeatured(false);
+          if (isSharePage) {
+            router.push("/u");
+          }
         } else {
           toast({
             title: "error",
@@ -150,10 +171,11 @@ export default function ShareDialog({
         const { success, shareUrl, shareName, isFeatured } =
           await checkShareItem(item.name, item.etag);
 
-        if (success && shareUrl && shareName && isFeatured) {
+        if (success && shareUrl && shareName) {
           setItemShareUrl(shareUrl);
           setItemShareName(shareName);
-          setIsFeatured(isFeatured);
+          setIsFeatured(isFeatured || false);
+          setSavedShareName(shareName);
         } else {
           setItemShareUrl("");
         }
@@ -167,6 +189,78 @@ export default function ShareDialog({
     }
   }, [item.name, item.type, item.etag]);
 
+  const handleShareNameChange = (value: string) => {
+    const hasSpace = /\s/.test(value);
+    const hasInvalidChar = /[^a-zA-Z0-9_-]/.test(value);
+
+    if (value.length === 0) {
+      setShareNameError("share name cannot be empty");
+    } else if (hasSpace) {
+      setShareNameError("share name cannot contain spaces");
+    } else if (hasInvalidChar) {
+      setShareNameError(
+        "only lowercase letters, numbers, and underscores are allowed"
+      );
+    } else if (value.length > 256) {
+      setShareNameError("share name must 256 characters or less");
+    } else {
+      setShareNameError(undefined);
+    }
+
+    setItemShareName(value);
+  };
+
+  // replace all itemShareName with newShareName for the editing of the share name
+  const handleShareNameEditCancel = () => {
+    setItemShareName(savedShareName);
+    setIsEditingShareName(false);
+
+    if (inputRef.current) {
+      inputRef.current.blur();
+    }
+
+    setShareNameError(undefined);
+  };
+
+  const handleShareNameSave = async () => {
+    if (shareNameError) {
+      return;
+    }
+
+    setIsEditingShareName(false);
+    const { success, message } = await editShareName(
+      savedShareName,
+      itemShareName
+    );
+
+    if (success) {
+      toast({
+        title: "success!",
+        description: "successfully changed share name",
+        variant: "good",
+      });
+      setSavedShareName(itemShareName);
+      if (isSharePage) {
+        router.push(`/s/${itemShareName}`);
+      }
+    } else {
+      setItemShareName(savedShareName);
+      toast({
+        title: "error",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      handleShareNameEditCancel();
+    } else if (e.key === "Enter") {
+      handleShareNameSave();
+    }
+  };
+
   useEffect(() => {
     if (isShareOpen) {
       checkShareStatus();
@@ -178,13 +272,14 @@ export default function ShareDialog({
   }, []);
 
   useEffect(() => {
-    console.log("isFeatured", isFeatured);
+    console.log("isFeatured: ", isFeatured);
   }, [isFeatured]);
 
   return (
     <>
       <AlertDialog open={isShareOpen} onOpenChange={setIsShareOpen}>
         {isLoading ? (
+          // when the share is loading
           <>
             <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
               <AlertDialogHeader>
@@ -213,14 +308,15 @@ export default function ShareDialog({
             </AlertDialogContent>
           </>
         ) : (
+          // this is when the share exists, essentially the share's settings
           <>
             {itemShareUrl ? (
               <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-black text-2xl truncate">
+                  <AlertDialogTitle className="text-black text-2xl max-w-[318px]">
                     {`${
                       item.type === "file"
-                        ? `${item.name} aka /s/${itemShareName}`
+                        ? `${truncateFileName(item.name)} aka /s/${itemShareName}`
                         : `${itemShareName}`
                     } `}
                   </AlertDialogTitle>
@@ -228,9 +324,66 @@ export default function ShareDialog({
                     shared with the world
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="flex flex-col  items-start text-black gap-2">
+                <div className="flex flex-col  items-start text-black gap-2 max-w-[318px]">
+                  <div>
+                    <div>
+                      {`share name: `}
+                      <>
+                        <div className="flex items-center w-min">
+                          <Input
+                            ref={inputRef}
+                            type="text"
+                            id="username"
+                            className="p-0 h-fit text-lg font-semibold w-auto min-w-3 border-none shadow-none rounded-none focus-visible:outline-none"
+                            value={itemShareName}
+                            onChange={(e) =>
+                              handleShareNameChange(e.target.value)
+                            }
+                            onKeyDown={handleKeyDown}
+                            autoComplete="off"
+                            disabled={!isEditingShareName}
+                            style={{
+                              width: `${itemShareName.length * 0.65}em`,
+                            }}
+                          />
+                          <div>
+                            {isEditingShareName && (
+                              <div className="flex gap-3 max-md:gap-5">
+                                <X
+                                  onClick={handleShareNameEditCancel}
+                                  className="text-red-500 stroke-3 cursor-pointer h-6 w-6"
+                                />
+                                <Check
+                                  onClick={handleShareNameSave}
+                                  className="text-green-700 stroke-3 cursor-pointer h-6 w-6"
+                                />
+                              </div>
+                            )}
+                            {!isEditingShareName && (
+                              <Pencil
+                                onClick={() => {
+                                  setIsEditingShareName((prev) => !prev);
+                                  setTimeout(() => {
+                                    inputRef.current?.focus();
+                                  }, 0);
+                                }}
+                                className="h-4 w-4 cursor-pointer"
+                              />
+                            )}
+                          </div>
+                        </div>
+                        {shareNameError && (
+                          <p className="text-red-500">{shareNameError}</p>
+                        )}
+                      </>
+                    </div>
+                  </div>
                   <div className="flex flex-row items-center gap-2">
-                    <div className="text-black">{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</div>
+                    <Link
+                      target="_blank"
+                      className="text-black underline"
+                      href={`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}
+                    >{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</Link>
                     <CopyText
                       textToCopy={`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}
                     />
@@ -255,12 +408,12 @@ export default function ShareDialog({
                       <MobileTooltip
                         trigger={<Info className="w-4 h-4 text-neutral-800" />}
                         content={
-                          <p>
+                          <span className="w-[200px]">
                             Checking this box will feature this item in the
                             /posts page. If you don't check it, the file will
                             still be public, but only users with the link will
                             be able to access it.
-                          </p>
+                          </span>
                         }
                       />
                     </div>
@@ -305,6 +458,7 @@ export default function ShareDialog({
                 )}
               </AlertDialogContent>
             ) : (
+              // when the share is not created yet
               <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-black text-2xl">
