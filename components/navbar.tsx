@@ -20,8 +20,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 export default function Navbar() {
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const { data: session, isPending } = authClient.useSession();
   const userData = session?.user;
   const pathname = usePathname();
@@ -47,21 +49,36 @@ export default function Navbar() {
                     className="w-10 h-6"
                   />
                   {isMobile && !isLanding ? (
-                    <DropdownMenu>
+                    <DropdownMenu
+                      open={isDropdownOpen}
+                      onOpenChange={() => setIsDropdownOpen((prev) => !prev)}
+                    >
                       <DropdownMenuTrigger className="flex items-center gap-1 text-xl font-semibold p-2 focus:outline-none">
-                        filegilla
-                        <ChevronDown className="w-4 h-4" />
+                        <span className="text-2xl font-semibold p-2">
+                          filegilla
+                        </span>
+                        <ChevronDown
+                          className={`w-5 h-5 stroke-[3.5] transition-transform duration-300 ease-in-out ${
+                            isDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="text-xl">
+                      <DropdownMenuContent>
                         <DropdownMenuItem
-                          onClick={() => router.push("/u")}
-                          className="cursor-pointer"
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            setTimeout(() => router.push("/u"), 100);
+                          }}
+                          className="cursor-pointer text-lg"
                         >
                           dashboard
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => router.push("/posts")}
-                          className="cursor-pointer"
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            setTimeout(() => router.push("/posts"), 100);
+                          }}
+                          className="cursor-pointer text-lg"
                         >
                           posts
                         </DropdownMenuItem>
