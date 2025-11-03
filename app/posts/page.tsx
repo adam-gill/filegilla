@@ -13,9 +13,9 @@ export const metadata: Metadata = {
     description: "view the public posts of filegilla",
     images: [
       {
-        url: "/ogLogo.png",
-        width: 244,
-        height: 144,
+        url: "/ogPostsImage.png",
+        width: 1200,
+        height: 630,
         alt: "filegilla posts",
       },
     ],
