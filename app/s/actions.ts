@@ -55,18 +55,6 @@ export const getSharedFile = async (
         "customtag" in metadata &&
         metadata["customtag"] === "filegilla document";
 
-      // Generate signed URL for inline viewing (no attachment disposition)
-      const viewCommand = new GetObjectCommand({
-        Bucket: S3_PUBLIC_BUCKET_NAME,
-        Key: key,
-        ResponseContentType: s3Response.ContentType,
-        ResponseContentDisposition: "inline",
-      });
-
-      const viewUrl = await getSignedUrl(s3Client, viewCommand, {
-        expiresIn: 3600,
-      });
-
       if (
         s3Response.ContentLength &&
         s3Response.ContentType &&
@@ -83,7 +71,7 @@ export const getSharedFile = async (
             fileType: s3Response.ContentType,
             lastModified: s3Response.LastModified,
             size: s3Response.ContentLength,
-            url: viewUrl,
+            url: response.s3Url,
             ownerId: response.ownerId ?? undefined,
             isFgDoc: isFgDoc,
           },

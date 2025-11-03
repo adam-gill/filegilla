@@ -21,6 +21,12 @@ const nextConfig = {
         port: "",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "filegilla-public.s3.us-east-1.amazonaws.com",
+        port: "",
+        pathname: "**",
+      },
     ],
   },
   outputFileTracingIncludes: {
