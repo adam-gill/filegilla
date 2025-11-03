@@ -9,7 +9,17 @@ export const metadata: Metadata = {
   title: "posts",
   description: "view the public posts of filegilla",
   openGraph: {
-    images: "/ogLogo.png",
+    title: "posts",
+    description: "view the public posts of filegilla",
+    images: [
+      {
+        url: "/ogLogo.png",
+        width: 1200,
+        height: 630,
+        alt: "filegilla posts",
+      },
+    ],
+    type: "website",
   },
 };
 
