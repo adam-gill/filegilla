@@ -21,7 +21,17 @@ export const metadata: Metadata = {
   },
   description: "store your stuff in the cloud",
   openGraph: {
-    images: "/ogLogo.png",
+    title: "filegilla",
+    description: "store your stuff in the cloud",
+    images: [
+      {
+        url: "/ogLogo.png",
+        width: 1200,
+        height: 630,
+        alt: "filegilla posts",
+      },
+    ],
+    type: "website",
   },
   icons: ["/logoFav.png"],
   metadataBase: new URL(

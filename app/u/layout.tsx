@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "dashboard",
-  description: "fileGilla dashboard",
+  description: "filegilla dashboard",
   openGraph: {
     images: "/ogLogo.png",
     },
