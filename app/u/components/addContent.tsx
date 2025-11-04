@@ -139,6 +139,8 @@ export default function AddContent({
         return;
       }
 
+      console.log("generating file preview");
+
       const formData = new FormData();
       formData.append("file", file);
 

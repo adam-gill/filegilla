@@ -271,10 +271,6 @@ export default function ShareDialog({
     setItemShareName(randomId());
   }, []);
 
-  useEffect(() => {
-    console.log("isFeatured: ", isFeatured);
-  }, [isFeatured]);
-
   return (
     <>
       <AlertDialog open={isShareOpen} onOpenChange={setIsShareOpen}>

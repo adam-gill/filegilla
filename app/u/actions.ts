@@ -756,6 +756,11 @@ export const getDownloadUrl = async (
 
 const removeUserIdFromPreviewKey = (key: string): string => {
   try {
+
+    if (!key) {
+      return "";
+    }
+
     const parts = key.split("/");
 
     if (parts.length !== 3) {
@@ -822,7 +827,7 @@ export const shareItem = async ({
       );
       return {
         success: false,
-        message: "share name already exists. please choose a different name.",
+        message: "share name already exists. please select a different name.",
       };
     } catch (error: any) {
       if (error.name !== "NotFound") {

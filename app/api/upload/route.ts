@@ -7,6 +7,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createPrivateS3Key } from "@/lib/aws/helpers";
+import { isFileTypeSupported } from "@/app/u/helpers";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
@@ -48,28 +49,49 @@ export async function POST(request: NextRequest) {
         const fileKey = createPrivateS3Key(userId, location, fileName);
         
         const previewId = crypto.randomUUID();
+        const previewSupported = isFileTypeSupported(file.type);
+
+        if (previewSupported) {
+          const uploadCommand = new PutObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: fileKey,
+            ContentType: file.type || 'application/octet-stream',
+            Metadata: {
+              preview: previewId,
+              previewKey: `preview/${userId}/${previewId}.webp`
+            }
+          });
+  
+          // Generate presigned URL (valid for 15 minutes)
+          const presignedUrl = await getSignedUrl(s3Client, uploadCommand, {
+            expiresIn: 900, // 15 minutes
+          });
+  
+          presignedUrls.push({
+            fileName: file.name,
+            url: presignedUrl,
+            key: fileKey,
+            previewId: previewId,
+          });
+        } else {
+          const uploadCommand = new PutObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: fileKey,
+            ContentType: file.type || 'application/octet-stream',
+          });
+  
+          // Generate presigned URL (valid for 15 minutes)
+          const presignedUrl = await getSignedUrl(s3Client, uploadCommand, {
+            expiresIn: 900, // 15 minutes
+          });
+  
+          presignedUrls.push({
+            fileName: file.name,
+            url: presignedUrl,
+            key: fileKey,
+          });
+        }
         
-        const uploadCommand = new PutObjectCommand({
-          Bucket: S3_BUCKET_NAME,
-          Key: fileKey,
-          ContentType: file.type || 'application/octet-stream',
-          Metadata: {
-            preview: previewId,
-            previewKey: `preview/${userId}/${previewId}.webp`
-          }
-        });
-
-        // Generate presigned URL (valid for 15 minutes)
-        const presignedUrl = await getSignedUrl(s3Client, uploadCommand, {
-          expiresIn: 900, // 15 minutes
-        });
-
-        presignedUrls.push({
-          fileName: file.name,
-          url: presignedUrl,
-          key: fileKey,
-          previewId: previewId,
-        });
       } catch (error) {
         console.error(`Failed to generate presigned URL for ${file.name}:`, error);
         return NextResponse.json(
