@@ -332,7 +332,7 @@ export default function Item({
 
   const handleItemOpen = () => {
     if (item.isFgDoc) {
-      router.push(`${pathname}/${item.name}?fg=1`);
+      router.push(`${pathname}/${item.name}`);
     } else {
       router.push(`${pathname}/${item.name}`);
     }
