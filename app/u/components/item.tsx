@@ -331,11 +331,7 @@ export default function Item({
   };
 
   const handleItemOpen = () => {
-    if (item.isFgDoc) {
-      router.push(`${pathname}/${item.name}`);
-    } else {
-      router.push(`${pathname}/${item.name}`);
-    }
+    router.push(`${pathname}/${item.name}`);
     setIsOptionsOpen(false);
   };
 
@@ -400,7 +396,7 @@ export default function Item({
                   <Image
                     onClick={handleItemOpen}
                     src={previewUrl || "/defaultPreview.svg"}
-                    alt={ previewUrl ? "default file preview" : "file preview"}
+                    alt={previewUrl ? "default file preview" : "file preview"}
                     fill
                     className="object-contain cursor-pointer"
                     sizes="318px"
