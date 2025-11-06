@@ -14,6 +14,7 @@ import Image from "next/image";
 import InfoDialog from "@/app/u/components/infoDialog";
 import { getHTMLContent } from "@/app/u/actions";
 import NoteWrapper from "@/app/u/components/noteWrapper";
+import dynamic from "next/dynamic";
 
 interface FileRendererProps {
   viewUrl: string;
@@ -26,6 +27,11 @@ interface FileRendererProps {
   setSyncStatus: Dispatch<SetStateAction<SyncStatuses>>;
   setFile: Dispatch<SetStateAction<FolderItem | undefined>>;
 }
+
+const PDFViewer = dynamic(() => import('./pdfViewer'), {
+  ssr: false,
+  loading: () => <div>Loading PDF...</div>
+});
 
 export default function FileRenderer({
   viewUrl,
@@ -168,57 +174,60 @@ export default function FileRenderer({
       );
 
     case "pdf":
-      return (
-        <div className="w-full rounded-lg border border-none h-full overflow-auto">
-          {isMobile ? (
-            <div className="flex flex-col h-full">
-              <object
-                data={`${viewUrl}#scrollbar=1&toolbar=0&navpanes=0&pagemode=none&view=FitV`}
-                type="application/pdf"
-                width="100%"
-                height={pageHeight - 285}
-                className="rounded-lg"
-                style={{
-                  backgroundColor: "white",
-                  overflow: "scroll",
-                }}
-              >
-                <p>
-                  {"Your browser doesn't support PDFs."}
-                  <a href={viewUrl} target="_blank" rel="noopener noreferrer">
-                    Download the PDF
-                  </a>
-                </p>
-              </object>
-              <div className="mt-2 flex w-full justify-end">
-                <Info onClick={() => setIsInfoOpen(true)} />
-              </div>
+      // Proxy the URL through our API to avoid CORS issues
+      const proxiedUrl = `/api/proxy-pdf?url=${encodeURIComponent(viewUrl)}`;
+      return <PDFViewer url={proxiedUrl} />;
+      // return (
+      //   <div className="w-full rounded-lg border border-none h-full overflow-auto">
+      //     {isMobile ? (
+      //       <div className="flex flex-col h-full">
+      //         <object
+      //           data={`${viewUrl}#scrollbar=1&toolbar=0&navpanes=0&pagemode=none&view=FitV`}
+      //           type="application/pdf"
+      //           width="100%"
+      //           height={pageHeight - 285}
+      //           className="rounded-lg"
+      //           style={{
+      //             backgroundColor: "white",
+      //             overflow: "scroll",
+      //           }}
+      //         >
+      //           <p>
+      //             {"Your browser doesn't support PDFs."}
+      //             <a href={viewUrl} target="_blank" rel="noopener noreferrer">
+      //               Download the PDF
+      //             </a>
+      //           </p>
+      //         </object>
+      //         <div className="mt-2 flex w-full justify-end">
+      //           <Info onClick={() => setIsInfoOpen(true)} />
+      //         </div>
 
-              <InfoDialog
-                isInfoOpen={isInfoOpen}
-                item={undefined}
-                setIsInfoOpen={setIsInfoOpen}
-              />
-            </div>
-          ) : (
-            <iframe
-              src={`${viewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
-              className="w-full rounded-lg"
-              title={fileName}
-              onError={handleError}
-              style={{
-                border: 0,
-                height: pageHeight,
-                minHeight: isMobile
-                  ? `${pageHeight - 200}px`
-                  : `${pageHeight - 350}px`,
-                width: "100%",
-                overflow: "hidden",
-              }}
-            />
-          )}
-        </div>
-      );
+      //         <InfoDialog
+      //           isInfoOpen={isInfoOpen}
+      //           item={undefined}
+      //           setIsInfoOpen={setIsInfoOpen}
+      //         />
+      //       </div>
+      //     ) : (
+      //       <iframe
+      //         src={`${viewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+      //         className="w-full rounded-lg"
+      //         title={fileName}
+      //         onError={handleError}
+      //         style={{
+      //           border: 0,
+      //           height: pageHeight,
+      //           minHeight: isMobile
+      //             ? `${pageHeight - 200}px`
+      //             : `${pageHeight - 350}px`,
+      //           width: "100%",
+      //           overflow: "hidden",
+      //         }}
+      //       />
+      //     )}
+      //   </div>
+      // );
 
     case "document":
       return (
