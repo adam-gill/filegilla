@@ -1,34 +1,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { auth } from "./lib/auth/auth";
 
 const protectedRoutes = ["/u", "/test", "/note"];
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
-  let sessionToken;
-
-  // block test page in production
-  if (process.env.NODE_ENV === "production" && pathname === "/test") {
-    return NextResponse.redirect(new URL("/auth", request.url));
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    sessionToken = request.cookies.get("__Secure-better-auth.session_token");
-  } else {
-    sessionToken = request.cookies.get("better-auth.session_token");
-  }
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  })
 
   if (isProtectedRoute) {
-    if (!sessionToken) {
+    if (!session) {
       return NextResponse.redirect(new URL("/auth", request.url));
     }
   } else {
-    if (pathname === "/" && sessionToken) {
+    if (pathname === "/" && session) {
       return NextResponse.redirect(new URL("/u", request.url));
     }
   }
