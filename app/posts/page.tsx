@@ -55,7 +55,7 @@ async function PostsList() {
 export default function Posts() {
   return (
     <main>
-      <Container className="mt-16">
+      <Container className="mt-16 pb-8">
         <Suspense
           fallback={
             <div>

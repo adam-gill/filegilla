@@ -186,3 +186,45 @@ export const getOgData = async (
     return { success: false };
   }
 };
+
+export const incrementShareViews = async (
+  shareName: string
+): Promise<{ success: boolean; message?: string, views?: number }> => {
+  try {
+    if (!shareName) {
+      return { success: false, message: "No share name provided." };
+    }
+
+    const shareObject = await prisma.share.findUnique({
+      where: {
+        shareName: shareName,
+      },
+    });
+
+    if (!shareObject) {
+      return { success: false, message: "Share not found." };
+    }
+
+    const updatedViews = Number(shareObject.views) + 1;
+    await prisma.share.update({
+      where: {
+        shareName: shareName,
+      },
+      data: {
+        views: updatedViews,
+      },
+    });
+
+    console.log(
+      `Views incremented successfully. ${shareName} now has ${updatedViews} views.`
+    );
+    return {
+      success: true,
+      message: `Views incremented successfully. ${shareName} now has ${updatedViews} views.`,
+      views: Number(updatedViews - 1),
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Failed to increment views." };
+  }
+};

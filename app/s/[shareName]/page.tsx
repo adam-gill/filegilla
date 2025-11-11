@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { getOgData, getSharedFile } from "../actions";
+import { getOgData, getSharedFile, incrementShareViews } from "../actions";
 import { Suspense } from "react";
 import SharedFileViewer from "../components/sharedFileViewer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,9 +15,7 @@ export async function generateMetadata({
   const shareName = (await params).shareName;
   const { username, imgUrl, views } = await getOgData(shareName);
 
-  const sharedBy = username
-    ? `shared by ${username}`
-    : `shared on filegilla`;
+  const sharedBy = username ? `shared by ${username}` : `shared on filegilla`;
 
   const viewsLabel = viewsText(Number(views));
   const description = `${sharedBy}${viewsLabel ? ` | ${viewsLabel}` : ""}`;
@@ -73,16 +71,13 @@ const LoadingScreen = () => {
 async function ShareContent({ shareName }: { shareName: string }) {
   const { initialFile } = await getSharedFile(shareName);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  const response = await fetch(`${baseUrl}/api/views`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ shareName: shareName }),
-  });
-  const data = await response.json();
-  const views = data.views;
+  const { success, message, views } = await incrementShareViews(shareName);
+
+  if (!success) {
+    console.error(
+      `Failed to increment views for share '${shareName}': ${message}`
+    );
+  }
 
   if (!initialFile) {
     return (

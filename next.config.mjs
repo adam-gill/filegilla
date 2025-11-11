@@ -6,6 +6,7 @@ const nextConfig = {
       bodySizeLimit: "4mb"
     }
   },
+  output: "standalone",
   reactStrictMode: true,
   images: {
     remotePatterns: [
