@@ -18,6 +18,10 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+
+# Install system packages required for image/video/pdf processing during build (if needed)
+RUN apk add --no-cache ffmpeg imagemagick ghostscript
+
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

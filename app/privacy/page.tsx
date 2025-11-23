@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const Privacy = () => {
   return (
     <>
-      <div className="min-h-screen text-gray-300">
+      <div className="min-h-screen pt-16 text-gray-300">
         <main className="container mx-auto px-4 py-8 max-w-3xl">
           <h1 className="text-3xl font-bold text-white mb-6">
             Privacy Policy for FileGilla

@@ -699,12 +699,12 @@ export default function Item({
         <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-black text-2xl">
-              {`delete '${item.name}'`}
+              {`delete '${truncateFileName(item.name)}'`}
             </AlertDialogTitle>
             <AlertDialogDescription className="!text-gray-600 text-base">
               {item.type === "file"
-                ? `this will permanently delete ${item.name}`
-                : `this will permanently delete ${item.name} and all of its contents`}
+                ? `this will permanently delete ${truncateFileName(item.name)}`
+                : `this will permanently delete ${truncateFileName(item.name)} and all of its contents`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

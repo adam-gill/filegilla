@@ -144,7 +144,7 @@ export default function AddContent({
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("https://api.filegilla.com/previewImage", {
+      const response = await fetch("/api/preview", {
         method: "POST",
         body: formData,
       });
@@ -157,7 +157,7 @@ export default function AddContent({
       const arrayBuffer = await blob.arrayBuffer();
 
       const contentDisposition = response.headers.get("Content-Disposition");
-      const filenameMatch = contentDisposition?.match(/filename="?(.+)"?/i);
+      const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/i);
       const filename = filenameMatch?.[1] || "preview.webp";
 
       const { success, url } = await setFilePreviewBackend(
