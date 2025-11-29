@@ -19,7 +19,6 @@ export const Link = TiptapLink.extend({
     const { editor } = this
 
     return [
-      // @ts-expect-error - Tiptap types are not fully compatible with TypeScript
       ...(this.parent?.() || []),
       new Plugin({
         props: {

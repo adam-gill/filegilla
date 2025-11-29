@@ -46,7 +46,10 @@ export default function SharedFileViewer({
   const [mounted, setMounted] = useState(false);
   const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const filegillaLink = `${process.env.NEXT_PUBLIC_APP_URL!}/s/${shareName}`;
+  const filegillaLink =
+    process.env.NODE_ENV === "production"
+      ? `$https://filegilla.com/s/${shareName}`
+      : `http://localhost:3000/s/${shareName}`;
   const { data: session } = authClient.useSession();
 
   // Set mounted to true on client to prevent hydration mismatch
