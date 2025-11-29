@@ -60,7 +60,7 @@ export default function ShareDialog({
   const [savedShareName, setSavedShareName] = useState<string>("");
   const filegillaLink =
     process.env.NODE_ENV === "production"
-      ? `$https://filegilla.com/s/${itemShareName}`
+      ? `https://filegilla.com/s/${itemShareName}`
       : `http://localhost:3000/s/${itemShareName}`;
   const router = useRouter();
 

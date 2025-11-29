@@ -48,7 +48,7 @@ export default function SharedFileViewer({
   const router = useRouter();
   const filegillaLink =
     process.env.NODE_ENV === "production"
-      ? `$https://filegilla.com/s/${shareName}`
+      ? `https://filegilla.com/s/${shareName}`
       : `http://localhost:3000/s/${shareName}`;
   const { data: session } = authClient.useSession();
 
