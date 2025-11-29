@@ -38,3 +38,6 @@ next-env.d.ts
 
 # misc
 notes.txt
+
+# prisma client generated files
+/prisma/generated/

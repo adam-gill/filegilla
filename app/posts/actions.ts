@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { share } from "@prisma/client";
+import { share } from "@/prisma/generated/client";
 import { HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createFullPreviewUrl } from "@/lib/helpers";
