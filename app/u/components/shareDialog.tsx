@@ -58,6 +58,10 @@ export default function ShareDialog({
   );
   const [isEditingShareName, setIsEditingShareName] = useState<boolean>(false);
   const [savedShareName, setSavedShareName] = useState<string>("");
+  const filegillaLink =
+    process.env.NODE_ENV === "production"
+      ? `https://filegilla.com/s/${itemShareName}`
+      : `http://localhost:3000/s/${itemShareName}`;
   const router = useRouter();
 
   const handleItemShare = async () => {
@@ -277,26 +281,26 @@ export default function ShareDialog({
         {isLoading ? (
           // when the share is loading
           <>
-            <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+            <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-black text-2xl">
-                  <Skeleton className="h-7 w-3/5 !bg-neutral-900/10" />
+                  <Skeleton className="h-7 w-3/5 bg-neutral-900/10!" />
                 </AlertDialogTitle>
-                <AlertDialogDescription className="!text-transparent absolute text-base">
+                <AlertDialogDescription className="text-transparent! absolute text-base">
                   loading...
                 </AlertDialogDescription>
-                <Skeleton className="h-10 w-4/5 !bg-neutral-900/10 my-4" />
+                <Skeleton className="h-10 w-4/5 bg-neutral-900/10! my-4" />
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="!m-0 !bg-transparent focus-visible:!ring-black focus-visible:!ring-2 border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
+                <AlertDialogCancel className="m-0! bg-transparent! focus-visible:ring-black! focus-visible:ring-2! border-none shadow-none hover:bg-neutral-200! absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer">
                   <X className="text-black stroke-3 hover:scale-110 trans" />
                 </AlertDialogCancel>
 
-                <Skeleton className="w-[93px] h-[45px] !bg-neutral-900/10 !mr-3" />
+                <Skeleton className="w-[93px] h-[45px] bg-neutral-900/10! mr-3!" />
                 <AlertDialogAction
                   onClick={handleItemShare}
                   disabled={isLoading}
-                  className="text-base !bg-neutral-900/10 !text-transparent border-none animate-pulse"
+                  className="text-base bg-neutral-900/10! text-transparent! border-none animate-pulse"
                 >
                   share
                 </AlertDialogAction>
@@ -307,7 +311,7 @@ export default function ShareDialog({
           // this is when the share exists, essentially the share's settings
           <>
             {itemShareUrl ? (
-              <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+              <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-black text-2xl max-w-[318px]">
                     {`${
@@ -316,7 +320,7 @@ export default function ShareDialog({
                         : `${itemShareName}`
                     } `}
                   </AlertDialogTitle>
-                  <AlertDialogDescription className="!text-gray-600 text-base">
+                  <AlertDialogDescription className="text-gray-600! text-base">
                     shared with the world
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -378,15 +382,13 @@ export default function ShareDialog({
                     <Link
                       target="_blank"
                       className="text-black underline"
-                      href={`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}
-                    >{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</Link>
-                    <CopyText
-                      textToCopy={`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}
-                    />
+                      href={filegillaLink}
+                    >{filegillaLink}</Link>
+                    <CopyText textToCopy={filegillaLink} />
                   </div>
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <Skeleton className="h-[20px] w-[125px]" />
+                      <Skeleton className="h-5 w-[125px]" />
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">
@@ -418,7 +420,7 @@ export default function ShareDialog({
                 <AlertDialogFooter>
                   <AlertDialogCancel
                     onClick={() => setIsConfirmDelete(false)}
-                    className="!m-0 !bg-transparent focus-visible:!ring-black focus-visible:!ring-2 border-none shadow-none hover:!bg-neutral-200 absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer"
+                    className="m-0! bg-transparent! focus-visible:ring-black! focus-visible:ring-2! border-none shadow-none hover:bg-neutral-200! absolute trans top-2 right-2 w-8 h-8 p-0 cursor-pointer"
                   >
                     <X className="text-black stroke-3 hover:scale-110 trans" />
                   </AlertDialogCancel>
@@ -427,7 +429,7 @@ export default function ShareDialog({
                     onClick={() => setIsConfirmDelete(true)}
                     className={`${
                       isConfirmDelete ? "hidden" : "flex"
-                    } focus-visible:!ring-black !m-0 focus-visible:!ring-2 text-base !bg-red-600/80 hover:!bg-red-500/90 cursor-pointer trans !text-white border-none trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed`}
+                    } focus-visible:ring-black! m-0! focus-visible:ring-2! text-base bg-red-600/80! hover:bg-red-500/90! cursor-pointer trans !text-white! border-none trans disabled:bg-gray-300! disabled:text-gray-500! disabled:cursor-not-allowed`}
                   >
                     <Trash2 />
                   </Button>
@@ -441,8 +443,8 @@ export default function ShareDialog({
                       !itemShareName.trim() || isLoading || !!validationError
                     }
                     className={`${
-                      isConfirmDelete ? "!flex mb-2" : "!hidden"
-                    } focus-visible:!ring-black focus-visible:!ring-2 text-base !bg-red-600/80 hover:!bg-red-500/90 cursor-pointer trans !text-white border-none trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed`}
+                      isConfirmDelete ? "flex! mb-2" : "hidden!"
+                    } focus-visible:ring-black! focus-visible:ring-2! text-base bg-red-600/80! hover:bg-red-500/90! cursor-pointer trans text-white! border-none trans disabled:bg-gray-300! disabled:text-gray-500! disabled:cursor-not-allowed`}
                   >
                     confirm delete?
                   </AlertDialogAction>
@@ -455,19 +457,19 @@ export default function ShareDialog({
               </AlertDialogContent>
             ) : (
               // when the share is not created yet
-              <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+              <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-black text-2xl">
                     {`share ${truncateFileName(item.name)}`}
                   </AlertDialogTitle>
-                  <AlertDialogDescription className="!text-gray-600 text-base text-left">
+                  <AlertDialogDescription className="text-gray-600! text-base text-left">
                     create a permalink for{" "}
                     <strong>{truncateFileName(item.name)}</strong>, or leave it
                     random. this will be accessible to anyone with the link.
                   </AlertDialogDescription>
                   <div className="text-black text-left text-wrap max-w-[380px]">
                     {`preview:`}{" "}
-                    <strong>{`${process.env.NEXT_PUBLIC_APP_URL}/s/${itemShareName}`}</strong>
+                    <strong>{filegillaLink}</strong>
                   </div>
                 </AlertDialogHeader>
                 <div>
@@ -523,7 +525,7 @@ export default function ShareDialog({
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel
-                    className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
+                    className="focus-visible:ring-blue-500! focus-visible:ring-2! text-base bg-transparent! cursor-pointer text-black! hover:bg-blue-100! trans"
                     disabled={isLoading}
                     onClick={() => {
                       setValidationError("");
@@ -537,7 +539,7 @@ export default function ShareDialog({
                     disabled={
                       !itemShareName.trim() || isLoading || !!validationError
                     }
-                    className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-[linear-gradient(to_left,#f3f4f6,#60a5fa,#1d4ed8)] cursor-pointer hover:scale-105 trans !text-black border-none hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+                    className="focus-visible:ring-blue-500! focus-visible:ring-2! text-base bg-[linear-gradient(to_left,#f3f4f6,#60a5fa,#1d4ed8)]! cursor-pointer hover:scale-105 trans text-black! border-none hover:bg-white! hover:border-black! hover:text-black! trans disabled:bg-gray-300! disabled:text-gray-500! disabled:cursor-not-allowed"
                   >
                     {isLoading ? "sharing..." : "share"}
                   </AlertDialogAction>

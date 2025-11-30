@@ -46,7 +46,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import ShareDialog from "@/app/u/components/shareDialog";
-import { getFileType } from "@/app/u/helpers";
+import { getFileType, truncateFileName } from "@/app/u/helpers";
 import GetFileIcon from "@/app/u/components/getFileIcon";
 import InfoDialog from "@/app/u/components/infoDialog";
 import FileRenderer from "@/app/u/components/fileRenderer";
@@ -551,10 +551,10 @@ export default function FileViewer({ location }: FileViewerProps) {
         <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-black text-2xl">
-              {`delete '${file?.name}'`}
+              {`delete '${truncateFileName(file?.name || "")}'`}
             </AlertDialogTitle>
             <AlertDialogDescription className="!text-gray-600 text-base">
-              {`this will permanently delete ${file?.name}`}
+              {`this will permanently delete ${truncateFileName(file?.name || "")}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
