@@ -7,11 +7,13 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma
 RUN npm ci
 RUN npx prisma generate
+RUN npx next telemetry disable
 
 # Stage 2: Build the application
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma/generated ./prisma/generated
 COPY . .
 RUN npm run build
 
@@ -26,6 +28,8 @@ RUN apk add --no-cache ffmpeg imagemagick ghostscript
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma/generated ./prisma/generated
+
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]
