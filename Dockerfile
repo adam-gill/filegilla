@@ -15,6 +15,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma/generated ./prisma/generated
 COPY . .
+RUN npx next telemetry disable
 RUN npm run build
 
 # Stage 3: Production server
