@@ -71,7 +71,7 @@ export default function Navbar() {
                           }}
                           className="cursor-pointer text-lg"
                         >
-                          dashboard
+                          dashboardP
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
