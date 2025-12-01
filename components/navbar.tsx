@@ -71,7 +71,7 @@ export default function Navbar() {
                           }}
                           className="cursor-pointer text-lg"
                         >
-                          dashboardP
+                          dashboard
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
@@ -98,7 +98,7 @@ export default function Navbar() {
                       href="/u"
                       className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                     >
-                      dashboard
+                      dashboardP
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
