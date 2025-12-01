@@ -655,7 +655,7 @@ export default function AddContent({
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="!z-100 w-56 !bg-gray-900 border border-gray-600 !rounded-lg !shadow-lg !shadow-gray-800 p-1">
+        <DropdownMenuContent className="z-100! w-56 !bg-gray-900 border border-gray-600 !rounded-lg !shadow-lg !shadow-gray-800 p-1">
           <DropdownMenuItem
             className="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-gray-800 rounded cursor-pointer outline-none"
             onSelect={() => {
