@@ -650,7 +650,7 @@ export default function AddContent({
             ) : (
               <>
                 <Plus className="w-8 h-8 mr-2" strokeWidth={2} />
-                aDD
+                add
               </>
             )}
           </Button>
