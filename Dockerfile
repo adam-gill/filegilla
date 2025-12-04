@@ -21,7 +21,11 @@ RUN npm run build
 # Stage 3: Production server
 FROM base AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV DEBUG=*
+ENV NODE_OPTIONS="--trace-warnings"
 
 # Install system packages required for image/video/pdf processing during build (if needed)
 RUN apk add --no-cache ffmpeg imagemagick ghostscript
@@ -33,4 +37,4 @@ COPY --from=builder /app/prisma/generated ./prisma/generated
 
 
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]
