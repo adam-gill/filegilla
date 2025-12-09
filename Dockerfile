@@ -24,8 +24,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DEBUG=*
-ENV NODE_OPTIONS="--trace-warnings"
 
 # Install system packages required for image/video/pdf processing during build (if needed)
 RUN apk add --no-cache ffmpeg imagemagick ghostscript
