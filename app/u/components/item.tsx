@@ -387,7 +387,7 @@ export default function Item({
     <>
       <ContextMenu>
         <ContextMenuTrigger>
-          <Card className="max-w-full group relative w-xs max-md:w-3xs border !border-neutral-700 hover:border-blue-400 transition-all duration-200 shadow-md shadow-neutral-900 hover:shadow-xl">
+          <Card className="max-w-full group relative w-xs max-md:w-3xs border border-neutral-700! hover:border-blue-400 transition-all duration-200 shadow-md shadow-neutral-900 hover:shadow-xl">
             <CardContent
               className={`p-0 h-full flex flex-col-reverse relative ${item.type === "file" ? "flex-col-reverse" : "flex-col"}`}
             >
@@ -411,7 +411,7 @@ export default function Item({
               >
                 {/* Icon and Name */}
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {item.type === "folder" ? (
                       <Folder className="w-5 h-5 text-blue-400" />
                     ) : (
@@ -435,7 +435,7 @@ export default function Item({
                 </div>
 
                 {/* Options Button - Always visible */}
-                <div className="flex-shrink-0 ml-2 relative" ref={dropdownRef}>
+                <div className="shrink-0 ml-2 relative" ref={dropdownRef}>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -447,11 +447,11 @@ export default function Item({
 
                   {/* Dropdown Menu */}
                   {isOptionsOpen && (
-                    <div className="absolute bg-black right-0 top-full mt-1 min-w-[200px] rounded-md shadow-lg border !z-100 border-neutral-700">
+                    <div className="absolute bg-black right-0 top-full mt-1 min-w-[200px] rounded-md shadow-lg border z-100! border-neutral-700">
                       <div className="px-1 pt-1">
                         <Button
                           onClick={handleItemOpen}
-                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                          className="w-full flex justify-start bg-black! text-gray-100! border-none cursor-pointer hover:bg-gray-700!"
                         >
                           <SquareArrowOutUpRight className="mr-2 h-4 w-4 text-neutral-400" />
                           open
@@ -461,7 +461,7 @@ export default function Item({
                             setIsRenameOpen(true);
                             setIsOptionsOpen(false);
                           }}
-                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                          className="w-full flex justify-start bg-black! text-gray-100! border-none cursor-pointer hover:bg-gray-700!"
                         >
                           <Edit className="mr-2 h-4 w-4 text-neutral-400" />
                           rename
@@ -474,7 +474,7 @@ export default function Item({
                               setIsMoveOpen(true);
                             }, 100);
                           }}
-                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                          className="w-full flex justify-start bg-black! text-gray-100! border-none cursor-pointer hover:bg-gray-700!"
                         >
                           <FolderInput className="mr-2 h-4 w-4 text-neutral-400" />
                           move
@@ -482,7 +482,7 @@ export default function Item({
 
                         <Button
                           onClick={handleDownload}
-                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                          className="w-full flex justify-start bg-black! text-gray-100! border-none cursor-pointer hover:bg-gray-700!"
                         >
                           <Download className="mr-2 h-4 w-4 text-neutral-400" />
                           download
@@ -491,7 +491,7 @@ export default function Item({
                         {item.type === "file" && (
                           <Button
                             onClick={handleItemCopyAndPaste}
-                            className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                            className="w-full flex justify-start bg-black! text-gray-100! border-none cursor-pointer hover:bg-gray-700!"
                           >
                             <Copy className="mr-2 h-4 w-4 text-neutral-400" />
                             make a copy
@@ -504,7 +504,7 @@ export default function Item({
                               setIsOptionsOpen(false);
                               setIsShareOpen(true);
                             }}
-                            className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                            className="w-full flex justify-start bg-black! text-gray-100! border-none cursor-pointer hover:bg-gray-700!"
                           >
                             <Share className="mr-2 h-4 w-4 text-neutral-400" />
                             share
@@ -516,7 +516,7 @@ export default function Item({
                             setIsInfoOpen(true);
                             setIsOptionsOpen(false);
                           }}
-                          className="w-full flex justify-start !bg-black !text-gray-100 border-none cursor-pointer hover:!bg-gray-700"
+                          className="w-full flex justify-start bg-black! text-gray-100! border-none cursor-pointer hover:bg-gray-700!"
                         >
                           <Info className="mr-2 h-4 w-4 text-neutral-400" />
                           more info
@@ -526,7 +526,7 @@ export default function Item({
 
                       <div className="px-1 pb-1">
                         <Button
-                          className="w-full flex justify-start cursor-pointer border-none !text-gray-100 !bg-red-600/50 hover:!bg-red-600/80 trans"
+                          className="w-full flex justify-start cursor-pointer border-none text-gray-100! bg-red-600/50! hover:bg-red-600/80! trans"
                           onClick={handleDeletionClick}
                         >
                           <Trash2 className="mr-2 h-4 w-4 text-neutral-400" />
@@ -542,10 +542,10 @@ export default function Item({
         </ContextMenuTrigger>
 
         {/* Right-click Context Menu */}
-        <ContextMenuContent className="!z-100 min-w-[200px] bg-black rounded-md shadow-lg border border-neutral-700 p-1">
+        <ContextMenuContent className="z-100! min-w-[200px] bg-black rounded-md shadow-lg border border-neutral-700 p-1">
           <ContextMenuItem
             onClick={handleItemOpen}
-            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
           >
             <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
             open
@@ -555,7 +555,7 @@ export default function Item({
               setIsRenameOpen(true);
               setIsOptionsOpen(false);
             }}
-            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
           >
             <Edit className="mr-2 h-4 w-4" />
             rename
@@ -568,7 +568,7 @@ export default function Item({
                 setIsMoveOpen(true);
               }, 100);
             }}
-            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
           >
             <FolderInput className="mr-2 h-4 w-4" />
             move
@@ -576,7 +576,7 @@ export default function Item({
 
           <ContextMenuItem
             onClick={handleDownload}
-            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
           >
             <Download className="mr-2 h-4 w-4" />
             download
@@ -585,7 +585,7 @@ export default function Item({
           {item.type === "file" && (
             <ContextMenuItem
               onClick={handleItemCopyAndPaste}
-              className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+              className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
             >
               <Copy className="mr-2 h-4 w-4" />
               make a copy
@@ -595,7 +595,7 @@ export default function Item({
           {item.type === "file" && (
             <ContextMenuItem
               onClick={() => setIsShareOpen(true)}
-              className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+              className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
             >
               <Share className="mr-2 h-4 w-4" />
               share
@@ -607,7 +607,7 @@ export default function Item({
               setIsInfoOpen(true);
               setIsOptionsOpen(false);
             }}
-            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:!bg-gray-700 rounded-sm text-gray-100"
+            className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
           >
             <Info className="mr-2 h-4 w-4" />
             more info
@@ -617,7 +617,7 @@ export default function Item({
 
           <ContextMenuItem
             onClick={handleDeletionClick}
-            className="cursor-pointer flex items-center px-3 py-2 text-sm bg-red-600/50 hover:!bg-red-600/80 trans text-gray-100 rounded-sm"
+            className="cursor-pointer flex items-center px-3 py-2 text-sm bg-red-600/50 hover:bg-red-600/80! trans text-gray-100 rounded-sm"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             delete
@@ -627,12 +627,12 @@ export default function Item({
 
       {/* Rename Dialog */}
       <AlertDialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
-        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+        <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-black text-2xl">
               {`rename ${item.type}`}
             </AlertDialogTitle>
-            <AlertDialogDescription className="!text-gray-600 text-base">
+            <AlertDialogDescription className="text-gray-600! text-base">
               {`enter a new name for ${truncateFileName(item.name)}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -662,7 +662,7 @@ export default function Item({
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
-              className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
+              className="focus-visible:ring-blue-500! focus-visible:ring-2! text-base bg-transparent! cursor-pointer text-black! hover:bg-blue-100! trans"
               disabled={isLoading}
               onClick={() => {
                 setValidationError("");
@@ -678,7 +678,7 @@ export default function Item({
                 !!validationError ||
                 removeFileExtension(item.name) === renameName
               }
-              className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+              className="focus-visible:ring-blue-500! focus-visible:ring-2! text-base bg-black! cursor-pointer text-white! hover:bg-white! hover:border-black! hover:text-black! trans disabled:bg-gray-300! disabled:text-gray-500! disabled:cursor-not-allowed"
             >
               {isLoading ? "renaming..." : "rename"}
             </AlertDialogAction>
@@ -696,24 +696,24 @@ export default function Item({
 
       {/* Delete Dialog */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+        <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-black text-2xl">
               {`delete '${truncateFileName(item.name)}'`}
             </AlertDialogTitle>
-            <AlertDialogDescription className="!text-gray-600 text-base">
+            <AlertDialogDescription className="text-gray-600! text-base">
               {item.type === "file"
                 ? `this will permanently delete ${truncateFileName(item.name)}`
                 : `this will permanently delete ${truncateFileName(item.name)} and all of its contents`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
+            <AlertDialogCancel className="focus-visible:ring-neutral-900! focus-visible:ring-2! text-base bg-transparent! cursor-pointer text-black! hover:bg-blue-100! trans">
               cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleItemDeletion}
-              className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+              className="focus-visible:ring-neutral-900! focus-visible:ring-2! text-base bg-red-600/85!  cursor-pointer text-white! hover:bg-white! hover:border-black! hover:text-black! trans disabled:bg-gray-300! disabled:text-gray-500! disabled:cursor-not-allowed"
             >
               delete
             </AlertDialogAction>
