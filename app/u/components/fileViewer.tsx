@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileMetadata, FolderItem } from "@/app/u/types";
 import {
+  delay,
   formatBytes,
   formatDate,
   getFileExtension,
@@ -160,7 +161,6 @@ export default function FileViewer({ location }: FileViewerProps) {
       try {
         const itemName = file.name;
         const fullRenameName = renameName + getFileExtension(itemName);
-        console.log(fullRenameName);
 
         setFile({
           ...file,
@@ -176,9 +176,16 @@ export default function FileViewer({ location }: FileViewerProps) {
         );
 
         if (success) {
-          router.replace(
-            `/u/${location.slice(0, -1).join("/")}/${fullRenameName}`
-          );
+          if (file.isFgDoc) {
+            await delay(500); // bandage fix, next redirects to old page after the redirect for some reason
+            router.replace(
+              `/u/${location.slice(0, -1).join("/")}/${fullRenameName}`
+            );
+          } else {
+            router.replace(
+              `/u/${location.slice(0, -1).join("/")}/${fullRenameName}`
+            );
+          }
           toast({
             title: "success!",
             description: message,
@@ -288,11 +295,11 @@ export default function FileViewer({ location }: FileViewerProps) {
                 <Skeleton className="w-[300px] h-6" />
               </div>
               <div className="w-1/2 max-md:w-1/5 flex items-start justify-end gap-4">
-                <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                <Skeleton className="w-[52px] h-[40px]" />
+                <Skeleton className="w-14 h-10 max-md:hidden" />
+                <Skeleton className="w-14 h-10 max-md:hidden" />
+                <Skeleton className="w-14 h-10 max-md:hidden" />
+                <Skeleton className="w-14 h-10 max-md:hidden" />
+                <Skeleton className="w-14 h-10" />
               </div>
             </div>
             <Skeleton className="w-full h-[600px] mt-8" />
@@ -384,7 +391,7 @@ export default function FileViewer({ location }: FileViewerProps) {
                   }}
                   variant="outline"
                   size="sm"
-                  className="!bg-red-600/85 border-gray-600 text-gray-300 hover:!bg-red-600 cursor-pointer"
+                  className="bg-red-600/85! border-gray-600 text-gray-300 hover:bg-red-600! cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -486,12 +493,12 @@ export default function FileViewer({ location }: FileViewerProps) {
 
       {/* Rename Dialog */}
       <AlertDialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
-        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+        <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-black text-2xl">
               rename file
             </AlertDialogTitle>
-            <AlertDialogDescription className="!text-gray-600 text-base">
+            <AlertDialogDescription className="text-gray-600! text-base">
               {file?.name && `enter a new name for ${file.name}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -521,7 +528,7 @@ export default function FileViewer({ location }: FileViewerProps) {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
-              className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans"
+              className="focus-visible:ring-blue-500! focus-visible:ring-2! text-base bg-transparent! cursor-pointer text-black! hover:bg-blue-100! trans"
               disabled={isRenaming}
               onClick={() => {
                 setValidationError("");
@@ -538,7 +545,7 @@ export default function FileViewer({ location }: FileViewerProps) {
                 !!validationError ||
                 removeFileExtension(file?.name) === renameName
               }
-              className="focus-visible:!ring-blue-500 focus-visible:!ring-2 text-base !bg-black cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+              className="focus-visible:ring-blue-500! focus-visible:ring-2! text-base bg-black! cursor-pointer text-white! hover:bg-white! hover:border-black! hover:text-black! trans disabled:bg-gray-300! disabled:text-gray-500! disabled:cursor-not-allowed"
             >
               {isRenaming ? "Renaming..." : "Rename"}
             </AlertDialogAction>
@@ -548,22 +555,22 @@ export default function FileViewer({ location }: FileViewerProps) {
 
       {/* Delete Dialog */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent className="!bg-white shadow-2xl shadow-gray-600 text-gray-200">
+        <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-black text-2xl">
               {`delete '${truncateFileName(file?.name || "")}'`}
             </AlertDialogTitle>
-            <AlertDialogDescription className="!text-gray-600 text-base">
+            <AlertDialogDescription className="text-gray-600! text-base">
               {`this will permanently delete ${truncateFileName(file?.name || "")}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-transparent cursor-pointer !text-black hover:!bg-blue-100 trans">
+            <AlertDialogCancel className="focus-visible:ring-neutral-900! focus-visible:ring-2! text-base bg-transparent! cursor-pointer text-black! hover:bg-blue-100! trans">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleItemDeletion}
-              className="focus-visible:!ring-neutral-900 focus-visible:!ring-2 text-base !bg-red-600/85  cursor-pointer !text-white hover:!bg-white hover:!border-black hover:!text-black trans disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed"
+              className="focus-visible:ring-neutral-900! focus-visible:ring-2! text-base bg-red-600/85!  cursor-pointer text-white! hover:bg-white! hover:border-black! hover:text-black! trans disabled:bg-gray-300! disabled:text-gray-500! disabled:cursor-not-allowed"
             >
               Delete
             </AlertDialogAction>

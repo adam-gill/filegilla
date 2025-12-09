@@ -158,15 +158,15 @@ export default function NoteWrapper({
       ) : (
         <div className="flex flex-col">
           <div className="flex px- w-full">
-            <Skeleton className="h-8 w-full !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-full bg-neutral-700/30!" />
           </div>
           <div className="flex flex-col gap-y-4 mt-10">
-            <Skeleton className="h-8 w-[90%] !bg-neutral-700/30" />
-            <Skeleton className="h-8 w-[50%] !bg-neutral-700/30" />
-            <Skeleton className="h-8 w-[40%] !bg-neutral-700/30" />
-            <Skeleton className="h-8 w-[60%] !bg-neutral-700/30" />
-            <Skeleton className="h-8 w-[30%] !bg-neutral-700/30" />
-            <Skeleton className="h-8 w-[40%] !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-[90%] bg-neutral-700/30!" />
+            <Skeleton className="h-8 w-[50%] bg-neutral-700/30!" />
+            <Skeleton className="h-8 w-[40%] bg-neutral-700/30!" />
+            <Skeleton className="h-8 w-[60%] bg-neutral-700/30!" />
+            <Skeleton className="h-8 w-[30%] bg-neutral-700/30!" />
+            <Skeleton className="h-8 w-[40%] bg-neutral-700/30!" />
           </div>
         </div>
       )}

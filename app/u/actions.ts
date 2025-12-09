@@ -308,6 +308,36 @@ export const renameItem = async (
         })
       );
 
+      const maxAttempts = 5;
+      let newKeyReady = false;
+      let attempt = 0;
+
+      while (attempt < maxAttempts && !newKeyReady) {
+        try {
+          await s3Client.send(
+            new HeadObjectCommand({
+              Bucket: S3_BUCKET_NAME,
+              Key: newKey,
+            })
+          );
+          newKeyReady = true;
+          break;
+        } catch (err: any) {
+          if (err.name === "NotFound") {
+            attempt++;
+            const waitMs = 200 * Math.pow(2, attempt - 1);
+            await new Promise((r) => setTimeout(r, waitMs));
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      if (!newKeyReady) {
+        return { success: false, message: "Failed to verify renamed file." };
+      }
+
+      // NOW safe to delete
       await s3Client.send(
         new DeleteObjectCommand({ Bucket: S3_BUCKET_NAME, Key: oldKey })
       );
@@ -756,7 +786,6 @@ export const getDownloadUrl = async (
 
 const removeUserIdFromPreviewKey = (key: string): string => {
   try {
-
     if (!key) {
       return "";
     }

@@ -400,16 +400,6 @@ export function SimpleEditor({
     }
   }, [isMobile, mobileView]);
 
-  React.useEffect(() => {
-    console.log("editable: ", editor?.isEditable)
-    console.log("canEdit: ", canEdit);
-    if (editor) {
-      editor.setEditable(canEdit, false);
-      console.log("editable: ", editor?.isEditable)
-    console.log("canEdit: ", canEdit);
-    }
-  }, [editor, canEdit]);
-
   return (
     <EditorContext.Provider value={{ editor }}>
       {canEdit && (
