@@ -26,9 +26,10 @@ export default function AccountCard() {
   const [usernameError, setUsernameError] = useState<string | undefined>(
     undefined
   );
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, refetch } = authClient.useSession();
   const [username, setUsername] = useState<string>("");
   const userData = session?.user;
+  console.log("userData", userData);
   const inputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -177,6 +178,8 @@ export default function AccountCard() {
         await authClient.updateUser({
           image: prep.avatarUrl,
         });
+
+        await refetch();
       }
 
       toast({
@@ -184,6 +187,8 @@ export default function AccountCard() {
         description: "avatar updated.",
         variant: "good",
       });
+
+
     } catch (error) {
       console.error("Error uploading avatar", error);
       toast({
@@ -203,40 +208,40 @@ export default function AccountCard() {
     return (
       <Card className="w-full max-w-2xl mx-auto fg-grad border-none min-h-96 flex flex-col justify-between text-black">
         <CardHeader className="flex flex-row items-center gap-4">
-          <Skeleton className="w-16 h-16 rounded-full !bg-neutral-700/30" />
+          <Skeleton className="w-16 h-16 rounded-full bg-neutral-700/30!" />
           <div className="space-y-2">
-            <Skeleton className="h-8 w-48 !bg-neutral-700/30" />
-            <Skeleton className="h-6 w-32 !bg-neutral-700/30" />
+            <Skeleton className="h-8 w-48 bg-neutral-700/30!" />
+            <Skeleton className="h-6 w-32 bg-neutral-700/30!" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 text-black">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Skeleton className="h-5 w-20 !bg-neutral-700/30" />
-                <Skeleton className="h-6 w-32 !bg-neutral-700/30" />
+                <Skeleton className="h-5 w-20 bg-neutral-700/30!" />
+                <Skeleton className="h-6 w-32 bg-neutral-700/30!" />
               </div>
               <div className="space-y-2">
-                <Skeleton className="h-5 w-20 !bg-neutral-700/30" />
-                <Skeleton className="h-6 w-32 !bg-neutral-700/30" />
+                <Skeleton className="h-5 w-20 bg-neutral-700/30!" />
+                <Skeleton className="h-6 w-32 bg-neutral-700/30!" />
               </div>
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-5 w-20 !bg-neutral-700/30" />
-              <Skeleton className="h-6 w-32 !bg-neutral-700/30" />
+              <Skeleton className="h-5 w-20 bg-neutral-700/30!" />
+              <Skeleton className="h-6 w-32 bg-neutral-700/30!" />
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-5 w-20 !bg-neutral-700/30" />
-              <Skeleton className="h-6 w-40 !bg-neutral-700/30" />
+              <Skeleton className="h-5 w-20 bg-neutral-700/30!" />
+              <Skeleton className="h-6 w-40 bg-neutral-700/30!" />
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-5 w-20 !bg-neutral-700/30" />
-              <Skeleton className="h-6 w-48 !bg-neutral-700/30" />
+              <Skeleton className="h-5 w-20 bg-neutral-700/30!" />
+              <Skeleton className="h-6 w-48 bg-neutral-700/30!" />
             </div>
           </div>
         </CardContent>
         <CardFooter>
-          <Skeleton className="h-10 w-24 !bg-neutral-700/30" />
+          <Skeleton className="h-10 w-24 bg-neutral-700/30!" />
         </CardFooter>
       </Card>
     );
@@ -265,7 +270,7 @@ export default function AccountCard() {
               src={userData?.image || undefined}
               alt={userData?.name || "Avatar Image"}
             />
-            <AvatarFallback className="!bg-black text-2xl">
+            <AvatarFallback className="bg-black! text-2xl">
               {userData ? (
                 <>{getInitials(userData.name)}</>
               ) : (

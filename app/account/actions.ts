@@ -10,6 +10,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
+import { randomId } from "@/lib/helpers";
 
 const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
 
@@ -89,7 +90,7 @@ export const changeAvatar = async (
     }
 
     const folderPrefix = `avatars/${userId}/`;
-    const key = `${folderPrefix}avatar.${ext}`;
+    const key = `${folderPrefix}avatar${randomId(5)}.${ext}`;
 
     const s3Client = await getScopedS3Client(userId);
 
@@ -128,7 +129,7 @@ export const changeAvatar = async (
 
     const url = await getSignedUrl(s3Client, put, { expiresIn: 900 });
 
-    const avatarUrl = `${process.env.S3_PUBLIC_BUCKET_URL}/${key}`;
+    const avatarUrl = `https://${process.env.S3_PUBLIC_BUCKET_URL}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
     return {
       success: true,
