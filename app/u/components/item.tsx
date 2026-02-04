@@ -141,21 +141,21 @@ export default function Item({
                 path:
                   contentItem.path.substring(
                     0,
-                    contentItem.path.lastIndexOf("/") + 1
+                    contentItem.path.lastIndexOf("/") + 1,
                   ) + fullRenameName,
               };
               return updatedItem;
             }
             return contentItem;
-          })
-        )
+          }),
+        ),
       );
 
       const { success, message } = await renameItem(
         item.type,
         item.name,
         fullRenameName,
-        location
+        location,
       );
 
       if (success) {
@@ -288,13 +288,13 @@ export default function Item({
 
       const itemName = item.name;
       setNewContents((prev) =>
-        sortItems(prev.filter((item) => item.name !== itemName))
+        sortItems(prev.filter((item) => item.name !== itemName)),
       );
 
       const { success, message } = await deleteItem(
         item.type,
         item.name,
-        location
+        location,
       );
 
       if (success) {
