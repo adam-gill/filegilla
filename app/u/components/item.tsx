@@ -392,7 +392,7 @@ export default function Item({
               className={`p-0 h-full flex flex-col-reverse relative ${item.type === "file" ? "flex-col-reverse" : "flex-col"}`}
             >
               {item.type === "file" && (
-                <div className="w-full h-[318px] overflow-hidden rounded-b-xl flex justify-center relative">
+                <div className="w-full h-79.5 overflow-hidden rounded-b-xl flex justify-center relative">
                   <Image
                     onClick={handleItemOpen}
                     src={previewUrl || "/defaultPreview.svg"}
@@ -426,7 +426,7 @@ export default function Item({
                   <div
                     title={item.name}
                     onClick={handleItemOpen}
-                    className="cursor-pointer flex-1 min-w-0"
+                    className="cursor-pointer flex-1 min-w-0 select-none"
                   >
                     <p className="text-base font-medium text-gray-100 truncate">
                       {item.name}
@@ -447,7 +447,7 @@ export default function Item({
 
                   {/* Dropdown Menu */}
                   {isOptionsOpen && (
-                    <div className="absolute bg-black right-0 top-full mt-1 min-w-[200px] rounded-md shadow-lg border z-100! border-neutral-700">
+                    <div className="absolute bg-black right-0 top-full mt-1 min-w-50 rounded-md shadow-lg border z-100! border-neutral-700">
                       <div className="px-1 pt-1">
                         <Button
                           onClick={handleItemOpen}
@@ -542,7 +542,7 @@ export default function Item({
         </ContextMenuTrigger>
 
         {/* Right-click Context Menu */}
-        <ContextMenuContent className="z-100! min-w-[200px] bg-black rounded-md shadow-lg border border-neutral-700 p-1">
+        <ContextMenuContent className="z-100! min-w-50 bg-black rounded-md shadow-lg border border-neutral-700 p-1">
           <ContextMenuItem
             onClick={handleItemOpen}
             className="cursor-pointer flex items-center px-3 py-2 text-sm hover:bg-gray-700! rounded-sm text-gray-100"
@@ -636,7 +636,7 @@ export default function Item({
               {`enter a new name for ${truncateFileName(item.name)}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4 max-w-[380px]">
+          <div className="py-4 max-w-95">
             <Input
               type="text"
               tabIndex={0}
