@@ -2,8 +2,8 @@ import Navbar from "@/components/navbar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "dashboard",
-  description: "filegilla dashboard",
+  title: "account settings",
+  description: "view and edit your account info",
   openGraph: {
     images: "/ogLogo.png",
     },
