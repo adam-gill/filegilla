@@ -50,18 +50,18 @@ const LoadingScreen = () => {
           <div className="flex flex-row w-full justify-between">
             <div className="w-1/2 max-md:w-4/5 flex flex-col gap-y-3">
               <Skeleton className="w-full max-md:w-4/5 h-10" />
-              <Skeleton className="w-[200px] h-6" />
-              <Skeleton className="w-[300px] h-6" />
+              <Skeleton className="w-50 h-6" />
+              <Skeleton className="w-75 h-6" />
             </div>
             <div className="w-1/2 max-md:w-1/5 flex items-start justify-end gap-4">
-              <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-              <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-              <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-              <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-              <Skeleton className="w-[52px] h-[40px]" />
+              <Skeleton className="w-13 h-10 max-md:hidden" />
+              <Skeleton className="w-13 h-10 max-md:hidden" />
+              <Skeleton className="w-13 h-10 max-md:hidden" />
+              <Skeleton className="w-13 h-10 max-md:hidden" />
+              <Skeleton className="w-13 h-10" />
             </div>
           </div>
-          <Skeleton className="w-full h-[600px] mt-8" />
+          <Skeleton className="w-full h-150 mt-8" />
         </div>
       </div>
     </div>
