@@ -7,7 +7,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createPrivateS3Key } from "@/lib/aws/helpers";
-import { isFileTypeSupported } from "@/app/u/helpers";
+import { isFileTypeSupported, normalizeFileName } from "@/app/u/helpers";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
       try {
         // Create the S3 key for this file
         // For folder uploads, use the webkitRelativePath to maintain folder structure
-        const fileName = isFolder && file.webkitRelativePath 
+        const fileName = normalizeFileName(isFolder && file.webkitRelativePath 
           ? file.webkitRelativePath 
-          : file.name;
+          : file.name);
         const fileKey = createPrivateS3Key(userId, location, fileName);
         
         const previewId = crypto.randomUUID();
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
           });
   
           presignedUrls.push({
-            fileName: file.name,
+            fileName: fileName,
             url: presignedUrl,
             key: fileKey,
             previewId: previewId,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
           });
   
           presignedUrls.push({
-            fileName: file.name,
+            fileName: fileName,
             url: presignedUrl,
             key: fileKey,
           });

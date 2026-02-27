@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "node server.js",
     "lint": "eslint .",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "dg": "docker build -t filegilla . && docker run --name filegilla -p 3000:3000 --env-file .env filegilla",
+    "db": "docker build -t filegilla .",
+    "dr": "docker run --name filegilla -p 3000:3000 --env-file .env filegilla",
+    "prod": "docker build -t filegilla . && docker run -d -p 3000:3000 --name filegilla --env-file .env --restart unless-stopped filegilla",
+    "clean": "docker stop filegilla || true && docker rm filegilla || true"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",

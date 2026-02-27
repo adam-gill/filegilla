@@ -29,7 +29,7 @@ import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
 import { sortItems } from "@/lib/helpers";
 import crypto from "crypto";
-import { isFileTypeSupported } from "../helpers";
+import { isFileTypeSupported, normalizeFileName } from "../helpers";
 import { useRouter } from "next/navigation";
 
 interface AddContentProps {
@@ -163,11 +163,11 @@ export default function AddContent({
 
       const contentDisposition = response.headers.get("Content-Disposition");
       const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/i);
-      const filename = filenameMatch?.[1] || "preview.webp";
+      const fileName = normalizeFileName(filenameMatch?.[1]) || "preview.webp";
 
       const { success, url } = await setFilePreviewBackend(
         arrayBuffer,
-        filename,
+        fileName,
         blob.type || "image/webp",
         previewId
       );
@@ -208,7 +208,7 @@ export default function AddContent({
 
     try {
       const fileInfo = Array.from(files).map((file) => ({
-        name: file.name,
+        name: normalizeFileName(file.name),
         type: file.type || "application/octet-stream",
         size: file.size,
       }));
@@ -262,17 +262,17 @@ export default function AddContent({
 
         if (success) {
           const folderItem: FolderItem = {
-            name: file.name,
+            name: normalizeFileName(file.name),
             etag: etag,
             type: "file",
             size: file.size,
             lastModified: new Date(file.lastModified),
-            path: "private/userId/" + location.join("/") + "/" + file.name,
+            path: "private/userId/" + location.join("/") + "/" + normalizeFileName(file.name),
             fileType: file.type || "application/octet-stream",
           };
           uploadedFiles.push(folderItem);
         } else {
-          failedFiles.push(file.name);
+          failedFiles.push(normalizeFileName(file.name));
         }
       }
 
@@ -337,7 +337,7 @@ export default function AddContent({
     try {
       // Process files to maintain folder structure
       const fileInfo = Array.from(files).map((file) => ({
-        name: file.name,
+        name: normalizeFileName(file.name),
         type: file.type || "application/octet-stream",
         size: file.size,
         webkitRelativePath: file.webkitRelativePath || file.name,
@@ -380,7 +380,7 @@ export default function AddContent({
         const file = files[i];
         const presignedUrlData = presignedResult.presignedUrls[i];
         const presignedUrl = presignedUrlData.url || presignedUrlData;
-        const relativePath = file.webkitRelativePath || file.name;
+        const relativePath = file.webkitRelativePath || normalizeFileName(file.name);
 
         const success = await uploadFileWithProgress(
           file,
@@ -414,11 +414,11 @@ export default function AddContent({
 
           // Create file item
           const fileItem: FolderItem = {
-            name: pathParts[pathParts.length - 1],
+            name: normalizeFileName(pathParts[pathParts.length - 1]),
             type: "file",
             size: file.size,
             lastModified: new Date(file.lastModified),
-            path: currentPath + "/" + pathParts[pathParts.length - 1],
+            path: currentPath + "/" + normalizeFileName(pathParts[pathParts.length - 1]),
             fileType: file.type || "application/octet-stream",
           };
           uploadedFiles.push(fileItem);
@@ -611,7 +611,7 @@ export default function AddContent({
           <Button
             type="button"
             variant={"pretty"}
-            className="cursor-pointer w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-115 rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
+            className="cursor-pointer w-full max-w-37.5 h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-115 rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
             disabled={isUploading || !newContents || !setNewContents}
           >
             {isUploading ? (

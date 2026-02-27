@@ -225,6 +225,10 @@ async function videoToImg(file: File): Promise<Uint8Array> {
       "1",
       "-vf",
       "scale=w=1200:h=630:force_original_aspect_ratio=decrease",
+      // recent ffmpeg builds no longer ship a default WebP encoder;
+      // you must explicitly choose one, typically `libwebp`.
+      "-c:v",
+      "libwebp",
       "-f",
       "webp",
       "-quality",

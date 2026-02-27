@@ -4,7 +4,7 @@ import { createPrivateS3Key } from "@/lib/aws/helpers";
 
 export const getFileType = (
   fileName: string,
-  isFgDoc: boolean | undefined
+  isFgDoc: boolean | undefined,
 ): FileType => {
   const extension = fileName.toLowerCase().split(".").pop();
 
@@ -14,14 +14,14 @@ export const getFileType = (
 
   if (
     ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "ico"].includes(
-      extension || ""
+      extension || "",
     )
   ) {
     return "image";
   }
   if (
     ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv", "m4v"].includes(
-      extension || ""
+      extension || "",
     )
   ) {
     return "video";
@@ -50,7 +50,7 @@ export const filegillaHTMLId = "65cc0429cc303dc822e2ac038e7bc391";
 
 export const createHTMLDocument = (
   userId: string,
-  location: string[]
+  location: string[],
 ): { fileName: string; fileBuffer: Buffer; key: string } => {
   const html = `<div data-filegilla="${filegillaHTMLId}"></div>`;
 
@@ -126,4 +126,22 @@ export const truncateFileName = (fileName: string) => {
 export const isFilePage = (path: string[]) => {
   const lastItem = path[path.length - 1];
   return hasFileExtension(lastItem);
+};
+
+// remove any non ascii characters
+export const normalizeFileName = (fileName: string | null | undefined) => {
+  let normalized = "";
+
+  if (!fileName) {
+    return "";
+  }
+
+  for (let i = 0; i < fileName.length; i++) {
+    const charCode = fileName[i].charCodeAt(0);
+    if (charCode <= 127) {
+      normalized += fileName[i];
+    }
+  }
+
+  return normalized;
 };
