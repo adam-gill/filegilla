@@ -8,9 +8,56 @@
 
 git clone <repo-url>
 cd filegilla
-docker build -t filegilla:latest .
-docker run -p 3000:3000 --env-file .env filegilla:latest
+
+vim .env # see .env example  for what to put in .env file 
+
+docker compose build
+docker compose up
+# TODO - need to setup database tables for everything to work
+
 ```
+
+## .env example
+
+```env
+
+# Better Auth
+
+BETTER_AUTH_URL=
+BETTER_AUTH_SECRET=
+
+# Database
+
+POSTGRES_DB=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+
+# OAuth
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# AWS
+
+S3_ACCESS_ROLE_ARN=
+S3_BUCKET_NAME=
+S3_PUBLIC_BUCKET_NAME=
+S3_PUBLIC_BUCKET_URL=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=
+
+# Misc
+
+NEXT_PUBLIC_APP_URL=
+NODE_ENV=
+RESEND_API_KEY=
+
+```
+
+
 
 ## future roadmap
 - fix preview images for large videos (old process part of the video to speed it up)
