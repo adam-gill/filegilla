@@ -12,8 +12,11 @@ cd filegilla
 vim .env # see .env example  for what to put in .env file 
 
 docker compose build
-docker compose up
+docker compose up -d
 # TODO - need to setup database tables for everything to work
+
+# to view logs of the web and db container
+docker compose logs -f 
 
 ```
 
