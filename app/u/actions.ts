@@ -25,7 +25,7 @@ const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
 
 export const folderNameExists = async (
   folderName: string,
-  location: string[]
+  location: string[],
 ): Promise<boolean> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -59,7 +59,7 @@ export const folderNameExists = async (
 
 export const createFolder = async (
   folderName: string,
-  location: string[]
+  location: string[],
 ): Promise<{ success: boolean; message: string }> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -107,7 +107,7 @@ export const createFolder = async (
 export const deleteItem = async (
   type: "file" | "folder",
   itemName: string,
-  location: string[]
+  location: string[],
 ): Promise<{ success: boolean; message: string }> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -239,7 +239,7 @@ export const deleteItem = async (
           if (deleteResult.Errors && deleteResult.Errors.length > 0) {
             console.error(
               "Some objects failed to delete:",
-              deleteResult.Errors
+              deleteResult.Errors,
             );
             return {
               success: false,
@@ -269,7 +269,7 @@ export const renameItem = async (
   type: "file" | "folder",
   oldName: string,
   newName: string,
-  location: string[]
+  location: string[],
 ): Promise<{ success: boolean; message: string }> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -305,7 +305,7 @@ export const renameItem = async (
           Bucket: S3_BUCKET_NAME,
           CopySource: `${S3_BUCKET_NAME}/${encodeURI(oldKey)}`,
           Key: newKey,
-        })
+        }),
       );
 
       const maxAttempts = 5;
@@ -318,7 +318,7 @@ export const renameItem = async (
             new HeadObjectCommand({
               Bucket: S3_BUCKET_NAME,
               Key: newKey,
-            })
+            }),
           );
           newKeyReady = true;
           break;
@@ -339,7 +339,7 @@ export const renameItem = async (
 
       // NOW safe to delete
       await s3Client.send(
-        new DeleteObjectCommand({ Bucket: S3_BUCKET_NAME, Key: oldKey })
+        new DeleteObjectCommand({ Bucket: S3_BUCKET_NAME, Key: oldKey }),
       );
 
       return { success: true, message: "Successfully renamed file." };
@@ -371,7 +371,7 @@ export const renameItem = async (
             Bucket: S3_BUCKET_NAME,
             Prefix: oldPrefix,
             ContinuationToken: continuationToken,
-          })
+          }),
         );
 
         const contents = listResp.Contents || [];
@@ -384,7 +384,7 @@ export const renameItem = async (
               Bucket: S3_BUCKET_NAME,
               CopySource: `${S3_BUCKET_NAME}/${encodeURI(obj.Key)}`,
               Key: newKey,
-            })
+            }),
           );
 
           keysToDelete.push({ Key: obj.Key });
@@ -402,7 +402,7 @@ export const renameItem = async (
           new DeleteObjectsCommand({
             Bucket: S3_BUCKET_NAME,
             Delete: { Objects: chunk, Quiet: true },
-          })
+          }),
         );
       }
 
@@ -426,7 +426,7 @@ export const renameItem = async (
 };
 
 export const validatePath = async (
-  location: string[]
+  location: string[],
 ): Promise<{ valid: boolean; type: "folder" | "file" | null }> => {
   try {
     const session = await auth.api.getSession({
@@ -503,13 +503,13 @@ export const validatePath = async (
           } catch (markerError) {
             console.log(
               "No folder marker, continue to return invalid",
-              markerError
+              markerError,
             );
           }
         } catch (listError) {
           console.log(
             "Error listing objects for folder validation:",
-            listError
+            listError,
           );
         }
       } else {
@@ -532,7 +532,7 @@ export const validatePath = async (
 
 export const getFileMetadata = async (
   key: string,
-  s3Client: S3Client
+  s3Client: S3Client,
 ): Promise<{ isFgDoc: boolean; previewUrl?: string }> => {
   if (!key) {
     return { isFgDoc: false };
@@ -582,7 +582,7 @@ export const getFileMetadata = async (
 };
 
 export const listFolderContents = async (
-  location: string[]
+  location: string[],
 ): Promise<{ success: boolean; contents: FolderItem[]; message: string }> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -634,7 +634,7 @@ export const listFolderContents = async (
 
           const { isFgDoc, previewUrl } = await getFileMetadata(
             object.Key,
-            s3Client
+            s3Client,
           );
 
           if (fileName && !fileName.includes("/")) {
@@ -669,7 +669,7 @@ export const listFolderContents = async (
 };
 
 export const getFile = async (
-  location: string[]
+  location: string[],
 ): Promise<{
   success: boolean;
   message: string;
@@ -736,7 +736,7 @@ export const getFile = async (
 };
 
 export const getDownloadUrl = async (
-  location: string[]
+  location: string[],
 ): Promise<{
   success: boolean;
   message: string;
@@ -794,7 +794,7 @@ const removeUserIdFromPreviewKey = (key: string): string => {
 
     if (parts.length !== 3) {
       console.error(
-        `Invalid key format: expected 3 segments, got ${parts.length}`
+        `Invalid key format: expected 3 segments, got ${parts.length}`,
       );
       return "";
     }
@@ -802,7 +802,7 @@ const removeUserIdFromPreviewKey = (key: string): string => {
     return `${parts[0]}/${parts[2]}`;
   } catch (error) {
     console.error(
-      `Failed to process key: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to process key: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
     return "";
   }
@@ -852,7 +852,7 @@ export const shareItem = async ({
         new HeadObjectCommand({
           Bucket: S3_PUBLIC_BUCKET_NAME,
           Key: publicKey,
-        })
+        }),
       );
       return {
         success: false,
@@ -891,19 +891,26 @@ export const shareItem = async ({
     await s3Client.send(copyCommand);
 
     if (previewKey && newPreviewKey) {
-      const copyPreviewCommand = new CopyObjectCommand({
-        Bucket: S3_PUBLIC_BUCKET_NAME,
-        Key: newPreviewKey,
-        CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
-        MetadataDirective: "REPLACE",
-        ContentType: "image/webp", // image api always creates webp images
-        Metadata: {
-          previewkey: newPreviewKey,
-        },
-      });
+      try {
+        const copyPreviewCommand = new CopyObjectCommand({
+          Bucket: S3_PUBLIC_BUCKET_NAME,
+          Key: newPreviewKey,
+          CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
+          MetadataDirective: "REPLACE",
+          ContentType: "image/webp", // image api always creates webp images
+          Metadata: {
+            previewkey: newPreviewKey,
+          },
+        });
 
-      await s3Client.send(copyPreviewCommand);
-      console.log("preview copied to public bucket: ", newPreviewKey);
+        await s3Client.send(copyPreviewCommand);
+        console.log("preview copied to public bucket: ", newPreviewKey);
+      } catch (error) {
+        console.log(
+          "error copying preview to public bucket. creating share without preview: ",
+          error,
+        );
+      }
     }
 
     const shareUrl = `https://${S3_PUBLIC_BUCKET_NAME}.s3.amazonaws.com/${publicKey}`;
@@ -942,7 +949,7 @@ export const shareItem = async ({
 
 export const editShareName = async (
   oldShareName: string,
-  newShareName: string
+  newShareName: string,
 ): Promise<{ success: boolean; message?: string }> => {
   try {
     console.log("oldShareName: ", oldShareName);
@@ -992,7 +999,7 @@ export const editShareName = async (
     });
 
     console.log(
-      `successfully changed ${oldShareName}'s share name to ${newShareName}`
+      `successfully changed ${oldShareName}'s share name to ${newShareName}`,
     );
     return { success: true };
   } catch (error) {
@@ -1003,7 +1010,7 @@ export const editShareName = async (
 
 export const changeShareFeaturedStatus = async (
   shareName: string,
-  isFeatured: boolean
+  isFeatured: boolean,
 ): Promise<{ success: boolean; message?: string }> => {
   try {
     const session = await auth.api.getSession({
@@ -1029,7 +1036,7 @@ export const changeShareFeaturedStatus = async (
     });
 
     console.log(
-      `successfully changed ${shareName}'s feature status to ${isFeatured}`
+      `successfully changed ${shareName}'s feature status to ${isFeatured}`,
     );
     return { success: true };
   } catch (error) {
@@ -1041,7 +1048,7 @@ export const changeShareFeaturedStatus = async (
 export const deleteShareItem = async (
   itemName: string,
   shareName: string,
-  sourceEtag: string
+  sourceEtag: string,
 ) => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -1118,7 +1125,7 @@ export const deleteShareItem = async (
 
 export const checkShareItem = async (
   itemName: string,
-  sourceEtag: string
+  sourceEtag: string,
 ): Promise<{
   success: boolean;
   message: string;
@@ -1165,7 +1172,7 @@ export const checkShareItem = async (
 
 export const copyAndPasteItem = async (
   itemName: string,
-  location: string[]
+  location: string[],
 ): Promise<{
   success: boolean;
   message: string;
@@ -1208,7 +1215,7 @@ export const copyAndPasteItem = async (
 };
 
 export const listMoveFolders = async (
-  location: string[]
+  location: string[],
 ): Promise<{
   success: boolean;
   message: string;
@@ -1292,13 +1299,13 @@ export const moveItem = async ({
         userId,
         sourceLocation,
         itemName,
-        false
+        false,
       );
       const destinationKey = createPrivateS3Key(
         userId,
         destinationLocation,
         itemName,
-        false
+        false,
       );
 
       if (sourceKey === destinationKey) {
@@ -1310,14 +1317,14 @@ export const moveItem = async ({
           Bucket: S3_BUCKET_NAME,
           CopySource: `${S3_BUCKET_NAME}/${encodeURI(sourceKey)}`,
           Key: destinationKey,
-        })
+        }),
       );
 
       await s3Client.send(
         new DeleteObjectCommand({
           Bucket: S3_BUCKET_NAME,
           Key: sourceKey,
-        })
+        }),
       );
 
       return {
@@ -1330,13 +1337,13 @@ export const moveItem = async ({
         userId,
         sourceLocation,
         itemName,
-        true
+        true,
       );
       const destinationPrefix = createPrivateS3Key(
         userId,
         destinationLocation,
         itemName,
-        true
+        true,
       );
 
       if (sourcePrefix === destinationPrefix) {
@@ -1362,7 +1369,7 @@ export const moveItem = async ({
             Bucket: S3_BUCKET_NAME,
             Prefix: sourcePrefix,
             ContinuationToken: continuationToken,
-          })
+          }),
         );
 
         const contents = listResp.Contents || [];
@@ -1375,7 +1382,7 @@ export const moveItem = async ({
               Bucket: S3_BUCKET_NAME,
               CopySource: `${S3_BUCKET_NAME}/${encodeURI(obj.Key)}`,
               Key: newKey,
-            })
+            }),
           );
 
           keysToDelete.push({ Key: obj.Key });
@@ -1392,7 +1399,7 @@ export const moveItem = async ({
           new DeleteObjectsCommand({
             Bucket: S3_BUCKET_NAME,
             Delete: { Objects: chunk, Quiet: true },
-          })
+          }),
         );
       }
 
@@ -1413,7 +1420,7 @@ export const moveItem = async ({
 };
 
 export const createDocument = async (
-  location: string[]
+  location: string[],
 ): Promise<{
   success: boolean;
   message: string;
@@ -1466,7 +1473,7 @@ export const getHTMLContent = async (
   location: string[],
   isPublic: boolean,
   fileName?: string,
-  shareName?: string
+  shareName?: string,
 ): Promise<{ success: boolean; message: string; html?: string }> => {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -1510,7 +1517,7 @@ export const getHTMLContent = async (
 const createPreviewKey = (
   previewId: string,
   fileName: string,
-  userId: string
+  userId: string,
 ) => {
   return `preview/${userId}/${previewId}${getFileExtension(fileName)}`;
 };
@@ -1519,7 +1526,7 @@ export const setFilePreviewBackend = async (
   fileData: ArrayBuffer,
   fileName: string,
   contentType: string,
-  previewId: string
+  previewId: string,
 ): Promise<{ success: boolean; message: string; url?: string }> => {
   try {
     const session = await auth.api.getSession({
