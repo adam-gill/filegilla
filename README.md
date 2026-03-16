@@ -69,3 +69,4 @@ RESEND_API_KEY=
 - add feature to select multiple items to move/delete (two separate things probably)
 - url shortener
 - maybe some text dump feature (so you can curl filegilla.com/dump/your_dump_name and get that text). filegilla documents need js to load in.
+- redo pdf render to use react-pdf and pdfjs
