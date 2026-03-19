@@ -70,3 +70,4 @@ RESEND_API_KEY=
 - url shortener
 - maybe some text dump feature (so you can curl filegilla.com/dump/your_dump_name and get that text). filegilla documents need js to load in.
 - redo pdf render to use react-pdf and pdfjs
+- file previews are broken right now (500 error) 
