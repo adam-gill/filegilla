@@ -565,7 +565,7 @@ export const getFileMetadata = async (
       const previewKey = metadata["previewkey"];
 
       const urlCommand = new GetObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME,
+        Bucket: S3_BUCKET_NAME,
         Key: previewKey,
       });
 
@@ -693,7 +693,7 @@ export const getFile = async (
     const s3Client = await getScopedS3Client(userId);
 
     const headCommand = new HeadObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Key: key,
     });
     const metadata = await s3Client.send(headCommand);
@@ -706,7 +706,7 @@ export const getFile = async (
       extraMetadata["customtag"] === "filegilla document";
 
     const urlCommand = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Key: key,
     });
 
@@ -760,7 +760,7 @@ export const getDownloadUrl = async (
     const s3Client = await getScopedS3Client(userId);
 
     const urlCommand = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Key: key,
       ResponseContentDisposition: `attachment; filename="${
         location[location.length - 1]
@@ -1552,7 +1552,7 @@ export const setFilePreviewBackend = async (
     await s3Client.send(uploadCommand);
 
     const urlCommand = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Key: previewKey,
     });
 

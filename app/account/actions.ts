@@ -129,7 +129,7 @@ export const changeAvatar = async (
 
     const url = await getSignedUrl(s3Client, put, { expiresIn: 900 });
 
-    const avatarUrl = `https://${process.env.S3_PUBLIC_BUCKET_URL}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    const avatarUrl = `https://${process.env.S3_PUBLIC_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
     return {
       success: true,

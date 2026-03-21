@@ -64,10 +64,14 @@ RESEND_API_KEY=
 
 ## future roadmap
 - fix preview images for large videos (old process part of the video to speed it up)
+    - Given you want minimal AWS, here's the honest simplest version:
+        - Client uploads directly to S3 via presigned URL (already done)
+        - After upload completes on the client, call a Next.js server action to queue the preview job — just insert a row into a preview_jobs DB table with status: "pending" and the S3 key
+        - A background worker loop in your Next.js app (a simple setInterval or cron route) picks up pending jobs, streams only the first 20MB from S3 with a range request, runs ffmpeg/ImageMagick/Ghostscript, uploads the preview, and marks the job done
+        - Your UI shows a skeleton/file-type icon for pending files — same as Google Drive does
 - add preview images for text files, filegilla documents, and files that can be displayed in plain text (like code files - index.js)
 - revamp filegilla documents, they kinda suck
 - add feature to select multiple items to move/delete (two separate things probably)
-- url shortener
+- url shortener (server actions only, at least for text sharing so that i can put something on filegilla then curl it on my server)
 - maybe some text dump feature (so you can curl filegilla.com/dump/your_dump_name and get that text). filegilla documents need js to load in.
 - redo pdf render to use react-pdf and pdfjs
-- file previews are broken right now (500 error) 
