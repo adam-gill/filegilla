@@ -30,9 +30,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Install system packages required for image/video/pdf processing during build (if needed)
 RUN apk add --no-cache ffmpeg \
     imagemagick \
-    ghostscript \
-    libwebp \
-    libwebp-dev
+    ghostscript
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./

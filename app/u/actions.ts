@@ -155,6 +155,7 @@ export const deleteItem = async (
         });
         await s3Client.send(deleteCommand);
 
+        console.log(`Successfully deleted the file '${itemName}'.`);
         return {
           success: true,
           message: `Successfully deleted the file '${itemName}'.`,
@@ -249,6 +250,7 @@ export const deleteItem = async (
         }
       }
 
+      console.log(`Successfully deleted the folder '${itemName}' and all its contents.`);
       return {
         success: true,
         message: `Successfully deleted the folder '${itemName}' and all its contents.`,

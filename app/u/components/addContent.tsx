@@ -89,7 +89,7 @@ export default function AddContent({
     file: File,
     presignedUrl: string,
     fileIndex: number,
-    totalBytes: number
+    totalBytes: number,
   ): Promise<boolean> => {
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
@@ -102,7 +102,7 @@ export default function AddContent({
 
           // Calculate total bytes uploaded across all files
           const totalBytesUploaded = Array.from(
-            fileProgressRef.current.values()
+            fileProgressRef.current.values(),
           ).reduce((sum, bytes) => sum + bytes, 0);
 
           const percentComplete = (totalBytesUploaded / totalBytes) * 100;
@@ -128,7 +128,7 @@ export default function AddContent({
       xhr.open("PUT", presignedUrl);
       xhr.setRequestHeader(
         "Content-Type",
-        file.type || "application/octet-stream"
+        file.type || "application/octet-stream",
       );
       xhr.send(file);
     });
@@ -137,7 +137,7 @@ export default function AddContent({
   const setFilePreview = async (
     file: File,
     previewId: string,
-    etag: string
+    etag: string,
   ) => {
     try {
       if (!isFileTypeSupported(file.type)) {
@@ -169,16 +169,16 @@ export default function AddContent({
         arrayBuffer,
         fileName,
         blob.type || "image/webp",
-        previewId
+        previewId,
       );
 
       if (success && url) {
         setNewContents((prev) =>
           sortItems(
             prev.map((file) =>
-              file.etag === etag ? { ...file, previewUrl: url } : file
-            )
-          )
+              file.etag === etag ? { ...file, previewUrl: url } : file,
+            ),
+          ),
         );
       }
     } catch (error) {
@@ -194,7 +194,7 @@ export default function AddContent({
   };
 
   const handleFilesUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
 
@@ -216,7 +216,7 @@ export default function AddContent({
       // Calculate total bytes for progress tracking
       const totalBytes = Array.from(files).reduce(
         (sum, file) => sum + file.size,
-        0
+        0,
       );
 
       const presignedResponse = await fetch("/api/upload", {
@@ -255,22 +255,54 @@ export default function AddContent({
           file,
           presignedUrl,
           i,
-          totalBytes
+          totalBytes,
         );
 
-        setFilePreview(file, previewId, etag);
-
         if (success) {
+          const fileName = normalizeFileName(file.name);
+          const filePath = `private/userId/${location.join("/")}${
+            location.length === 0 ? "" : "/"
+          }${fileName}`;
+
           const folderItem: FolderItem = {
             name: normalizeFileName(file.name),
             etag: etag,
             type: "file",
             size: file.size,
             lastModified: new Date(file.lastModified),
-            path: "private/userId/" + location.join("/") + "/" + normalizeFileName(file.name),
+            path: filePath,
             fileType: file.type || "application/octet-stream",
           };
           uploadedFiles.push(folderItem);
+
+          // Fire preview generation in background — don't await
+          if (isFileTypeSupported(file.type)) {
+            fetch("/api/generate-preview", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                previewId,
+                fileName,
+                fileType: file.type,
+                filePath,
+              }),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success && data.previewUrl) {
+                  setNewContents((prev) =>
+                    sortItems(
+                      prev.map((item) =>
+                        item.etag === etag
+                          ? { ...item, previewUrl: data.previewUrl }
+                          : item,
+                      ),
+                    ),
+                  );
+                }
+              })
+              .catch(() => {}); // silently fail — preview is non-critical
+          }
         } else {
           failedFiles.push(normalizeFileName(file.name));
         }
@@ -322,7 +354,7 @@ export default function AddContent({
   };
 
   const handleFolderUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
 
@@ -346,7 +378,7 @@ export default function AddContent({
       // Calculate total bytes for progress tracking
       const totalBytes = Array.from(files).reduce(
         (sum, file) => sum + file.size,
-        0
+        0,
       );
 
       const presignedResponse = await fetch("/api/upload", {
@@ -380,13 +412,14 @@ export default function AddContent({
         const file = files[i];
         const presignedUrlData = presignedResult.presignedUrls[i];
         const presignedUrl = presignedUrlData.url || presignedUrlData;
-        const relativePath = file.webkitRelativePath || normalizeFileName(file.name);
+        const relativePath =
+          file.webkitRelativePath || normalizeFileName(file.name);
 
         const success = await uploadFileWithProgress(
           file,
           presignedUrl,
           i,
-          totalBytes
+          totalBytes,
         );
 
         if (success) {
@@ -418,7 +451,10 @@ export default function AddContent({
             type: "file",
             size: file.size,
             lastModified: new Date(file.lastModified),
-            path: currentPath + "/" + normalizeFileName(pathParts[pathParts.length - 1]),
+            path:
+              currentPath +
+              "/" +
+              normalizeFileName(pathParts[pathParts.length - 1]),
             fileType: file.type || "application/octet-stream",
           };
           uploadedFiles.push(fileItem);
@@ -507,7 +543,7 @@ export default function AddContent({
     try {
       const { success, message } = await createFolder(
         folderName.trim(),
-        location
+        location,
       );
       if (success) {
         toast({
@@ -567,7 +603,9 @@ export default function AddContent({
       router.push(`/u/${location.join("/")}/${fileName}`);
       const newItem: FolderItem = {
         name: fileName,
-        path: `private/userid/${location.join("/")}/${fileName}`,
+        path: `private/userId/${location.join("/")}${
+          location.length === 0 ? "" : "/"
+        }${fileName}`,
         type: "file",
         lastModified: new Date(),
         etag: etag,

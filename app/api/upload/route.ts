@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
             ContentType: file.type || 'application/octet-stream',
             Metadata: {
               preview: previewId,
-              previewKey: `preview/${userId}/${previewId}.webp`
+              previewKey: `preview/${userId}/${previewId}.png`,
             }
           });
   
