@@ -64,6 +64,14 @@ RESEND_API_KEY=
 
 ## future roadmap
 - fix preview images for large videos (old process part of the video to speed it up)
+    - Changed the process to: 
+        - do regular s3 upload on client
+        - call api that pulls down s3 object on server and processes the file for preview image generation
+        - api sends a response back
+        - caveat: if user disconnects after s3 upload and before preview image processes, the preview image job does not finish and there is no preview image generated
+        - solution: nextjs api feature that sends instant response and processes job if client disconnects, just will have to poll and probably write a new api route to check if the preview image is generated or not
+    - Also, the share process is still pretty bad, it needs redone
+    - Need to add additional step on deleteItem that deletes the shared object from the share bucket with its preview image that is also on the public bucket
     - Given you want minimal AWS, here's the honest simplest version:
         - Client uploads directly to S3 via presigned URL (already done)
         - After upload completes on the client, call a Next.js server action to queue the preview job — just insert a row into a preview_jobs DB table with status: "pending" and the S3 key

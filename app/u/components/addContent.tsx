@@ -134,58 +134,6 @@ export default function AddContent({
     });
   };
 
-  const setFilePreview = async (
-    file: File,
-    previewId: string,
-    etag: string,
-  ) => {
-    try {
-      if (!isFileTypeSupported(file.type)) {
-        return;
-      }
-
-      console.log("generating file preview");
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/preview", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`API returned status ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-
-      const contentDisposition = response.headers.get("Content-Disposition");
-      const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/i);
-      const fileName = normalizeFileName(filenameMatch?.[1]) || "preview.webp";
-
-      const { success, url } = await setFilePreviewBackend(
-        arrayBuffer,
-        fileName,
-        blob.type || "image/webp",
-        previewId,
-      );
-
-      if (success && url) {
-        setNewContents((prev) =>
-          sortItems(
-            prev.map((file) =>
-              file.etag === etag ? { ...file, previewUrl: url } : file,
-            ),
-          ),
-        );
-      }
-    } catch (error) {
-      console.error("Error setting file preview:", error);
-    }
-  };
-
   const computeEtag = async (file: File) => {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
