@@ -21,9 +21,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  checkPreviewStatus,
   createDocument,
   createFolder,
-  setFilePreviewBackend,
 } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
@@ -141,6 +141,34 @@ export default function AddContent({
     return etag;
   };
 
+  const pollForPreview = (previewId: string, etag: string) => {
+    const delays = [500, 1000, 3_000, 10_000, 30_000, 60_000];
+    let attempt = 0;
+
+    const poll = async () => {
+      attempt++;
+
+      const result = await checkPreviewStatus(previewId);
+
+      if (result.success && result.url) {
+        setNewContents((prev) =>
+          sortItems(
+            prev.map((item) =>
+              item.etag === etag ? { ...item, previewUrl: result.url } : item,
+            ),
+          ),
+        );
+        return; 
+      }
+
+      if (attempt < delays.length) {
+        setTimeout(poll, delays[attempt]);
+      }
+    };
+
+    setTimeout(poll, delays[0]);
+  };
+
   const handleFilesUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -234,22 +262,11 @@ export default function AddContent({
                 fileType: file.type,
                 filePath,
               }),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.success && data.previewUrl) {
-                  setNewContents((prev) =>
-                    sortItems(
-                      prev.map((item) =>
-                        item.etag === etag
-                          ? { ...item, previewUrl: data.previewUrl }
-                          : item,
-                      ),
-                    ),
-                  );
-                }
-              })
-              .catch(() => {}); // silently fail — preview is non-critical
+            }).catch((error) => {
+              console.log("Error initiating preview generation:", error);
+            });
+
+            pollForPreview(previewId, etag);
           }
         } else {
           failedFiles.push(normalizeFileName(file.name));

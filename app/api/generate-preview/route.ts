@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth/auth";
 import { getFileCategory } from "@/lib/helpers";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { headers } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { spawn } from "child_process";
 import { writeFile, unlink, readFile, mkdtemp, rmdir } from "fs/promises";
 import { tmpdir } from "os";
@@ -17,6 +17,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function POST(request: NextRequest) {
   try {
+    const startTime = Date.now();
     const body = await request.json();
     const { previewId, fileName, filePath, fileType } = body;
 
@@ -40,17 +41,13 @@ export async function POST(request: NextRequest) {
 
     if (!fileName || !filePath || !fileType) {
       return NextResponse.json(
-        { success: false, message: "Missing fileName, filePath, or fileType." },
+        {
+          success: false,
+          message: "Missing fileName, filePath, or fileType.",
+        },
         { status: 400 },
       );
     }
-
-    console.log("starting preview generation for", {
-      userId,
-      fileName,
-      fullFilePath,
-      fileType,
-    });
 
     const fileCategory = getFileCategory(fileType, fileName);
 
@@ -64,26 +61,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const s3Client = await getScopedS3Client(userId);
-    const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
-    const previewKey = `preview/${userId}/${previewId}.png`;
+    
+    after(async () => {
+      console.log("starting preview generation for", {
+        userId,
+        fileName,
+        fullFilePath,
+        fileType,
+      });
+      
+      const s3Client = await getScopedS3Client(userId);
+      const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
+      const previewKey = `preview/${userId}/${previewId}.png`;
+  
+      const { tmpFilePath, tmpDir } = await downloadToTemp(
+        s3Client,
+        S3_BUCKET_NAME,
+        fullFilePath,
+        fileName,
+      );
 
-    const { tmpFilePath, tmpDir } = await downloadToTemp(
-      s3Client,
-      S3_BUCKET_NAME,
-      fullFilePath,
-      fileName,
-    );
+      try {
+        const previewBuffer = await generatePreview(tmpFilePath, fileCategory);
+        const previewUrl = await uploadToS3(
+          s3Client,
+          S3_BUCKET_NAME,
+          previewKey,
+          previewBuffer,
+        );
 
-    try {
-      const previewBuffer = await generatePreview(tmpFilePath, fileCategory);
-      const previewUrl = await uploadToS3(s3Client, S3_BUCKET_NAME, previewKey, previewBuffer);
-
-      return NextResponse.json({ success: true, previewUrl });
-    } finally {
-      await unlink(tmpFilePath).catch(() => {});
-      await rmdir(tmpDir).catch(() => {});
-    }
+        const endTime = Date.now();
+        console.log(
+          `Preview generation completed in ${(endTime - startTime) / 1000}s for ${fileName}`,
+        );
+        console.log(
+          "Successfully generated preview and uploaded to S3:",
+          previewUrl.slice(0, 110) + "...",
+        );
+      } finally {
+        await unlink(tmpFilePath).catch(() => {});
+        await rmdir(tmpDir).catch(() => {});
+      }
+    });
   } catch (error) {
     console.error("Error generating preview:", error);
     return NextResponse.json(
@@ -91,6 +110,11 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+
+  return NextResponse.json({
+    success: true,
+    status: "processing file preview",
+  });
 }
 
 // ---------------------------------------------------------------------------

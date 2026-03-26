@@ -250,7 +250,9 @@ export const deleteItem = async (
         }
       }
 
-      console.log(`Successfully deleted the folder '${itemName}' and all its contents.`);
+      console.log(
+        `Successfully deleted the folder '${itemName}' and all its contents.`,
+      );
       return {
         success: true,
         message: `Successfully deleted the folder '${itemName}' and all its contents.`,
@@ -878,6 +880,7 @@ export const shareItem = async ({
     const newPreviewKey = removeUserIdFromPreviewKey(previewKey || "");
     const isFgDoc = metadata?.["customtag"] === "filegilla document";
 
+    // copy user's file they want to share to public bucket
     const copyCommand = new CopyObjectCommand({
       Bucket: S3_PUBLIC_BUCKET_NAME,
       Key: publicKey,
@@ -892,6 +895,7 @@ export const shareItem = async ({
 
     await s3Client.send(copyCommand);
 
+    // copy preview image to public bucket if it exists
     if (previewKey && newPreviewKey) {
       try {
         const copyPreviewCommand = new CopyObjectCommand({
@@ -1570,5 +1574,62 @@ export const setFilePreviewBackend = async (
   } catch (error) {
     console.error(`error setting file preview. error: ${error}`);
     return { success: false, message: `Failed to set file preview ${error}` };
+  }
+};
+
+export const checkPreviewStatus = async (
+  previewId: string,
+): Promise<{ success: boolean; message: string; url?: string }> => {
+  try {
+    if (!previewId) {
+      return { success: false, message: "Invalid preview ID" };
+    }
+
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return { success: false, message: "user is not authenticated." };
+    }
+
+    const userId = session.user.id;
+    const previewKey = `preview/${userId}/${previewId}.png`;
+    const s3Client = await getScopedS3Client(userId);
+
+    await s3Client.send(
+      new HeadObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: previewKey,
+      }),
+    );
+
+    const signedUrl = await getSignedUrl(
+      s3Client,
+      new GetObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: previewKey,
+      }),
+      { expiresIn: 3600 },
+    );
+
+    return {
+      success: true,
+      message: "Preview exists",
+      url: signedUrl,
+    };
+  } catch (error: any) {
+
+    if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
+      return {
+        success: false,
+        message: "Preview does not exist",
+      };
+    }
+
+    return {
+      success: false,
+      message: `Error checking preview existence ${error}`,
+    };
   }
 };
