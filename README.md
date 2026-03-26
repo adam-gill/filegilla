@@ -74,3 +74,4 @@ RESEND_API_KEY=
 - url shortener (server actions only, at least for text sharing so that i can put something on filegilla then curl it on my server)
 - maybe some text dump feature (so you can curl filegilla.com/dump/your_dump_name and get that text). filegilla documents need js to load in.
 - redo pdf render to use react-pdf and pdfjs
+- next/previous post button, page location rememberer, and link uploads
