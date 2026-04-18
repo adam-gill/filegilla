@@ -35,14 +35,8 @@ RUN apk add --no-cache ffmpeg \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/prisma/ ./prisma/
-COPY prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/prisma/generated ./prisma/generated
 
-RUN npm install prisma tsx --save-dev
-
-
-COPY entrypoint.sh ./entrypoint.sh
-RUN chmod +x entrypoint.sh
 
 EXPOSE 3000
-ENTRYPOINT ["./entrypoint.sh"]
+CMD ["node", "server.js"]
