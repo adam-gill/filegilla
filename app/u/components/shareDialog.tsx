@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import MobileTooltip from "@/components/mobileTooltip";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { set } from "zod";
 
 interface ShareDialogProps {
   item: FolderItem;
@@ -54,7 +55,7 @@ export default function ShareDialog({
   const [isFeatured, setIsFeatured] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [shareNameError, setShareNameError] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [isEditingShareName, setIsEditingShareName] = useState<boolean>(false);
   const [savedShareName, setSavedShareName] = useState<string>("");
@@ -87,9 +88,9 @@ export default function ShareDialog({
           description: message,
           variant: "good",
         });
-        // Small delay to allow database write to propagate
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await checkShareStatus();
+        setTimeout(() => {
+          setItemShareUrl(shareUrl || "");
+        }, 300);
       } else {
         toast({
           title: "error",
@@ -113,7 +114,7 @@ export default function ShareDialog({
       setIsFeatured((prev) => !prev);
       const { success, message } = await changeShareFeaturedStatus(
         itemShareName,
-        tempIsFeatured
+        tempIsFeatured,
       );
 
       if (!success) {
@@ -138,7 +139,7 @@ export default function ShareDialog({
         const { success, message } = await deleteShareItem(
           item.name,
           itemShareName,
-          item.etag
+          item.etag,
         );
 
         if (success) {
@@ -190,7 +191,7 @@ export default function ShareDialog({
         }
       } catch (error) {
         console.error(
-          `unknown error checking ${item.name} share status: ${error}`
+          `unknown error checking ${item.name} share status: ${error}`,
         );
       } finally {
         setIsLoading(false);
@@ -208,7 +209,7 @@ export default function ShareDialog({
       setShareNameError("share name cannot contain spaces");
     } else if (hasInvalidChar) {
       setShareNameError(
-        "only lowercase letters, numbers, and underscores are allowed"
+        "only lowercase letters, numbers, and underscores are allowed",
       );
     } else if (value.length > 256) {
       setShareNameError("share name must 256 characters or less");
@@ -239,7 +240,7 @@ export default function ShareDialog({
     setIsEditingShareName(false);
     const { success, message } = await editShareName(
       savedShareName,
-      itemShareName
+      itemShareName,
     );
 
     if (success) {
@@ -388,7 +389,9 @@ export default function ShareDialog({
                       target="_blank"
                       className="text-black underline"
                       href={filegillaLink}
-                    >{filegillaLink}</Link>
+                    >
+                      {filegillaLink}
+                    </Link>
                     <CopyText textToCopy={filegillaLink} />
                   </div>
                   {isLoading ? (
@@ -473,8 +476,7 @@ export default function ShareDialog({
                     random. this will be accessible to anyone with the link.
                   </AlertDialogDescription>
                   <div className="text-black text-left text-wrap max-w-[380px]">
-                    {`preview:`}{" "}
-                    <strong>{filegillaLink}</strong>
+                    {`preview:`} <strong>{filegillaLink}</strong>
                   </div>
                 </AlertDialogHeader>
                 <div>
