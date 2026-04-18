@@ -81,13 +81,13 @@ export default function ShareDialog({
         isFeatured: isFeatured,
       });
 
-      if (success && shareUrl) {
+      if (success) {
         toast({
           title: "success!",
           description: message,
           variant: "good",
         });
-        setItemShareUrl(shareUrl);
+        await checkShareStatus();
       } else {
         toast({
           title: "error",

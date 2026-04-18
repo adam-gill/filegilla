@@ -1230,6 +1230,7 @@ export const checkShareItem = async (
     });
 
     if (response?.s3Url && response.shareName) {
+      console.log(`share found for ${itemName}`);
       return {
         success: true,
         message: `${itemName} shareUrl found`,
