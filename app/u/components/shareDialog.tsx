@@ -176,6 +176,8 @@ export default function ShareDialog({
         const { success, shareUrl, shareName, isFeatured } =
           await checkShareItem(item.name, item.path);
 
+        console.log(shareUrl);
+
         if (success && shareUrl && shareName) {
           setItemShareUrl(shareUrl);
           setItemShareName(shareName);
