@@ -30,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import MobileTooltip from "@/components/mobileTooltip";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { set } from "zod";
+import { authClient } from "@/lib/auth/auth-client";
 
 interface ShareDialogProps {
   item: FolderItem;
@@ -63,6 +63,7 @@ export default function ShareDialog({
     process.env.NODE_ENV === "production"
       ? `https://filegilla.com/s/${itemShareName}`
       : `http://localhost:3000/s/${itemShareName}`;
+  const { data: session } = authClient.useSession();
   const router = useRouter();
 
   const handleItemShare = async () => {
@@ -175,11 +176,16 @@ export default function ShareDialog({
     setIsLoading(true);
     if (item.type === "file" && item.etag && item.name) {
       try {
-        console.log("checking share status for", item.name);
-        const { success, shareUrl, shareName, isFeatured } =
-          await checkShareItem(item.name, item.path);
 
-        console.log(shareUrl);
+        const userId = session?.user?.id;
+        const filePath = item.path.replace("userId", userId || "userId");
+
+        console.log("checking share status for", item.name);
+
+
+        const { success, shareUrl, shareName, isFeatured } =
+          await checkShareItem(item.name, filePath);
+
 
         if (success && shareUrl && shareName) {
           setItemShareUrl(shareUrl);
