@@ -87,6 +87,8 @@ export default function ShareDialog({
           description: message,
           variant: "good",
         });
+        // Small delay to allow database write to propagate
+        await new Promise(resolve => setTimeout(resolve, 500));
         await checkShareStatus();
       } else {
         toast({
