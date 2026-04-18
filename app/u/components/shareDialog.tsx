@@ -172,6 +172,7 @@ export default function ShareDialog({
     setIsLoading(true);
     if (item.type === "file" && item.etag && item.name) {
       try {
+        console.log("checking share status for", item.name);
         const { success, shareUrl, shareName, isFeatured } =
           await checkShareItem(item.name, item.path);
 
@@ -296,7 +297,7 @@ export default function ShareDialog({
                   <X className="text-black stroke-3 hover:scale-110 trans" />
                 </AlertDialogCancel>
 
-                <Skeleton className="w-[93px] h-[45px] bg-neutral-900/10! mr-3!" />
+                <Skeleton className="w-23.25 h-11.25 bg-neutral-900/10! mr-3!" />
                 <AlertDialogAction
                   onClick={handleItemShare}
                   disabled={isLoading}
