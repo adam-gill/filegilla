@@ -63,11 +63,6 @@ RESEND_API_KEY=
 
 
 ## future roadmap
-- fix sharing logic
-    - add sourceKey to shares table to identify if an object is shared accurately
-        - this would require renameItem to check if the item is shared, and if it is, update the sourceKey, itemName, and s3Url
-            - I don't know how it got this complex, I feel like that's a bad thing 
-    - change deleteItem action to check if that file was shared, and if it was, delete the public file, public preview image, and the row in the share table
 - add preview images for text files, filegilla documents, and files that can be displayed in plain text (like code files - index.js)
 - revamp filegilla documents, they kinda suck
 - add feature to select multiple items to move/delete (two separate things probably)
@@ -75,3 +70,10 @@ RESEND_API_KEY=
 - maybe some text dump feature (so you can curl filegilla.com/dump/your_dump_name and get that text). filegilla documents need js to load in.
 - redo pdf render to use react-pdf and pdfjs
 - next/previous post button, page location rememberer, and link uploads
+- when copying file, it uses the same image preview, and if you delete the copied file, it deletes the image preview from the original file
+- integrate yt-dlp/cobalt with uploading button (enter url to download content which is then uploaded to filegilla)
+~~- fix sharing logic
+    - add sourceKey to shares table to identify if an object is shared accurately
+        - this would require renameItem to check if the item is shared, and if it is, update the sourceKey, itemName, and s3Url
+            - I don't know how it got this complex, I feel like that's a bad thing 
+    - change deleteItem action to check if that file was shared, and if it was, delete the public file, public preview image, and the row in the share table~~

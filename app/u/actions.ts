@@ -140,14 +140,7 @@ export const deleteItem = async (
         const metadata = headResponse.Metadata;
         const previewKey = metadata?.["previewkey"];
 
-        if (previewKey) {
-          const deletePreviewCommand = new DeleteObjectCommand({
-            Bucket: S3_BUCKET_NAME,
-            Key: previewKey,
-          });
-          await s3Client.send(deletePreviewCommand);
-          console.log(`preview deleted (${previewKey})`);
-        }
+        await cleanupShareOnDelete(previewKey, itemName, fileKey, s3Client);
 
         const deleteCommand = new DeleteObjectCommand({
           Bucket: S3_BUCKET_NAME,
@@ -217,14 +210,13 @@ export const deleteItem = async (
             const metadata = headResponse.Metadata;
             const previewKey = metadata?.["previewkey"];
 
-            if (previewKey) {
-              const deletePreviewCommand = new DeleteObjectCommand({
-                Bucket: S3_BUCKET_NAME,
-                Key: previewKey,
-              });
-              await s3Client.send(deletePreviewCommand);
-              console.log(`preview deleted (${previewKey})`);
-            }
+            const itemName = object.Key?.split("/").pop() || "unknown";
+            await cleanupShareOnDelete(
+              previewKey,
+              itemName,
+              object.Key,
+              s3Client,
+            );
           }
 
           const deleteCommand = new DeleteObjectsCommand({
@@ -266,6 +258,64 @@ export const deleteItem = async (
         `Error when deleting ${type}: ` +
         (error instanceof Error ? error.message : error),
     };
+  }
+};
+
+const cleanupShareOnDelete = async (
+  previewKey: string | undefined,
+  itemName: string | undefined,
+  fileKey: string,
+  s3Client: S3Client,
+) => {
+  if (previewKey) {
+    const deletePreviewCommand = new DeleteObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: previewKey,
+    });
+    await s3Client.send(deletePreviewCommand);
+    console.log(`preview deleted (${previewKey})`);
+  }
+
+  // if the file is shared, delete the public copy and public preview copy
+  const itemNameSafe = itemName || "unknown";
+  const shareStatus = await checkShareItem(itemNameSafe, fileKey);
+
+  if (shareStatus.success && shareStatus.shareUrl) {
+    try {
+      const deletePublicCopyCommand = new DeleteObjectCommand({
+        Bucket: S3_PUBLIC_BUCKET_NAME,
+        Key: new URL(shareStatus.shareUrl).pathname.substring(1),
+      });
+
+      await s3Client.send(deletePublicCopyCommand);
+
+      // delete the share record in the database
+      await prisma.share.deleteMany({
+        where: {
+          shareName: shareStatus.shareName,
+        },
+      });
+
+      console.log(`public copy deleted (${shareStatus.shareUrl})`);
+    } catch (error) {
+      console.log(`Failed to delete public copy (${shareStatus.shareUrl})`);
+    }
+
+    if (shareStatus.sharePreviewKey) {
+      try {
+        const deletePublicPreviewCommand = new DeleteObjectCommand({
+          Bucket: S3_PUBLIC_BUCKET_NAME,
+          Key: shareStatus.sharePreviewKey,
+        });
+
+        await s3Client.send(deletePublicPreviewCommand);
+        console.log(`public preview deleted (${shareStatus.shareUrl})`);
+      } catch (error) {
+        console.log(
+          `Failed to delete public preview (${shareStatus.shareUrl})`,
+        );
+      }
+    }
   }
 };
 
@@ -339,6 +389,27 @@ export const renameItem = async (
 
       if (!newKeyReady) {
         return { success: false, message: "Failed to verify renamed file." };
+      }
+
+      // if item is shared, update objSourcePath in share table
+      const shareStatus = await checkShareItem(oldName, oldKey);
+
+      if (shareStatus.success && shareStatus.shareUrl) {
+        try {
+          await prisma.share.update({
+            where: { shareName: shareStatus.shareName },
+            data: { objSourcePath: newKey, itemName: finalNewName },
+          });
+          console.log(
+            "successfully updated share with new object path: ",
+            newKey,
+          );
+        } catch (error) {
+          console.error(
+            `Error updating share object path to: ${newKey}`,
+            error,
+          );
+        }
       }
 
       // NOW safe to delete
@@ -903,7 +974,7 @@ export const shareItem = async ({
           Key: newPreviewKey,
           CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
           MetadataDirective: "REPLACE",
-          ContentType: "image/webp", // image api always creates webp images
+          ContentType: "image/png", // image api always creates png images
           Metadata: {
             previewkey: newPreviewKey,
           },
@@ -934,6 +1005,7 @@ export const shareItem = async ({
         views: 0,
         previewKey: newPreviewKey || null,
         isFeatured: featured,
+        objSourcePath: privateKey,
       },
     });
 
@@ -1131,12 +1203,13 @@ export const deleteShareItem = async (
 
 export const checkShareItem = async (
   itemName: string,
-  sourceEtag: string,
+  objPath: string,
 ): Promise<{
   success: boolean;
   message: string;
   shareUrl?: string;
   shareName?: string;
+  sharePreviewKey?: string;
   isFeatured?: boolean;
 }> => {
   const session = await auth.api.getSession({
@@ -1147,13 +1220,12 @@ export const checkShareItem = async (
     return { success: false, message: "user is not authenticated." };
   }
 
-  const userId = session.user.id;
+  console.log("checking share status for: ", itemName, objPath);
 
   try {
     const response = await prisma.share.findFirst({
       where: {
-        sourceEtag: sourceEtag,
-        ownerId: userId,
+        objSourcePath: objPath,
       },
     });
 
@@ -1163,6 +1235,7 @@ export const checkShareItem = async (
         message: `${itemName} shareUrl found`,
         shareUrl: response.s3Url,
         shareName: response.shareName,
+        sharePreviewKey: response.previewKey || undefined,
         isFeatured: response.isFeatured || false,
       };
     } else {
@@ -1619,7 +1692,6 @@ export const checkPreviewStatus = async (
       url: signedUrl,
     };
   } catch (error: any) {
-
     if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
       return {
         success: false,

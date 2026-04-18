@@ -173,7 +173,7 @@ export default function ShareDialog({
     if (item.type === "file" && item.etag && item.name) {
       try {
         const { success, shareUrl, shareName, isFeatured } =
-          await checkShareItem(item.name, item.etag);
+          await checkShareItem(item.name, item.path);
 
         if (success && shareUrl && shareName) {
           setItemShareUrl(shareUrl);

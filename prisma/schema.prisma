@@ -103,6 +103,7 @@ model share {
   previewKey String?
   isFeatured Boolean?       @default(false)
   user       User?          @relation(fields: [ownerId], references: [id], onUpdate: NoAction, map: "fk_shares_owner")
+  objSourcePath String?     @unique
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

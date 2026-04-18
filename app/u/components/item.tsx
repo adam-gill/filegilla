@@ -636,7 +636,7 @@ export default function Item({
               {`enter a new name for ${truncateFileName(item.name)}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4 max-w-95">
+          <div className="flex w-full py-4">
             <Input
               type="text"
               tabIndex={0}
