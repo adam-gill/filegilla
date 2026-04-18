@@ -72,8 +72,3 @@ RESEND_API_KEY=
 - next/previous post button, page location rememberer, and link uploads
 - when copying file, it uses the same image preview, and if you delete the copied file, it deletes the image preview from the original file
 - integrate yt-dlp/cobalt with uploading button (enter url to download content which is then uploaded to filegilla)
-~~- fix sharing logic
-    - add sourceKey to shares table to identify if an object is shared accurately
-        - this would require renameItem to check if the item is shared, and if it is, update the sourceKey, itemName, and s3Url
-            - I don't know how it got this complex, I feel like that's a bad thing 
-    - change deleteItem action to check if that file was shared, and if it was, delete the public file, public preview image, and the row in the share table~~
