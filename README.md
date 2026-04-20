@@ -63,6 +63,7 @@ RESEND_API_KEY=
 
 
 ## future roadmap
+- search feature (search recursively through subdirectories). Search file/folder name title with fuzzy search and possibly search through text of gb docs) 
 - add preview images for text files, filegilla documents, and files that can be displayed in plain text (like code files - index.js)
 - revamp filegilla documents, they kinda suck
 - add feature to select multiple items to move/delete (two separate things probably)
