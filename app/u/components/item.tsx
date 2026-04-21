@@ -21,6 +21,7 @@ import {
   Download,
   Copy,
   FolderInput,
+  File
 } from "lucide-react";
 import {
   ContextMenu,
@@ -393,15 +394,21 @@ export default function Item({
             >
               {item.type === "file" && (
                 <div className="w-full h-79.5 overflow-hidden rounded-b-xl flex justify-center relative">
-                  <Image
-                    onClick={handleItemOpen}
-                    src={previewUrl || "/defaultPreview.svg"}
-                    alt={previewUrl ? "default file preview" : "file preview"}
-                    fill
-                    className="object-contain cursor-pointer"
-                    sizes="318px"
-                    unoptimized
-                  />
+                  {previewUrl ? (
+                    <Image
+                      onClick={handleItemOpen}
+                      src={previewUrl || "/defaultPreview.svg"}
+                      alt={previewUrl ? "default file preview" : "file preview"}
+                      fill
+                      className="object-contain cursor-pointer"
+                      sizes="318px"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full flex items-center justify-center">
+                      <File size={192} strokeWidth={0.8} className="w-full text-gray-400 mb-6" />
+                    </div>
+                  )}
                 </div>
               )}
 

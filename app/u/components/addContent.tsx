@@ -20,11 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  checkPreviewStatus,
-  createDocument,
-  createFolder,
-} from "../actions";
+import { checkPreviewStatus, createDocument, createFolder } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { FolderItem } from "../types";
 import { sortItems } from "@/lib/helpers";
@@ -158,7 +154,7 @@ export default function AddContent({
             ),
           ),
         );
-        return; 
+        return;
       }
 
       if (attempt < delays.length) {
@@ -377,8 +373,15 @@ export default function AddContent({
         const file = files[i];
         const presignedUrlData = presignedResult.presignedUrls[i];
         const presignedUrl = presignedUrlData.url || presignedUrlData;
+        const previewId = presignedUrlData.previewId;
+        const etag = await computeEtag(file);
+        const fileName = normalizeFileName(file.name);
         const relativePath =
           file.webkitRelativePath || normalizeFileName(file.name);
+        // const filePath = `private/userId/${location.join("/")}${
+        //   location.length === 0 ? "" : "/"
+        // }${fileName}`;
+        const filePath = `private/userId/${location.join("/")}${location.length === 0 ? "" : "/"}${relativePath}`;
 
         const success = await uploadFileWithProgress(
           file,
@@ -408,6 +411,22 @@ export default function AddContent({
               };
               uploadedFiles.push(folderItem);
             }
+          }
+
+          // Fire preview generation in background — don't await
+          if (isFileTypeSupported(file.type)) {
+            fetch("/api/generate-preview", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                previewId,
+                fileName,
+                fileType: file.type,
+                filePath,
+              }),
+            }).catch((error) => {
+              console.log("Error initiating preview generation:", error);
+            });
           }
 
           // Create file item
