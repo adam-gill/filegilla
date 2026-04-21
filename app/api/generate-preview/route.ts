@@ -1,6 +1,11 @@
 import { auth } from "@/lib/auth/auth";
 import { getFileCategory } from "@/lib/helpers";
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  HeadObjectCommand,
+  CopyObjectCommand,
+} from "@aws-sdk/client-s3";
 import { headers } from "next/headers";
 import { after, NextRequest, NextResponse } from "next/server";
 import { spawn } from "child_process";
@@ -11,15 +16,23 @@ import { Readable } from "stream";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+class NoPreviewAvailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NoPreviewAvailableError";
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Route handler
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const { previewId, fileName, filePath, fileType } = body;
+
   try {
     const startTime = Date.now();
-    const body = await request.json();
-    const { previewId, fileName, filePath, fileType } = body;
 
     if (!previewId) {
       return NextResponse.json(
@@ -30,7 +43,6 @@ export async function POST(request: NextRequest) {
 
     const session = await auth.api.getSession({ headers: await headers() });
     const userId = session?.user.id;
-    const fullFilePath = filePath.replace("userId", userId);
 
     if (!userId) {
       return NextResponse.json(
@@ -49,9 +61,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const fullFilePath = filePath.replace("userId", userId);
     const fileCategory = getFileCategory(fileType, fileName);
 
-    if (!["image", "video", "pdf"].includes(fileCategory)) {
+    if (!["image", "video", "pdf", "audio"].includes(fileCategory)) {
+      await removePreviewMetadata(filePath);
       return NextResponse.json(
         {
           success: false,
@@ -61,7 +75,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    
     after(async () => {
       console.log("starting preview generation for", {
         userId,
@@ -69,11 +82,11 @@ export async function POST(request: NextRequest) {
         fullFilePath,
         fileType,
       });
-      
+
       const s3Client = await getScopedS3Client(userId);
       const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
       const previewKey = `preview/${userId}/${previewId}.png`;
-  
+
       const { tmpFilePath, tmpDir } = await downloadToTemp(
         s3Client,
         S3_BUCKET_NAME,
@@ -98,6 +111,9 @@ export async function POST(request: NextRequest) {
           "Successfully generated preview and uploaded to S3:",
           previewUrl.slice(0, 110) + "...",
         );
+      } catch (error) {
+        console.error("Error during preview generation/upload:", error);
+        await removePreviewMetadata(filePath);
       } finally {
         await unlink(tmpFilePath).catch(() => {});
         await rmdir(tmpDir).catch(() => {});
@@ -105,6 +121,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error generating preview:", error);
+
+    await removePreviewMetadata(filePath);
+
     return NextResponse.json(
       { success: false, message: "Error generating preview." },
       { status: 500 },
@@ -180,7 +199,7 @@ async function uploadToS3(
 
 async function generatePreview(
   filePath: string,
-  fileCategory: "image" | "video" | "pdf" | string,
+  fileCategory: "image" | "video" | "pdf" | "audio" | string,
 ): Promise<Uint8Array> {
   switch (fileCategory) {
     case "image":
@@ -189,8 +208,70 @@ async function generatePreview(
       return processVideo(filePath);
     case "pdf":
       return processPdf(filePath);
+    case "audio":
+      return processAudio(filePath);
     default:
       throw new Error(`Unsupported category: ${fileCategory}`);
+  }
+}
+
+async function processAudio(filePath: string): Promise<Uint8Array> {
+  console.log("Processing audio for cover art extraction:", filePath);
+
+  // ffmpeg extracts the attached picture stream and pipes raw image data to stdout.
+  // -an disables audio output. "pipe:1" writes the image to stdout.
+  // If no cover art stream exists, ffmpeg exits with a non-zero code.
+  let rawImageData: Uint8Array;
+  try {
+    rawImageData = await runCommand("ffmpeg", [
+      "-i",
+      filePath,
+      "-an", // no audio output
+      "-vcodec",
+      "copy", // copy the image stream as-is (usually JPEG)
+      "-f",
+      "image2",
+      "pipe:1", // write to stdout
+    ]);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // ffmpeg outputs this when no video/image stream is found
+    if (msg.includes("Output file does not contain any stream")) {
+      throw new NoPreviewAvailableError(
+        `No embedded cover art found in audio file: ${filePath}`,
+      );
+    }
+    throw err;
+  }
+
+  if (!rawImageData || rawImageData.length === 0) {
+    throw new NoPreviewAvailableError(
+      `No embedded cover art found in audio file: ${filePath}`,
+    );
+  }
+
+  // The extracted image may be JPEG or PNG — run through ImageMagick
+  // to normalize it to PNG, matching what the rest of the pipeline expects.
+  const tmpImagePath = `${filePath}-cover-raw`;
+  await writeFile(tmpImagePath, Buffer.from(rawImageData));
+
+  try {
+    const pngData = await runCommand("magick", [
+      tmpImagePath,
+      "-resize",
+      "1200x1200>",
+      "-quality",
+      "95",
+      "png:-",
+    ]);
+
+    if (!pngData || pngData.length === 0) {
+      throw new Error("ImageMagick produced empty output for audio cover art.");
+    }
+
+    return pngData;
+  } finally {
+    await unlink(tmpImagePath).catch(() => {});
   }
 }
 
@@ -298,4 +379,55 @@ function runCommand(cmd: string, args: string[]): Promise<Uint8Array> {
 
     child.on("error", reject);
   });
+}
+
+// ---------------------------------------------------------------------------
+// Metadata cleanup
+// ---------------------------------------------------------------------------
+
+async function removePreviewMetadata(filePath: string) {
+  try {
+    console.log("Starting preview metadata cleanup");
+
+    const session = await auth.api.getSession({ headers: await headers() });
+    const userId = session?.user.id;
+
+    if (!userId) {
+      console.warn("Cannot clean up preview metadata: user not authenticated.");
+      return;
+    }
+
+    const s3Client = await getScopedS3Client(userId);
+    const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
+    const fullFilePath = filePath.replace("userId", userId);
+
+    console.log(fullFilePath);
+    // Get current metadata
+    const headCommand = new HeadObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: fullFilePath,
+    });
+    const headResponse = await s3Client.send(headCommand);
+    const currentMetadata = headResponse.Metadata || {};
+
+    // Remove "preview" and "previewkey" keys
+    const updatedMetadata = { ...currentMetadata };
+    delete updatedMetadata.preview;
+    delete updatedMetadata.previewkey;
+
+    // Copy object to itself with updated metadata
+    const copyCommand = new CopyObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      CopySource: `${S3_BUCKET_NAME}/${fullFilePath}`,
+      Key: fullFilePath,
+      MetadataDirective: "REPLACE",
+      ContentType: headResponse.ContentType,
+      Metadata: updatedMetadata,
+    });
+
+    await s3Client.send(copyCommand);
+    console.log("Successfully removed preview metadata from:", fullFilePath);
+  } catch (error) {
+    console.error("Error during preview metadata cleanup:", error);
+  }
 }

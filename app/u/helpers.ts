@@ -92,6 +92,9 @@ export const isFileTypeSupported = (fileType: string): boolean => {
     "video/x-m4v", // m4v
     // PDF
     "application/pdf",
+    // Music
+    "audio/mpeg", // mp3
+    "audio/flac",
   ];
 
   return supportedTypes.includes(fileType.toLowerCase());

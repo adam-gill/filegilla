@@ -26,7 +26,7 @@ export default function Dashboard() {
               <Button
                 type="button"
                 variant={"pretty"}
-                className="cursor-pointer w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
+                className="cursor-pointer w-full max-w-37.5 h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-115 rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
                 disabled={true}
               >
                 <>
@@ -38,7 +38,7 @@ export default function Dashboard() {
             <div className="flex flex-wrap w-full gap-4 items-start justify-center mt-4">
               {new Array(9).fill(0).map((_, index) => (
                 <Skeleton
-                  className="w-xs h-[366px] max-md:h-[374px] max-md:w-[254px] rounded-xl"
+                  className="w-xs h-91.5 max-md:h-93.5 max-md:w-63.5 rounded-xl"
                   key={index}
                 />
               ))}
