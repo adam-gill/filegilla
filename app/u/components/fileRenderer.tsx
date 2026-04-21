@@ -21,6 +21,7 @@ interface FileRendererProps {
   fileName: string;
   fileType: FileType;
   isPublic: boolean;
+  filePreviewUrl?: string;
   shareName?: string;
   onDownload: () => void;
   setSyncStatus: Dispatch<SetStateAction<SyncStatuses>>;
@@ -33,6 +34,7 @@ export default function FileRenderer({
   fileName,
   fileType,
   isPublic,
+  filePreviewUrl,
   shareName,
   onDownload,
   setSyncStatus,
@@ -86,7 +88,7 @@ export default function FileRenderer({
         location,
         isPublic,
         fileName,
-        shareName
+        shareName,
       );
       if (html) {
         setSyncStatus("loaded");
@@ -158,7 +160,20 @@ export default function FileRenderer({
       return (
         <div className=" rounded-lg border border-none p-8">
           <div className="flex flex-col items-center">
-            <Music className="w-16 h-16 text-green-400 mb-4" />
+            {filePreviewUrl ? (
+              <Image
+                width={500}
+                height={300}  
+                src={filePreviewUrl}
+                alt={`${fileName} preview`}
+                className="rounded-lg mb-6"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <Music className="w-16 h-16 text-green-400 mb-4" />
+            )}
             <audio controls className="w-full max-w-md" onError={handleError}>
               <source src={viewUrl} />
               Your browser does not support the audio tag.

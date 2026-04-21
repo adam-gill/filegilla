@@ -141,6 +141,7 @@ export default function FileViewer({ location }: FileViewerProps) {
         size: fileMetadata?.size,
         url: url,
         isFgDoc: fileMetadata?.isFgDoc,
+        previewUrl: fileMetadata?.previewUrl,
       });
     } catch (error) {
       console.error("Error fetching file URL:", error);
@@ -291,8 +292,8 @@ export default function FileViewer({ location }: FileViewerProps) {
             <div className="flex flex-row w-full justify-between">
               <div className="w-1/2 max-md:w-4/5 flex flex-col gap-y-3">
                 <Skeleton className="w-full max-md:w-4/5 h-10" />
-                <Skeleton className="w-[200px] h-6" />
-                <Skeleton className="w-[300px] h-6" />
+                <Skeleton className="w-50 h-6" />
+                <Skeleton className="w-75 h-6" />
               </div>
               <div className="w-1/2 max-md:w-1/5 flex items-start justify-end gap-4">
                 <Skeleton className="w-14 h-10 max-md:hidden" />
@@ -302,7 +303,7 @@ export default function FileViewer({ location }: FileViewerProps) {
                 <Skeleton className="w-14 h-10" />
               </div>
             </div>
-            <Skeleton className="w-full h-[600px] mt-8" />
+            <Skeleton className="w-full h-150 mt-8" />
           </div>
         </div>
       </div>
@@ -481,6 +482,7 @@ export default function FileViewer({ location }: FileViewerProps) {
               viewUrl={file.url}
               location={location}
               fileName={file.name}
+              filePreviewUrl={file.previewUrl}
               fileType={getFileType(file.name, file.isFgDoc)}
               onDownload={handleDownload}
               isPublic={false}

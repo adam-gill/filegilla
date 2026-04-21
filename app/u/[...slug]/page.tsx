@@ -49,18 +49,18 @@ export default async function PathPage({
                     <div className="flex flex-row w-full justify-between">
                       <div className="w-1/2 max-md:w-4/5 flex flex-col gap-y-3">
                         <Skeleton className="w-full max-md:w-4/5 h-10" />
-                        <Skeleton className="w-[200px] h-6" />
-                        <Skeleton className="w-[300px] h-6" />
+                        <Skeleton className="w-50 h-6" />
+                        <Skeleton className="w-75 h-6" />
                       </div>
                       <div className="w-1/2 max-md:w-1/5 flex items-start justify-end gap-4">
-                        <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                        <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                        <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                        <Skeleton className="w-[52px] h-[40px] max-md:hidden" />
-                        <Skeleton className="w-[52px] h-[40px]" />
+                        <Skeleton className="w-13 h-10 max-md:hidden" />
+                        <Skeleton className="w-13 h-10 max-md:hidden" />
+                        <Skeleton className="w-13 h-10 max-md:hidden" />
+                        <Skeleton className="w-13 h-10 max-md:hidden" />
+                        <Skeleton className="w-13 h-10" />
                       </div>
                     </div>
-                    <Skeleton className="w-full h-[600px] mt-8" />
+                    <Skeleton className="w-full h-150 mt-8" />
                   </div>
                 </div>
               </div>
@@ -71,7 +71,7 @@ export default async function PathPage({
                   <Button
                     type="button"
                     variant={"pretty"}
-                    className="cursor-pointer w-full max-w-[150px] h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-[115%] rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
+                    className="cursor-pointer w-full max-w-37.5 h-12 px-4 py-4 text-3xl text-black border-none relative hover:brightness-115 rounded-2xl transition-all duration-300 outline-none focus-visible:ring-0"
                     disabled={true}
                   >
                     <>
@@ -83,7 +83,7 @@ export default async function PathPage({
                 <div className="flex flex-wrap w-full gap-4 items-start justify-center mt-4">
                   {new Array(9).fill(0).map((_, index) => (
                     <Skeleton
-                      className="w-xs h-[366px] max-md:h-[374px] max-md:w-[254px] rounded-xl"
+                      className="w-xs h-91.5 max-md:h-93.5 max-md:w-63.5 rounded-xl"
                       key={index}
                     />
                   ))}

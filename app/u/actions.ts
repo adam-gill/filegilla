@@ -780,6 +780,24 @@ export const getFile = async (
       "customtag" in extraMetadata &&
       extraMetadata["customtag"] === "filegilla document";
 
+    const previewKey =
+      extraMetadata && "previewkey" in extraMetadata
+        ? extraMetadata["previewkey"]
+        : undefined;
+
+    let previewUrl: string | undefined = undefined;
+
+    if (previewKey) {
+      const previewUrlCommand = new GetObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: previewKey,
+      });
+
+      previewUrl = await getSignedUrl(s3Client, previewUrlCommand, {
+        expiresIn: 3600,
+      });
+    }
+
     const urlCommand = new GetObjectCommand({
       Bucket: S3_BUCKET_NAME,
       Key: key,
@@ -791,6 +809,7 @@ export const getFile = async (
       lastModified: metadata.LastModified,
       size: metadata.ContentLength,
       isFgDoc: isFgDoc,
+      previewUrl: previewUrl,
     };
 
     const url = await getSignedUrl(s3Client, urlCommand, { expiresIn: 3600 });
@@ -1308,7 +1327,6 @@ export const copyAndPasteItem = async (
         ContentType: "image/png",
       });
 
-
       await s3Client.send(copyCommand);
       await s3Client.send(copyPreviewCommand);
 
@@ -1316,7 +1334,6 @@ export const copyAndPasteItem = async (
         success: true,
         message: `successfully copied ${itemName} with preview`,
       };
-
     } else {
       const copyCommand = new CopyObjectCommand({
         Bucket: S3_BUCKET_NAME,

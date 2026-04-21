@@ -4,6 +4,7 @@ export interface FileMetadata {
   etag?: string;
   fileType?: string;
   isFgDoc?: boolean;
+  previewUrl?: string;
 }
 
 export interface FolderItem {
