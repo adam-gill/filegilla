@@ -1276,19 +1276,65 @@ export const copyAndPasteItem = async (
     const sourceKey = createPrivateS3Key(userId, location, itemName);
     const destinationKey = createPrivateS3Key(userId, location, newName);
 
-    const copyCommand = new CopyObjectCommand({
+    const headCommand = new HeadObjectCommand({
       Bucket: S3_BUCKET_NAME,
-      CopySource: `${S3_BUCKET_NAME}/${sourceKey}`,
-      Key: destinationKey,
+      Key: sourceKey,
     });
 
-    await s3Client.send(copyCommand);
+    const headResponse = await s3Client.send(headCommand);
+    const metadata = headResponse.Metadata;
 
-    return {
-      success: true,
-      message: `successfully copied ${itemName}`,
-    };
+    // if file has a preview, copy the preview and update metadata on copied file
+    if (metadata && "previewkey" in metadata && metadata["previewkey"]) {
+      const previewKey = metadata["previewkey"];
+      const previewId = crypto.randomUUID();
+      const newPreviewKey = `preview/${userId}/${previewId}.png`;
+
+      const copyCommand = new CopyObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        CopySource: `${S3_BUCKET_NAME}/${sourceKey}`,
+        Key: destinationKey,
+        MetadataDirective: "REPLACE",
+        ContentType: "image/png", // image api always creates png images
+        Metadata: {
+          ...metadata,
+          preview: previewId,
+          previewkey: newPreviewKey,
+        },
+      });
+
+      const copyPreviewCommand = new CopyObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        CopySource: `${S3_BUCKET_NAME}/${previewKey}`,
+        Key: newPreviewKey,
+        ContentType: "image/png",
+      });
+
+
+      await s3Client.send(copyCommand);
+      await s3Client.send(copyPreviewCommand);
+
+      return {
+        success: true,
+        message: `successfully copied ${itemName} with preview`,
+      };
+
+    } else {
+      const copyCommand = new CopyObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        CopySource: `${S3_BUCKET_NAME}/${sourceKey}`,
+        Key: destinationKey,
+      });
+
+      await s3Client.send(copyCommand);
+
+      return {
+        success: true,
+        message: `successfully copied ${itemName}`,
+      };
+    }
   } catch (error) {
+    console.log(`Error copying and pasting ${itemName}: ${error}`);
     return {
       success: false,
       message: `unknown error checking share status: ${error}`,
