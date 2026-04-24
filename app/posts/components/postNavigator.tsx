@@ -47,7 +47,7 @@ export default function PostNavigator({
   }, [posts, shareName]);
 
   return (
-    <div className="flex items-center justify-center absolute right-8 top-1/2 -translate-y-1/2">
+    <div className="flex items-center justify-center absolute right-8 max-md:right-1 top-1/2 -translate-y-1/2">
       <div className="flex flex-col gap-4">
         <button
           onClick={() => navigatePosts(-1)}
