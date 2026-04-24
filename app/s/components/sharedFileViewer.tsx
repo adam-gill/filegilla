@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Download, Info, MoreVertical, Copy, Settings } from "lucide-react";
+import {
+  Download,
+  Info,
+  MoreVertical,
+  Copy,
+  Settings,
+  ChevronLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,9 +48,10 @@ export default function SharedFileViewer({
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [syncStatus, setSyncStatus] = useState<"loaded" | "loading" | "error">(
-    "loading"
+    "loading",
   );
   const [mounted, setMounted] = useState(false);
+  const [historyLength, setHistoryLength] = useState(0);
   const infoRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const filegillaLink =
@@ -55,6 +63,7 @@ export default function SharedFileViewer({
   // Set mounted to true on client to prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
+    setHistoryLength(window.history.length);
   }, []);
 
   // Close dropdown when clicking outside of the more info alert dialog
@@ -89,7 +98,7 @@ export default function SharedFileViewer({
         title: "success!",
         description: `successfully downloaded ${createPublicFileName(
           file?.name || "file",
-          shareName
+          shareName,
         )}`,
         variant: "good",
       });
@@ -98,7 +107,7 @@ export default function SharedFileViewer({
         title: "error",
         description: `failed to download ${createPublicFileName(
           file?.name || "file",
-          shareName
+          shareName,
         )}`,
         variant: "destructive",
       });
@@ -111,7 +120,7 @@ export default function SharedFileViewer({
         const { success, message } = await deleteShareItem(
           file?.name || "",
           shareName,
-          file?.etag || ""
+          file?.etag || "",
         );
 
         if (success) {
@@ -150,6 +159,12 @@ export default function SharedFileViewer({
           <div className="flex items-center justify-between mb-6">
             {file && (
               <div className="flex items-center gap-3 overflow-hidden">
+                {historyLength > 2 && (
+                  <ChevronLeft
+                    className="cursor-pointer w-6 h-6 stroke-3 mr-2"
+                    onClick={() => router.back()}
+                  />
+                )}
                 <GetFileIcon fileName={file.name} isFgDoc={file.isFgDoc} />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-xl font-semibold truncate">
@@ -328,6 +343,7 @@ export default function SharedFileViewer({
       {file && (
         <ShareDialog
           item={file}
+          altShareName={shareName}
           location={undefined}
           isShareOpen={isShareOpen}
           setIsShareOpen={setIsShareOpen}

@@ -164,9 +164,10 @@ export default function FileRenderer({
               <Image
                 width={500}
                 height={300}  
+                loading="eager"
                 src={filePreviewUrl}
                 alt={`${fileName} preview`}
-                className="rounded-lg mb-6"
+                className="rounded-lg mb-6 w-auto h-auto"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}

@@ -3,7 +3,7 @@ import { share } from "@/prisma/generated/client";
 import { HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getScopedS3Client } from "@/lib/aws/actions";
 import { createFullPreviewUrl } from "@/lib/helpers";
-import { unstable_noStore as noStore } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 
 export interface Posts extends share {
   previewUrl?: string;
@@ -17,15 +17,8 @@ const getKeyFromUrl = (s3Url: string): string => {
   return parts.slice(3).join("/");
 };
 
-export const fetchPosts = async (): Promise<{
-  success: boolean;
-  message: string;
-  posts?: share[];
-}> => {
-
-  noStore();
-
-  try {
+const getCachedPosts = unstable_cache(
+  async () => {
     const s3Client = await getScopedS3Client("public");
 
     const posts = await prisma.share.findMany({
@@ -36,7 +29,7 @@ export const fetchPosts = async (): Promise<{
         views: "desc",
       },
     });
-    
+
     const postsWithMetaData: Posts[] = await Promise.all(
       posts.map(async (post) => {
         const headCommand = new HeadObjectCommand({
@@ -52,11 +45,26 @@ export const fetchPosts = async (): Promise<{
 
         return {
           ...post,
+          views: Number(post.views) as any,
           previewUrl,
           isFgDoc,
         };
       })
     );
+
+    return postsWithMetaData;
+  },
+  ["posts-list"],
+  { tags: ["posts-list"], revalidate: 30 } // Refresh cache every 30 seconds
+);
+
+export const fetchPosts = async (): Promise<{
+  success: boolean;
+  message: string;
+  posts?: share[];
+}> => {
+  try {
+    const postsWithMetaData = await getCachedPosts();
 
     return {
       success: true,

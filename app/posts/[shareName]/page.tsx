@@ -1,9 +1,12 @@
 import { Metadata } from "next";
-import { getOgData, getSharedFile, incrementShareViews } from "../actions";
+import { getOgData, getSharedFile, incrementShareViews } from "@/app/s/actions";
 import { Suspense } from "react";
-import SharedFileViewer from "../components/sharedFileViewer";
+import SharedFileViewer from "@/app/s/components/sharedFileViewer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { viewsText } from "@/lib/helpers";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { fetchPosts } from "../actions";
+import PostNavigator from "../components/postNavigator";
 
 interface ShareViewerProps {
   params: Promise<{ shareName: string }>;
@@ -64,6 +67,7 @@ const LoadingScreen = () => {
           <Skeleton className="w-full h-150 mt-8" />
         </div>
       </div>
+      <PostNavigator posts={undefined} shareName={""} />
     </div>
   );
 };
@@ -71,11 +75,12 @@ const LoadingScreen = () => {
 async function ShareContent({ shareName }: { shareName: string }) {
   const { initialFile } = await getSharedFile(shareName);
 
-  const { success, message, views } = await incrementShareViews(shareName);
+  const viewsResponse = await incrementShareViews(shareName);
+  const postsResponse = await fetchPosts();
 
-  if (!success) {
+  if (!viewsResponse.success) {
     console.error(
-      `Failed to increment views for share '${shareName}': ${message}`
+      `Failed to increment views for share '${shareName}': ${viewsResponse.message}`,
     );
   }
 
@@ -88,11 +93,15 @@ async function ShareContent({ shareName }: { shareName: string }) {
   }
 
   return (
-    <SharedFileViewer
-      initialFile={initialFile}
-      shareName={shareName}
-      views={views}
-    />
+    <div className="w-full">
+      <SharedFileViewer
+        initialFile={initialFile}
+        shareName={shareName}
+        views={viewsResponse.views}
+      />
+
+      <PostNavigator posts={postsResponse.posts} shareName={shareName} />
+    </div>
   );
 }
 

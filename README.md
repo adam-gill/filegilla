@@ -13,7 +13,6 @@ vim .env # see .env example  for what to put in .env file
 
 docker compose build
 docker compose up -d
-# TODO - need to setup database tables for everything to work
 
 # to view logs of the web and db container
 docker compose logs -f 
@@ -63,12 +62,11 @@ RESEND_API_KEY=
 
 
 ## future roadmap
-- search feature (search recursively through subdirectories). Search file/folder name title with fuzzy search and possibly search through text of fb docs)
+- search feature (search recursively through subdirectories). Search file/folder name title with fuzzy search and possibly search through text of fb docs
 - add preview images for text files, filegilla documents, and files that can be displayed in plain text (like code files - index.js)
 - revamp filegilla documents, they kinda suck
 - add feature to select multiple items to move/delete (two separate things probably)
 - url shortener (server actions only, at least for text sharing so that i can put something on filegilla then curl it on my server)
 - maybe some text dump feature (so you can curl filegilla.com/dump/your_dump_name and get that text). filegilla documents need js to load in.
 - redo pdf render to use react-pdf and pdfjs
-- next/previous post button, page location rememberer, and link uploads
 - integrate yt-dlp/cobalt with uploading button (enter url to download content which is then uploaded to filegilla)

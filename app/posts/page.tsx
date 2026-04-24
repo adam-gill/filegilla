@@ -63,7 +63,7 @@ export default function Posts() {
 
               <div className="flex flex-wrap w-full gap-4 items-start justify-center mt-4">
                 {new Array(9).fill(0).map((_, index) => (
-                  <Skeleton className="w-xs h-[366px] rounded-xl" key={index} />
+                  <Skeleton className="w-xs h-91.5 rounded-xl" key={index} />
                 ))}
               </div>
             </div>

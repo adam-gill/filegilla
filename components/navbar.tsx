@@ -96,7 +96,7 @@ export default function Navbar() {
                   <NavigationMenuItem>
                     <NavigationMenuLink
                       href="/u"
-                      className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                      className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
                     >
                       dashboard
                     </NavigationMenuLink>
@@ -104,7 +104,7 @@ export default function Navbar() {
                   <NavigationMenuItem>
                     <NavigationMenuLink
                       href="/posts"
-                      className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                      className="max-md:hidden group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 max-sm:px-2 py-2 text-lg font-medium transition-colors hover:bg-grayHover focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
                     >
                       posts
                     </NavigationMenuLink>
@@ -118,7 +118,7 @@ export default function Navbar() {
               <NavigationMenuItem>
                 <NavigationMenuLink
                   href={!isPending && !userData ? "/auth" : "/account"}
-                  className="max-md:p-0 group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  className="mt-2 max-md:p-0 group relative inline-flex h-9 w-max items-center justify-center rounded-md px-2 py-2 text-sm text-black font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
                 >
                   {userData ? (
                     <Avatar>
@@ -133,9 +133,9 @@ export default function Navbar() {
                   ) : (
                     <>
                       {isPending ? (
-                        <Skeleton className="rounded-full h-10 w-10 !bg-neutral-50/10" />
+                        <Skeleton className="rounded-full h-10 w-10 bg-neutral-50/10!" />
                       ) : (
-                        <div className="w-[50px] h-[50px] bg-white flex items-center justify-center rounded-full">
+                        <div className="w-12.5 h-12.5 bg-white flex items-center justify-center rounded-full">
                           <LogIn className="text-black" />
                         </div>
                       )}

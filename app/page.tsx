@@ -8,7 +8,7 @@ export default function Landing() {
     <main className="pt-16">
       <div className="flex flex-col w-full px-6 mx-auto max-w-7xl justify-between">
         <main className="flex flex-col items-center">
-          <div className="w-full max-w-6xl max-md:text-4xl flex flex-col mt-8 text-6xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">
+          <div className="w-full max-w-6xl max-md:text-4xl flex flex-col mt-8 text-6xl font-bold text-center text-transparent bg-clip-text bg-linear-to-r from-gray-100 via-blue-400 to-blue-800 pb-4">
             private and secure cloud storage.
           </div>
           <div
@@ -29,10 +29,10 @@ export default function Landing() {
             />
           </div>
 
-          <div className="w-full mt-[200px] flex flex-col items-center justify-center ">
+          <div className="w-full mt-50 flex flex-col items-center justify-center ">
             <Link
               href={"/auth?signUp=1"}
-              className="w-full max-w-[300px] bg-gradient-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium py-4 text-3xl text-center px-14 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
+              className="w-full max-w-75 bg-linear-to-r from-blue-800 via-blue-400 to-white text-black hover:brightness-90 font-medium py-4 text-3xl text-center px-14 rounded-full hover:scale-105 transition-all duration-500 ease-in-out"
             >
               join now
             </Link>

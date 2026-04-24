@@ -38,11 +38,13 @@ interface ShareDialogProps {
   isShareOpen: boolean;
   setIsShareOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isSharePage?: boolean;
+  altShareName?: string; // this is for the shared file viewer, since the share name is not in the url, it needs to check the share status with the backend to get the share name and url
 }
 
 export default function ShareDialog({
   item,
   location,
+  altShareName,
   isShareOpen,
   setIsShareOpen,
   isSharePage,
@@ -178,13 +180,16 @@ export default function ShareDialog({
       try {
 
         const userId = session?.user?.id;
-        const filePath = item.path.replace("userId", userId || "userId");
+        let filePath = item.path.replace("userId", userId || "userId");
+        
+        if (filePath.startsWith("/u/")) {
+          filePath = filePath.replace("/u/", `private/${userId}/`);
+        }
 
-        console.log("checking share status for", item.name);
-
+        console.log(item.path, filePath);
 
         const { success, shareUrl, shareName, isFeatured } =
-          await checkShareItem(item.name, filePath);
+          await checkShareItem(item.name, filePath, altShareName);
 
 
         if (success && shareUrl && shareName) {
@@ -325,7 +330,7 @@ export default function ShareDialog({
             {itemShareUrl ? (
               <AlertDialogContent className="bg-white! shadow-2xl shadow-gray-600 text-gray-200">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-black text-2xl max-w-[318px]">
+                  <AlertDialogTitle className="text-black text-2xl max-w-79.5">
                     {`${
                       item.type === "file"
                         ? `${truncateFileName(item.name)} aka /s/${itemShareName}`
@@ -336,7 +341,7 @@ export default function ShareDialog({
                     shared with the world
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="flex flex-col  items-start text-black gap-2 max-w-[318px]">
+                <div className="flex flex-col  items-start text-black gap-2 max-w-79.5">
                   <div>
                     <div>
                       {`share name: `}
@@ -402,7 +407,7 @@ export default function ShareDialog({
                   </div>
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
-                      <Skeleton className="h-5 w-[125px]" />
+                      <Skeleton className="h-5 w-31.25" />
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">
@@ -420,7 +425,7 @@ export default function ShareDialog({
                       <MobileTooltip
                         trigger={<Info className="w-4 h-4 text-neutral-800" />}
                         content={
-                          <span className="w-[200px]">
+                          <span className="w-50">
                             Checking this box will feature this item in the
                             /posts page. If you don't check it, the file will
                             still be public, but only users with the link will
@@ -481,7 +486,7 @@ export default function ShareDialog({
                     <strong>{truncateFileName(item.name)}</strong>, or leave it
                     random. this will be accessible to anyone with the link.
                   </AlertDialogDescription>
-                  <div className="text-black text-left text-wrap max-w-[380px]">
+                  <div className="text-black text-left text-wrap max-w-95">
                     {`preview:`} <strong>{filegillaLink}</strong>
                   </div>
                 </AlertDialogHeader>

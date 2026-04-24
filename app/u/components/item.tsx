@@ -405,7 +405,7 @@ export default function Item({
                       unoptimized
                     />
                   ) : (
-                    <div className="w-full flex items-center justify-center">
+                    <div onClick={handleItemOpen} className="w-full flex items-center justify-center cursor-pointer">
                       <File size={192} strokeWidth={0.8} className="w-full text-gray-400 mb-6" />
                     </div>
                   )}

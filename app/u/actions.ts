@@ -1223,6 +1223,7 @@ export const deleteShareItem = async (
 export const checkShareItem = async (
   itemName: string,
   objPath: string,
+  altShareName?: string,
 ): Promise<{
   success: boolean;
   message: string;
@@ -1242,24 +1243,46 @@ export const checkShareItem = async (
   console.log("checking share status for: ", itemName, objPath);
 
   try {
-    const response = await prisma.share.findFirst({
-      where: {
-        objSourcePath: objPath,
-      },
-    });
+    if (altShareName) {
+      const response = await prisma.share.findFirst({
+        where: {
+          shareName: altShareName,
+        },
+      });
 
-    if (response?.s3Url && response.shareName) {
-      console.log(`share found for ${itemName}`);
-      return {
-        success: true,
-        message: `${itemName} shareUrl found`,
-        shareUrl: response.s3Url,
-        shareName: response.shareName,
-        sharePreviewKey: response.previewKey || undefined,
-        isFeatured: response.isFeatured || false,
-      };
+      if (response?.s3Url && response.shareName) {
+        console.log(`share found for ${itemName}`);
+        return {
+          success: true,
+          message: `${itemName} shareUrl found`,
+          shareUrl: response.s3Url,
+          shareName: response.shareName,
+          sharePreviewKey: response.previewKey || undefined,
+          isFeatured: response.isFeatured || false,
+        };
+      } else {
+        return { success: true, message: `${itemName} is not shared` };
+      }
     } else {
-      return { success: true, message: `${itemName} is not shared` };
+      const response = await prisma.share.findFirst({
+        where: {
+          objSourcePath: objPath,
+        },
+      });
+
+      if (response?.s3Url && response.shareName) {
+        console.log(`share found for ${itemName}`);
+        return {
+          success: true,
+          message: `${itemName} shareUrl found`,
+          shareUrl: response.s3Url,
+          shareName: response.shareName,
+          sharePreviewKey: response.previewKey || undefined,
+          isFeatured: response.isFeatured || false,
+        };
+      } else {
+        return { success: true, message: `${itemName} is not shared` };
+      }
     }
   } catch (error) {
     return {
