@@ -70,6 +70,7 @@ export default function PDFViewer({ viewUrl }: PDFViewerProps) {
               width={containerWidth}
               renderTextLayer={true}
               renderAnnotationLayer={true}
+              className={"mb-4"}
             />
           ))}
       </Document>

@@ -68,5 +68,4 @@ RESEND_API_KEY=
 - add feature to select multiple items to move/delete (two separate things probably)
 - url shortener (server actions only, at least for text sharing so that i can put something on filegilla then curl it on my server)
 - maybe some text dump feature (so you can curl filegilla.com/dump/your_dump_name and get that text). filegilla documents need js to load in.
-- redo pdf render to use react-pdf and pdfjs
 - integrate yt-dlp/cobalt with uploading button (enter url to download content which is then uploaded to filegilla)
