@@ -1,8 +1,8 @@
 generator client {
-  provider = "prisma-client"
-  output = "./generated"
+  provider     = "prisma-client"
+  output       = "./generated"
   moduleFormat = "cjs"
-  runtime = "nodejs"
+  runtime      = "nodejs"
 }
 
 datasource db {
@@ -20,6 +20,7 @@ model User {
   updatedAt     DateTime
   note          String?
   accounts      Account[]
+  cliItem       cliItem[]
   preview       preview[]
   sessions      Session[]
   share         share[]
@@ -90,20 +91,20 @@ model Jwks {
 }
 
 model share {
-  shareName  String         @id(map: "shares_pkey")
-  id         String         @db.Uuid
-  itemName   String
-  s3Url      String
-  ownerId    String?
-  itemType   item_type_enum @default(file)
-  createdAt  DateTime       @default(now()) @db.Timestamp(6)
-  updatedAt  DateTime       @default(now()) @db.Timestamp(6)
-  sourceEtag String?
-  views      BigInt         @default(0)
-  previewKey String?
-  isFeatured Boolean?       @default(false)
-  user       User?          @relation(fields: [ownerId], references: [id], onUpdate: NoAction, map: "fk_shares_owner")
-  objSourcePath String?     @unique
+  shareName     String         @id(map: "shares_pkey")
+  id            String         @db.Uuid
+  itemName      String
+  s3Url         String
+  ownerId       String?
+  itemType      item_type_enum @default(file)
+  createdAt     DateTime       @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime       @default(now()) @db.Timestamp(6)
+  sourceEtag    String?
+  views         BigInt         @default(0)
+  previewKey    String?
+  isFeatured    Boolean?       @default(false)
+  objSourcePath String?        @unique
+  user          User?          @relation(fields: [ownerId], references: [id], onUpdate: NoAction, map: "fk_shares_owner")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -118,8 +119,9 @@ model verificationCode {
 
 model apiKey {
   hash      String
-  createdAt DateTime? @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
-  id        String    @id @db.Uuid
+  createdAt DateTime @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
+  id        String   @id @db.Uuid
+  user      String
 }
 
 model preview {
@@ -129,6 +131,19 @@ model preview {
   createdAt DateTime? @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
   updatedAt DateTime? @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
   user      User      @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model cliItem {
+  id               String   @id
+  isFile           Boolean
+  content          String
+  createdAt        DateTime @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
+  updatedAt        DateTime @default(dbgenerated("(now() AT TIME ZONE 'UTC'::text)")) @db.Timestamptz(3)
+  ownerId          String
+  publiclyViewable Boolean
+  user             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
 }
 
 enum item_type_enum {

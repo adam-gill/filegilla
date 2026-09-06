@@ -1,0 +1,695 @@
+#!/usr/bin/env bash
+# fg — filegilla CLI
+#
+# A thin wrapper around the filegilla HTTP API. Use `fg setup` once
+# to configure the API key and base URL; after that, every request
+# is authenticated automatically.
+#
+# Install:
+#     curl -fsSL https://filegilla.com/install.sh | sh
+#     fg setup
+#
+# Common usage:
+#     fg post ./photo.jpg              # upload, prompt for id
+#     fg post ./photo.jpg --id my-photo
+#     fg get my-photo                  # download to ./<original-filename>
+#     fg get my-photo -O ./saved.jpg   # download to a specific path
+#     fg metadata my-photo
+#     fg delete my-photo
+#
+# Configuration is read from:
+#     ~/.config/fg/config              (base URL, key id; mode 600)
+#     ~/.config/fg/api_key             (key secret; mode 600)
+#
+# Environment variables override config-file values:
+#     FG_BASE_URL, FG_API_KEY, FG_API_KEY_ID
+#
+# Shell completion:
+#     fg completion bash > ~/.local/share/bash-completion/completions/fg
+#     fg completion zsh  > ~/.zsh/completions/_fg
+
+set -euo pipefail
+
+FG_VERSION="0.1.0"
+FG_CONFIG_DIR="${FG_CONFIG_DIR:-${HOME}/.config/fg}"
+FG_CONFIG_FILE="${FG_CONFIG_DIR}/config"
+FG_API_KEY_FILE="${FG_CONFIG_DIR}/api_key"
+
+# In-memory config (loaded from disk by fg_load_config).
+FG_BASE_URL=""
+FG_API_KEY=""
+FG_API_KEY_ID=""
+
+# ---------- config I/O ----------
+
+fg_load_config() {
+  if [[ -r "${FG_CONFIG_FILE}" ]]; then
+    # Source the config file. It must be KEY=VALUE lines.
+    # shellcheck disable=SC1090
+    (
+      set +u
+      . "${FG_CONFIG_FILE}"
+      [[ -n "${FG_BASE_URL:-}" ]] && FG_BASE_URL_IN="${FG_BASE_URL}"
+      [[ -n "${FG_API_KEY_ID:-}" ]] && FG_API_KEY_ID_IN="${FG_API_KEY_ID}"
+    )
+    FG_BASE_URL="${FG_BASE_URL:-${FG_BASE_URL_IN:-https://filegilla.com}}"
+    FG_API_KEY_ID="${FG_API_KEY_ID:-${FG_API_KEY_ID_IN:-}}"
+  else
+    FG_BASE_URL="${FG_BASE_URL:-https://filegilla.com}"
+  fi
+
+  # API key secret in its own file, mode 600. Env var overrides.
+  if [[ -z "${FG_API_KEY}" && -r "${FG_API_KEY_FILE}" ]]; then
+    FG_API_KEY="$(cat "${FG_API_KEY_FILE}")"
+  fi
+}
+
+fg_save_config() {
+  mkdir -p "${FG_CONFIG_DIR}"
+  chmod 700 "${FG_CONFIG_DIR}"
+  {
+    printf 'FG_BASE_URL=%q\n' "${FG_BASE_URL}"
+    if [[ -n "${FG_API_KEY_ID}" ]]; then
+      printf 'FG_API_KEY_ID=%q\n' "${FG_API_KEY_ID}"
+    fi
+  } > "${FG_CONFIG_FILE}"
+  chmod 600 "${FG_CONFIG_FILE}"
+}
+
+fg_save_api_key() {
+  mkdir -p "${FG_CONFIG_DIR}"
+  chmod 700 "${FG_CONFIG_DIR}"
+  printf '%s' "${1}" > "${FG_API_KEY_FILE}"
+  chmod 600 "${FG_API_KEY_FILE}"
+}
+
+# ---------- output helpers ----------
+
+fg_die() {
+  echo "fg: $*" >&2
+  exit 1
+}
+
+fg_warn() {
+  echo "fg: $*" >&2
+}
+
+# Run jq if available, else fall back to sed-based extraction for
+# the small set of fields this script reads. The fallback is
+# intentionally narrow; it works for the metadata response shape
+# only.
+fg_jq() {
+  local filter="$1"
+  if command -v jq >/dev/null 2>&1; then
+    jq -r "${filter}"
+  else
+    cat
+  fi
+}
+
+fg_json_str() {
+  local field="$1"
+  if command -v jq >/dev/null 2>&1; then
+    jq -r --arg f "${field}" '.data[$f] // .[$f] // empty'
+  else
+    sed -n 's/.*"'"${field}"'":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1
+  fi
+}
+
+fg_json_bool() {
+  local field="$1"
+  if command -v jq >/dev/null 2>&1; then
+    jq -r --arg f "${field}" '.data[$f] // .[$f] // empty'
+  else
+    sed -n 's/.*"'"${field}"'":[[:space:]]*\(true\|false\).*/\1/p' | head -n1
+  fi
+}
+
+# ---------- HTTP helpers ----------
+
+# Echoes a single -H argument per call. Caller builds the array.
+fg_auth_headers() {
+  printf '%s\n' "-H" "x-api-key: ${FG_API_KEY}"
+  if [[ -n "${FG_API_KEY_ID}" ]]; then
+    printf '%s\n' "-H" "x-api-key-id: ${FG_API_KEY_ID}"
+  fi
+}
+
+# Build a curl command as a bash array. Returns via the global
+# FG_CMD array because bash arrays can't be returned from functions.
+FG_CMD=()
+fg_build_curl() {
+  FG_CMD=(curl -fsSL --connect-timeout 10 --max-time 3600)
+  if [[ -n "${FG_API_KEY}" ]]; then
+    FG_CMD+=(-H "x-api-key: ${FG_API_KEY}")
+    if [[ -n "${FG_API_KEY_ID}" ]]; then
+      FG_CMD+=(-H "x-api-key-id: ${FG_API_KEY_ID}")
+    fi
+  fi
+}
+
+fg_run_curl() {
+  fg_build_curl
+  FG_CMD+=("$@")
+  "${FG_CMD[@]}"
+}
+
+fg_require_api_key() {
+  if [[ -z "${FG_API_KEY}" ]]; then
+    fg_die "no API key configured. Run 'fg setup' first."
+  fi
+}
+
+# ---------- commands ----------
+
+fg_help() {
+  cat <<'EOF'
+fg — filegilla CLI
+
+Usage:
+  fg <command> [options]
+
+Commands:
+  setup                              Configure base URL, API key id, and key secret
+  post <file> [options]              Upload a file
+  post --text <text> [options]       Upload a text snippet
+  get <id> [options]                 Download a file or print a text item
+  metadata <id> [options]            Show metadata for an item
+  delete <id> [options]              Delete an item
+  config                             Show current config
+  completion <bash|zsh>              Print shell completion script
+  help                               Show this help
+  version                            Show version
+
+Post (upload) options:
+  --id <id>        Store under this id. If omitted, you'll be prompted;
+                   press Enter to let the server generate one.
+  --text <text>    Upload text instead of a file. The first positional
+                   argument is ignored when --text is used.
+  --key <password> Encrypt the text with this password before storing.
+                   Only meaningful with --text.
+  --public         Mark the item as publicly viewable (no auth needed
+                   to read it back).
+  --overwrite      For file uploads: overwrite an existing S3 object
+                   with the same name.
+
+Get (download) options:
+  --key <password> Decrypt a text item that was uploaded with --key.
+  -O <path>        Write the file to <path> instead of the current
+                   directory. For text items, this is ignored (text
+                   always goes to stdout).
+
+Metadata options:
+  --json           Print the raw JSON response instead of a table.
+
+Delete options:
+  --yes, -y        Skip the confirmation prompt.
+
+Config layout (created by 'fg setup'):
+  ~/.config/fg/config          base URL and key id (mode 600)
+  ~/.config/fg/api_key         key secret (mode 600)
+
+Environment variables override config-file values:
+  FG_BASE_URL, FG_API_KEY, FG_API_KEY_ID
+
+Examples:
+  fg setup
+  fg post ./photo.jpg
+  fg post ./photo.jpg --id my-photo --public
+  fg post --text "hello world" --id greeting
+  fg get my-photo
+  fg get my-photo -O ~/Downloads/saved.jpg
+  fg get my-greeting --key my-password
+  fg metadata my-photo
+  fg metadata my-photo --json
+  fg delete my-photo
+
+EOF
+}
+
+fg_version() {
+  echo "fg ${FG_VERSION}"
+}
+
+# ---------- setup ----------
+
+fg_cmd_setup() {
+  echo "filegilla CLI setup"
+  echo
+  echo "Press Enter to accept the default in [brackets]."
+  echo
+
+  # Base URL.
+  local default_url="${FG_BASE_URL:-https://filegilla.com}"
+  echo -n "Base URL [${default_url}]: "
+  read -r url
+  FG_BASE_URL="${url:-${default_url}}"
+
+  # API key id (optional).
+  local default_id="${FG_API_KEY_ID:-}"
+  echo -n "API key id [${default_id:-none}]: "
+  read -r kid
+  FG_API_KEY_ID="${kid:-${default_id}}"
+
+  # API key secret (required).
+  local secret
+  while true; do
+    echo -n "API key secret: "
+    # Read without echo if a TTY. -s is in bash and POSIX sh; works.
+    read -r -s secret
+    echo
+    if [[ -z "${secret}" ]]; then
+      echo "  secret cannot be empty"
+      continue
+    fi
+    echo -n "Confirm API key secret: "
+    read -r -s secret2
+    echo
+    if [[ "${secret}" != "${secret2}" ]]; then
+      echo "  secrets do not match; try again"
+      continue
+    fi
+    break
+  done
+
+  fg_save_config
+  fg_save_api_key "${secret}"
+
+  echo
+  echo "Saved to ${FG_CONFIG_DIR}/"
+  echo "  config     $(wc -c < "${FG_CONFIG_FILE}" 2>/dev/null || echo 0) bytes"
+  echo "  api_key    $(wc -c < "${FG_API_KEY_FILE}" 2>/dev/null || echo 0) bytes"
+  echo
+  echo "Try: fg post ./somefile"
+}
+
+fg_cmd_config() {
+  fg_load_config
+  echo "FG_BASE_URL    = ${FG_BASE_URL}"
+  if [[ -n "${FG_API_KEY_ID}" ]]; then
+    echo "FG_API_KEY_ID  = ${FG_API_KEY_ID}"
+  else
+    echo "FG_API_KEY_ID  = (not set; server default will be used)"
+  fi
+  if [[ -n "${FG_API_KEY}" ]]; then
+    echo "FG_API_KEY     = (set, ${#FG_API_KEY} chars)"
+  else
+    echo "FG_API_KEY     = (not set)"
+  fi
+  echo
+  echo "Files:"
+  [[ -f "${FG_CONFIG_FILE}" ]] && echo "  ${FG_CONFIG_FILE} (mode $(stat -c '%a' "${FG_CONFIG_FILE}" 2>/dev/null || stat -f '%Lp' "${FG_CONFIG_FILE}"))" || echo "  ${FG_CONFIG_FILE} (missing)"
+  [[ -f "${FG_API_KEY_FILE}" ]] && echo "  ${FG_API_KEY_FILE} (mode $(stat -c '%a' "${FG_API_KEY_FILE}" 2>/dev/null || stat -f '%Lp' "${FG_API_KEY_FILE}"))" || echo "  ${FG_API_KEY_FILE} (missing)"
+}
+
+# ---------- post (upload) ----------
+
+# Reads a value from stdin, with an optional default if the user hits
+# Enter. If the user types anything non-empty, returns that. If they
+# hit Enter, echoes the default to stdout.
+fg_prompt_with_default() {
+  local prompt="$1"
+  local default="$2"
+  local reply
+  if [[ -n "${default}" ]]; then
+    echo -n "${prompt} [${default}]: " >&2
+  else
+    echo -n "${prompt}: " >&2
+  fi
+  read -r reply
+  if [[ -z "${reply}" ]]; then
+    printf '%s' "${default}"
+  else
+    printf '%s' "${reply}"
+  fi
+}
+
+fg_cmd_post() {
+  fg_load_config
+  fg_require_api_key
+
+  local file="" text="" id="" key="" public="false" overwrite="false"
+
+  # First pass: pull out flags.
+  local positional=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --id) id="$2"; shift 2;;
+      --text) text="$2"; shift 2;;
+      --key) key="$2"; shift 2;;
+      --public) public="true"; shift;;
+      --overwrite) overwrite="true"; shift;;
+      --) shift; while [[ $# -gt 0 ]]; do positional+=("$1"); shift; done;;
+      -h|--help) fg_help; exit 0;;
+      *) positional+=("$1"); shift;;
+    esac
+  done
+
+  if [[ -n "${text}" ]]; then
+    : # text mode; file arg is ignored
+  elif [[ ${#positional[@]} -eq 0 ]]; then
+    fg_die "post: file path required (or use --text)"
+  elif [[ ${#positional[@]} -eq 1 ]]; then
+    file="${positional[0]}"
+  else
+    fg_die "post: too many arguments: ${positional[*]}"
+  fi
+
+  # If --id wasn't given, prompt. Enter = empty (server generates).
+  if [[ -z "${id}" && -z "${text}" ]]; then
+    id="$(fg_prompt_with_default "id (Enter to auto-generate)" "")"
+  fi
+
+  fg_build_curl
+  FG_CMD+=(-X POST "${FG_BASE_URL}/cli")
+
+  if [[ -n "${text}" ]]; then
+    FG_CMD+=(-F "text=${text}")
+  else
+    if [[ ! -r "${file}" ]]; then
+      fg_die "post: cannot read file: ${file}"
+    fi
+    FG_CMD+=(-F "file=@${file}")
+  fi
+
+  if [[ -n "${id}" ]]; then
+    FG_CMD+=(-F "id=${id}")
+  fi
+  if [[ -n "${key}" ]]; then
+    FG_CMD+=(-F "key=${key}")
+  fi
+  if [[ "${public}" == "true" ]]; then
+    FG_CMD+=(-F "public=true")
+  fi
+  if [[ "${overwrite}" == "true" ]]; then
+    FG_CMD+=(-F "overwrite=true")
+  fi
+
+  local resp
+  resp="$("${FG_CMD[@]}")"
+
+  # Try to extract a friendly message. Fall back to raw JSON.
+  if command -v jq >/dev/null 2>&1; then
+    echo "${resp}" | jq -r '.message // .'
+  else
+    echo "${resp}"
+  fi
+}
+
+# ---------- get (download) ----------
+
+fg_cmd_get() {
+  fg_load_config
+
+  local id="" key="" out=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --key) key="$2"; shift 2;;
+      -O) out="$2"; shift 2;;
+      -h|--help) fg_help; exit 0;;
+      *) id="$1"; shift;;
+    esac
+  done
+
+  if [[ -z "${id}" ]]; then
+    fg_die "get: id required"
+  fi
+
+  # Fetch metadata. If auth isn't set up, try the no-auth version
+  # (which works for public items only). Either way, if metadata
+  # 401s, surface a useful error.
+  local meta meta_args=()
+  if [[ -n "${FG_API_KEY}" ]]; then
+    fg_build_curl
+    FG_CMD+=("${FG_BASE_URL}/cli/${id}/metadata")
+    meta="$("${FG_CMD[@]}" 2>/dev/null || true)"
+  else
+    meta="$(curl -fsSL "${FG_BASE_URL}/cli/${id}/metadata" 2>/dev/null || true)"
+  fi
+
+  if [[ -z "${meta}" ]]; then
+    fg_die "get: could not fetch metadata for '${id}' (item missing, or 'fg setup' not run)"
+  fi
+
+  local is_file
+  is_file="$(echo "${meta}" | fg_json_bool isFile)"
+  local filename
+  filename="$(echo "${meta}" | fg_json_str filename)"
+
+  if [[ "${is_file}" != "true" && -z "${is_file}" ]]; then
+    fg_die "get: unexpected metadata response: ${meta}"
+  fi
+
+  # Build the actual GET.
+  if [[ -n "${FG_API_KEY}" ]]; then
+    fg_build_curl
+  else
+    FG_CMD=(curl -fsSL)
+  fi
+  if [[ -n "${key}" ]]; then
+    FG_CMD+=(--data-urlencode "key=${key}" -G)
+  fi
+  FG_CMD+=("${FG_BASE_URL}/cli/${id}")
+
+  if [[ "${is_file}" == "true" ]]; then
+    if [[ -z "${out}" ]]; then
+      if [[ -n "${filename}" ]]; then
+        out="./${filename}"
+      else
+        out="./download"
+      fi
+    fi
+    FG_CMD+=(-o "${out}")
+    "${FG_CMD[@]}"
+    echo "saved to ${out}" >&2
+  else
+    # Text item. Always to stdout. --out/-O is ignored.
+    if [[ -n "${out}" ]]; then
+      fg_warn "--out/-O ignored for text items; printing to stdout"
+    fi
+    "${FG_CMD[@]}"
+  fi
+}
+
+# ---------- metadata ----------
+
+fg_cmd_metadata() {
+  fg_load_config
+
+  local id="" as_json="false"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json) as_json="true"; shift;;
+      -h|--help) fg_help; exit 0;;
+      *) id="$1"; shift;;
+    esac
+  done
+
+  if [[ -z "${id}" ]]; then
+    fg_die "metadata: id required"
+  fi
+
+  local resp
+  if [[ -n "${FG_API_KEY}" ]]; then
+    fg_run_curl "${FG_BASE_URL}/cli/${id}/metadata"
+  else
+    curl -fsSL "${FG_BASE_URL}/cli/${id}/metadata"
+  fi
+  resp="$(cat)"
+
+  if [[ "${as_json}" == "true" ]] || ! command -v jq >/dev/null 2>&1; then
+    echo "${resp}"
+    return
+  fi
+
+  echo "${resp}" | jq -r '
+    .data |
+    "id:               \(.id)",
+    "type:             \(if .isFile then "file" else "text" end)",
+    "filename:         \(.filename // "(none)")",
+    "publiclyViewable: \(.publiclyViewable)",
+    "createdAt:        \(.createdAt)",
+    "updatedAt:        \(.updatedAt)"
+  '
+}
+
+# ---------- delete ----------
+
+fg_cmd_delete() {
+  fg_load_config
+  fg_require_api_key
+
+  local id="" yes="false"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --yes|-y) yes="true"; shift;;
+      -h|--help) fg_help; exit 0;;
+      *) id="$1"; shift;;
+    esac
+  done
+
+  if [[ -z "${id}" ]]; then
+    fg_die "delete: id required"
+  fi
+
+  if [[ "${yes}" != "true" ]]; then
+    echo -n "Delete '${id}'? [y/N] "
+    local ans
+    read -r ans
+    case "${ans}" in
+      y|Y|yes|YES) ;;
+      *) echo "aborted"; exit 1;;
+    esac
+  fi
+
+  fg_build_curl
+  FG_CMD+=(-X DELETE "${FG_BASE_URL}/cli/${id}")
+  "${FG_CMD[@]}"
+  echo
+}
+
+# ---------- list ----------
+# (removed: the GET /cli list endpoint does not exist on the server yet,
+# so the subcommand was removed to avoid surfacing a 404 to the user.
+# Re-add when the endpoint is implemented.)
+
+# ---------- completion ----------
+
+fg_cmd_completion() {
+  local shell="${1:-}"
+  case "${shell}" in
+    bash)
+      cat <<'EOF'
+_fg() {
+  local cur prev cmds
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  cmds="setup post get metadata delete config completion help version"
+
+  if [[ ${COMP_CWORD} -eq 1 ]]; then
+    COMPREPLY=( $(compgen -W "${cmds}" -- "${cur}") )
+    return 0
+  fi
+
+  case "${COMP_WORDS[1]}" in
+    post)
+      if [[ "${prev}" == "--id" || "${prev}" == "--key" || "${prev}" == "--text" ]]; then
+        return 0
+      fi
+      if [[ "${cur}" == -* ]]; then
+        COMPREPLY=( $(compgen -W "--id --text --key --public --overwrite" -- "${cur}") )
+      else
+        COMPREPLY=( $(compgen -f -- "${cur}") )
+      fi
+      ;;
+    get)
+      if [[ "${prev}" == "-O" ]]; then
+        COMPREPLY=( $(compgen -f -- "${cur}") )
+      elif [[ "${prev}" == "--key" ]]; then
+        return 0
+      fi
+      ;;
+    delete)
+      if [[ "${cur}" == -* ]]; then
+        COMPREPLY=( $(compgen -W "--yes -y" -- "${cur}") )
+      fi
+      ;;
+    metadata)
+      if [[ "${cur}" == -* ]]; then
+        COMPREPLY=( $(compgen -W "--json" -- "${cur}") )
+      fi
+      ;;
+    completion)
+      COMPREPLY=( $(compgen -W "bash zsh" -- "${cur}") )
+      ;;
+  esac
+}
+complete -F _fg fg
+EOF
+      ;;
+    zsh)
+      cat <<'EOF'
+#compdef fg
+_fg() {
+  local -a commands
+  commands=(
+    'setup:Configure base URL, API key id, and key secret'
+    'post:Upload a file or text'
+    'get:Download a file or print a text item'
+    'metadata:Show metadata for an item'
+    'delete:Delete an item'
+    'config:Show current config'
+    'completion:Print shell completion script'
+    'help:Show help'
+    'version:Show version'
+  )
+  _arguments -C \
+    '1: :->command' \
+    '*:: :->args'
+
+  case $state in
+    command)
+      _describe 'command' commands
+      ;;
+    args)
+      case $words[1] in
+        post)
+          _arguments \
+            '--id[ID to store under]:id:' \
+            '--text[Text to upload]:text:' \
+            '--key[Encryption key]:key:' \
+            '--public[Mark as publicly viewable]' \
+            '--overwrite[Overwrite existing S3 object]'
+          ;;
+        get)
+          _arguments \
+            '--key[Decryption key]:key:' \
+            '-O[Output path]:file:_files'
+          ;;
+        metadata)
+          _arguments '--json[Output as JSON]'
+          ;;
+        delete)
+          _arguments '--yes[Skip confirmation]'
+          ;;
+        completion)
+          _arguments '1: :(bash zsh)'
+          ;;
+      esac
+      ;;
+  esac
+}
+_fg "$@"
+EOF
+      ;;
+    *)
+      fg_die "completion: specify 'bash' or 'zsh'"
+      ;;
+  esac
+}
+
+# ---------- entrypoint ----------
+
+fg_load_config
+
+if [[ $# -eq 0 ]]; then
+  fg_help
+  exit 0
+fi
+
+cmd="$1"
+shift
+
+case "${cmd}" in
+  setup) fg_cmd_setup "$@";;
+  post|upload) fg_cmd_post "$@";;
+  get|download) fg_cmd_get "$@";;
+  metadata) fg_cmd_metadata "$@";;
+  delete|rm) fg_cmd_delete "$@";;
+  config) fg_cmd_config "$@";;
+  completion) fg_cmd_completion "$@";;
+  help|-h|--help) fg_help;;
+  version|-V|--version) fg_version;;
+  *) fg_die "unknown command: ${cmd} (try 'fg help')";;
+esac

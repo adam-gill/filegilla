@@ -2,8 +2,9 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb"
-    }
+      bodySizeLimit: "5gb"
+    },
+    middlewareClientMaxBodySize: "5gb"
   },
   output: "standalone",
   reactStrictMode: true,
