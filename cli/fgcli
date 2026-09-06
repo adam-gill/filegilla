@@ -30,7 +30,7 @@
 
 set -euo pipefail
 
-FG_VERSION="0.1.0"
+FG_VERSION="0.1.1"
 FG_CONFIG_DIR="${FG_CONFIG_DIR:-${HOME}/.config/fgcli}"
 FG_CONFIG_FILE="${FG_CONFIG_DIR}/config"
 FG_API_KEY_FILE="${FG_CONFIG_DIR}/api_key"
