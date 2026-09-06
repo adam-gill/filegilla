@@ -14,22 +14,31 @@
 #   FG_INSTALL_DIR   target directory (default: ~/.local/bin or /usr/local/bin)
 #   FG_VERSION       release tag to install (default: latest)
 #   FG_REPO          GitHub owner/repo (default: adam-gill/filegilla)
+#
+# The script is written to be POSIX-compatible so it works whether
+# piped to `sh` (which may be dash on Debian/Ubuntu) or `bash`.
 
-set -euo pipefail
+set -eu
 
 FG_REPO="${FG_REPO:-adam-gill/filegilla}"
 FG_VERSION="${FG_VERSION:-latest}"
 FG_ASSET_NAME="${FG_ASSET_NAME:-fg}"
 
-if [[ -n "${FG_INSTALL_DIR:-}" ]]; then
+if [ -n "${FG_INSTALL_DIR:-}" ]; then
   INSTALL_DIR="${FG_INSTALL_DIR}"
-elif [[ "$(id -u)" -eq 0 ]]; then
+elif [ "$(id -u)" -eq 0 ]; then
   INSTALL_DIR="/usr/local/bin"
 else
   INSTALL_DIR="${HOME}/.local/bin"
 fi
 
-download_url="https://github.com/${FG_REPO}/releases/download/${FG_VERSION}/${FG_ASSET_NAME}"
+# GitHub's URL for the latest release uses /releases/latest/download/.
+# Pinned versions use /releases/download/<tag>/.
+if [ "${FG_VERSION}" = "latest" ]; then
+  download_url="https://github.com/${FG_REPO}/releases/latest/download/${FG_ASSET_NAME}"
+else
+  download_url="https://github.com/${FG_REPO}/releases/download/${FG_VERSION}/${FG_ASSET_NAME}"
+fi
 
 echo "Installing fg to ${INSTALL_DIR}/fg"
 echo "Source: ${download_url}"
@@ -43,15 +52,18 @@ echo
 echo "fg installed to ${INSTALL_DIR}/fg"
 echo
 
-# PATH warning.
+# PATH warning. Use POSIX [ ] (not [[ ]]) so this works under dash.
 if ! command -v fg >/dev/null 2>&1; then
-  if [[ ":${PATH}:" != *":${INSTALL_DIR}:"* ]]; then
-    echo "NOTE: ${INSTALL_DIR} is not on your PATH."
-    echo "Add this to your ~/.bashrc (or equivalent):"
-    echo
-    echo "    export PATH=\"${INSTALL_DIR}:\${PATH}\""
-    echo
-  fi
+  case ":${PATH}:" in
+    *":${INSTALL_DIR}:"*) ;;
+    *)
+      echo "NOTE: ${INSTALL_DIR} is not on your PATH."
+      echo "Add this to your ~/.bashrc (or equivalent):"
+      echo
+      echo "    export PATH=\"${INSTALL_DIR}:\${PATH}\""
+      echo
+      ;;
+  esac
 fi
 
 echo "Next step: run 'fg setup' to configure your API key."
