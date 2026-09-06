@@ -55,10 +55,10 @@ fgcli_load_config() {
     . "${FG_CONFIG_FILE}"
     [[ -n "${FG_BASE_URL:-}" ]] && FG_BASE_URL_IN="${FG_BASE_URL}"
     [[ -n "${FG_API_KEY_ID:-}" ]] && FG_API_KEY_ID_IN="${FG_API_KEY_ID}"
-    FG_BASE_URL="${FG_BASE_URL:-${FG_BASE_URL_IN:-https://filegilla.com}}"
+    FG_BASE_URL="${FG_BASE_URL:-${FG_BASE_URL_IN:-https://www.filegilla.com}}"
     FG_API_KEY_ID="${FG_API_KEY_ID:-${FG_API_KEY_ID_IN:-}}"
   else
-    FG_BASE_URL="${FG_BASE_URL:-https://filegilla.com}"
+    FG_BASE_URL="${FG_BASE_URL:-https://www.filegilla.com}"
   fi
 
   # API key secret in its own file, mode 600. Env var overrides.
@@ -243,7 +243,7 @@ fgcli_cmd_setup() {
   echo
 
   # Base URL.
-  local default_url="${FG_BASE_URL:-https://filegilla.com}"
+  local default_url="${FG_BASE_URL:-https://www.filegilla.com}"
   echo -n "Base URL [${default_url}]: "
   read -r url
   FG_BASE_URL="${url:-${default_url}}"
