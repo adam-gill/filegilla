@@ -2,7 +2,7 @@ import { prisma } from "./prisma";
 import bcrypt from "bcrypt";
 import { apiKey, cliItem } from "@/prisma/generated/client";
 
-const DEFAULT_API_KEY_ID = "cb7c658b-2660-4d9c-ad22-b5dda0875d53";
+const DEFAULT_API_KEY_ID = "90edb81b-898e-44fc-a712-fbfe2a4ea267";
 
 // A structurally-valid bcrypt hash used to keep the comparison time constant
 // when the requested key id doesn't exist. Any string that parses as bcrypt
