@@ -44,14 +44,17 @@ FG_API_KEY_ID=""
 
 fgcli_load_config() {
   if [[ -r "${FG_CONFIG_FILE}" ]]; then
-    # Source the config file. It must be KEY=VALUE lines.
+    # Source the config file. The file is written by this script and
+    # only contains KEY=VALUE lines, so we don't need a subshell to
+    # isolate it. (A previous version used a subshell for `set +u`
+    # isolation, but the subshell returned non-zero when the config
+    # was minimal, which killed the parent under `set -e`.)
+    FG_BASE_URL_IN=""
+    FG_API_KEY_ID_IN=""
     # shellcheck disable=SC1090
-    (
-      set +u
-      . "${FG_CONFIG_FILE}"
-      [[ -n "${FG_BASE_URL:-}" ]] && FG_BASE_URL_IN="${FG_BASE_URL}"
-      [[ -n "${FG_API_KEY_ID:-}" ]] && FG_API_KEY_ID_IN="${FG_API_KEY_ID}"
-    )
+    . "${FG_CONFIG_FILE}"
+    [[ -n "${FG_BASE_URL:-}" ]] && FG_BASE_URL_IN="${FG_BASE_URL}"
+    [[ -n "${FG_API_KEY_ID:-}" ]] && FG_API_KEY_ID_IN="${FG_API_KEY_ID}"
     FG_BASE_URL="${FG_BASE_URL:-${FG_BASE_URL_IN:-https://filegilla.com}}"
     FG_API_KEY_ID="${FG_API_KEY_ID:-${FG_API_KEY_ID_IN:-}}"
   else
