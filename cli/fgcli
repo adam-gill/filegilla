@@ -1,48 +1,48 @@
 #!/usr/bin/env bash
-# fg — filegilla CLI
+# fgcli — filegilla CLI
 #
-# A thin wrapper around the filegilla HTTP API. Use `fg setup` once
+# A thin wrapper around the filegilla HTTP API. Use `fgcli setup` once
 # to configure the API key and base URL; after that, every request
 # is authenticated automatically.
 #
 # Install:
 #     curl -fsSL https://filegilla.com/install.sh | sh
-#     fg setup
+#     fgcli setup
 #
 # Common usage:
-#     fg post ./photo.jpg              # upload, prompt for id
-#     fg post ./photo.jpg --id my-photo
-#     fg get my-photo                  # download to ./<original-filename>
-#     fg get my-photo -O ./saved.jpg   # download to a specific path
-#     fg metadata my-photo
-#     fg delete my-photo
+#     fgcli post ./photo.jpg              # upload, prompt for id
+#     fgcli post ./photo.jpg --id my-photo
+#     fgcli get my-photo                  # download to ./<original-filename>
+#     fgcli get my-photo -O ./saved.jpg   # download to a specific path
+#     fgcli metadata my-photo
+#     fgcli delete my-photo
 #
 # Configuration is read from:
-#     ~/.config/fg/config              (base URL, key id; mode 600)
-#     ~/.config/fg/api_key             (key secret; mode 600)
+#     ~/.config/fgcli/config              (base URL, key id; mode 600)
+#     ~/.config/fgcli/api_key             (key secret; mode 600)
 #
 # Environment variables override config-file values:
 #     FG_BASE_URL, FG_API_KEY, FG_API_KEY_ID
 #
 # Shell completion:
-#     fg completion bash > ~/.local/share/bash-completion/completions/fg
-#     fg completion zsh  > ~/.zsh/completions/_fg
+#     fgcli completion bash > ~/.local/share/bash-completion/completions/fgcli
+#     fgcli completion zsh  > ~/.zsh/completions/_fgcli
 
 set -euo pipefail
 
 FG_VERSION="0.1.0"
-FG_CONFIG_DIR="${FG_CONFIG_DIR:-${HOME}/.config/fg}"
+FG_CONFIG_DIR="${FG_CONFIG_DIR:-${HOME}/.config/fgcli}"
 FG_CONFIG_FILE="${FG_CONFIG_DIR}/config"
 FG_API_KEY_FILE="${FG_CONFIG_DIR}/api_key"
 
-# In-memory config (loaded from disk by fg_load_config).
+# In-memory config (loaded from disk by fgcli_load_config).
 FG_BASE_URL=""
 FG_API_KEY=""
 FG_API_KEY_ID=""
 
 # ---------- config I/O ----------
 
-fg_load_config() {
+fgcli_load_config() {
   if [[ -r "${FG_CONFIG_FILE}" ]]; then
     # Source the config file. It must be KEY=VALUE lines.
     # shellcheck disable=SC1090
@@ -64,7 +64,7 @@ fg_load_config() {
   fi
 }
 
-fg_save_config() {
+fgcli_save_config() {
   mkdir -p "${FG_CONFIG_DIR}"
   chmod 700 "${FG_CONFIG_DIR}"
   {
@@ -76,7 +76,7 @@ fg_save_config() {
   chmod 600 "${FG_CONFIG_FILE}"
 }
 
-fg_save_api_key() {
+fgcli_save_api_key() {
   mkdir -p "${FG_CONFIG_DIR}"
   chmod 700 "${FG_CONFIG_DIR}"
   printf '%s' "${1}" > "${FG_API_KEY_FILE}"
@@ -85,20 +85,20 @@ fg_save_api_key() {
 
 # ---------- output helpers ----------
 
-fg_die() {
-  echo "fg: $*" >&2
+fgcli_die() {
+  echo "fgcli: $*" >&2
   exit 1
 }
 
-fg_warn() {
-  echo "fg: $*" >&2
+fgcli_warn() {
+  echo "fgcli: $*" >&2
 }
 
 # Run jq if available, else fall back to sed-based extraction for
 # the small set of fields this script reads. The fallback is
 # intentionally narrow; it works for the metadata response shape
 # only.
-fg_jq() {
+fgcli_jq() {
   local filter="$1"
   if command -v jq >/dev/null 2>&1; then
     jq -r "${filter}"
@@ -107,7 +107,7 @@ fg_jq() {
   fi
 }
 
-fg_json_str() {
+fgcli_json_str() {
   local field="$1"
   if command -v jq >/dev/null 2>&1; then
     jq -r --arg f "${field}" '.data[$f] // .[$f] // empty'
@@ -116,7 +116,7 @@ fg_json_str() {
   fi
 }
 
-fg_json_bool() {
+fgcli_json_bool() {
   local field="$1"
   if command -v jq >/dev/null 2>&1; then
     jq -r --arg f "${field}" '.data[$f] // .[$f] // empty'
@@ -128,7 +128,7 @@ fg_json_bool() {
 # ---------- HTTP helpers ----------
 
 # Echoes a single -H argument per call. Caller builds the array.
-fg_auth_headers() {
+fgcli_auth_headers() {
   printf '%s\n' "-H" "x-api-key: ${FG_API_KEY}"
   if [[ -n "${FG_API_KEY_ID}" ]]; then
     printf '%s\n' "-H" "x-api-key-id: ${FG_API_KEY_ID}"
@@ -138,7 +138,7 @@ fg_auth_headers() {
 # Build a curl command as a bash array. Returns via the global
 # FG_CMD array because bash arrays can't be returned from functions.
 FG_CMD=()
-fg_build_curl() {
+fgcli_build_curl() {
   FG_CMD=(curl -fsSL --connect-timeout 10 --max-time 3600)
   if [[ -n "${FG_API_KEY}" ]]; then
     FG_CMD+=(-H "x-api-key: ${FG_API_KEY}")
@@ -148,26 +148,26 @@ fg_build_curl() {
   fi
 }
 
-fg_run_curl() {
-  fg_build_curl
+fgcli_run_curl() {
+  fgcli_build_curl
   FG_CMD+=("$@")
   "${FG_CMD[@]}"
 }
 
-fg_require_api_key() {
+fgcli_require_api_key() {
   if [[ -z "${FG_API_KEY}" ]]; then
-    fg_die "no API key configured. Run 'fg setup' first."
+    fgcli_die "no API key configured. Run 'fgcli setup' first."
   fi
 }
 
 # ---------- commands ----------
 
-fg_help() {
+fgcli_help() {
   cat <<'EOF'
-fg — filegilla CLI
+fgcli — filegilla CLI
 
 Usage:
-  fg <command> [options]
+  fgcli <command> [options]
 
 Commands:
   setup                              Configure base URL, API key id, and key secret
@@ -205,35 +205,35 @@ Metadata options:
 Delete options:
   --yes, -y        Skip the confirmation prompt.
 
-Config layout (created by 'fg setup'):
-  ~/.config/fg/config          base URL and key id (mode 600)
-  ~/.config/fg/api_key         key secret (mode 600)
+Config layout (created by 'fgcli setup'):
+  ~/.config/fgcli/config          base URL and key id (mode 600)
+  ~/.config/fgcli/api_key         key secret (mode 600)
 
 Environment variables override config-file values:
   FG_BASE_URL, FG_API_KEY, FG_API_KEY_ID
 
 Examples:
-  fg setup
-  fg post ./photo.jpg
-  fg post ./photo.jpg --id my-photo --public
-  fg post --text "hello world" --id greeting
-  fg get my-photo
-  fg get my-photo -O ~/Downloads/saved.jpg
-  fg get my-greeting --key my-password
-  fg metadata my-photo
-  fg metadata my-photo --json
-  fg delete my-photo
+  fgcli setup
+  fgcli post ./photo.jpg
+  fgcli post ./photo.jpg --id my-photo --public
+  fgcli post --text "hello world" --id greeting
+  fgcli get my-photo
+  fgcli get my-photo -O ~/Downloads/saved.jpg
+  fgcli get my-greeting --key my-password
+  fgcli metadata my-photo
+  fgcli metadata my-photo --json
+  fgcli delete my-photo
 
 EOF
 }
 
-fg_version() {
-  echo "fg ${FG_VERSION}"
+fgcli_version() {
+  echo "fgcli ${FG_VERSION}"
 }
 
 # ---------- setup ----------
 
-fg_cmd_setup() {
+fgcli_cmd_setup() {
   echo "filegilla CLI setup"
   echo
   echo "Press Enter to accept the default in [brackets]."
@@ -272,19 +272,19 @@ fg_cmd_setup() {
     break
   done
 
-  fg_save_config
-  fg_save_api_key "${secret}"
+  fgcli_save_config
+  fgcli_save_api_key "${secret}"
 
   echo
   echo "Saved to ${FG_CONFIG_DIR}/"
   echo "  config     $(wc -c < "${FG_CONFIG_FILE}" 2>/dev/null || echo 0) bytes"
   echo "  api_key    $(wc -c < "${FG_API_KEY_FILE}" 2>/dev/null || echo 0) bytes"
   echo
-  echo "Try: fg post ./somefile"
+  echo "Try: fgcli post ./somefile"
 }
 
-fg_cmd_config() {
-  fg_load_config
+fgcli_cmd_config() {
+  fgcli_load_config
   echo "FG_BASE_URL    = ${FG_BASE_URL}"
   if [[ -n "${FG_API_KEY_ID}" ]]; then
     echo "FG_API_KEY_ID  = ${FG_API_KEY_ID}"
@@ -307,7 +307,7 @@ fg_cmd_config() {
 # Reads a value from stdin, with an optional default if the user hits
 # Enter. If the user types anything non-empty, returns that. If they
 # hit Enter, echoes the default to stdout.
-fg_prompt_with_default() {
+fgcli_prompt_with_default() {
   local prompt="$1"
   local default="$2"
   local reply
@@ -324,9 +324,9 @@ fg_prompt_with_default() {
   fi
 }
 
-fg_cmd_post() {
-  fg_load_config
-  fg_require_api_key
+fgcli_cmd_post() {
+  fgcli_load_config
+  fgcli_require_api_key
 
   local file="" text="" id="" key="" public="false" overwrite="false"
 
@@ -340,7 +340,7 @@ fg_cmd_post() {
       --public) public="true"; shift;;
       --overwrite) overwrite="true"; shift;;
       --) shift; while [[ $# -gt 0 ]]; do positional+=("$1"); shift; done;;
-      -h|--help) fg_help; exit 0;;
+      -h|--help) fgcli_help; exit 0;;
       *) positional+=("$1"); shift;;
     esac
   done
@@ -348,26 +348,26 @@ fg_cmd_post() {
   if [[ -n "${text}" ]]; then
     : # text mode; file arg is ignored
   elif [[ ${#positional[@]} -eq 0 ]]; then
-    fg_die "post: file path required (or use --text)"
+    fgcli_die "post: file path required (or use --text)"
   elif [[ ${#positional[@]} -eq 1 ]]; then
     file="${positional[0]}"
   else
-    fg_die "post: too many arguments: ${positional[*]}"
+    fgcli_die "post: too many arguments: ${positional[*]}"
   fi
 
   # If --id wasn't given, prompt. Enter = empty (server generates).
   if [[ -z "${id}" && -z "${text}" ]]; then
-    id="$(fg_prompt_with_default "id (Enter to auto-generate)" "")"
+    id="$(fgcli_prompt_with_default "id (Enter to auto-generate)" "")"
   fi
 
-  fg_build_curl
+  fgcli_build_curl
   FG_CMD+=(-X POST "${FG_BASE_URL}/cli")
 
   if [[ -n "${text}" ]]; then
     FG_CMD+=(-F "text=${text}")
   else
     if [[ ! -r "${file}" ]]; then
-      fg_die "post: cannot read file: ${file}"
+      fgcli_die "post: cannot read file: ${file}"
     fi
     FG_CMD+=(-F "file=@${file}")
   fi
@@ -398,21 +398,21 @@ fg_cmd_post() {
 
 # ---------- get (download) ----------
 
-fg_cmd_get() {
-  fg_load_config
+fgcli_cmd_get() {
+  fgcli_load_config
 
   local id="" key="" out=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --key) key="$2"; shift 2;;
       -O) out="$2"; shift 2;;
-      -h|--help) fg_help; exit 0;;
+      -h|--help) fgcli_help; exit 0;;
       *) id="$1"; shift;;
     esac
   done
 
   if [[ -z "${id}" ]]; then
-    fg_die "get: id required"
+    fgcli_die "get: id required"
   fi
 
   # Fetch metadata. If auth isn't set up, try the no-auth version
@@ -420,7 +420,7 @@ fg_cmd_get() {
   # 401s, surface a useful error.
   local meta meta_args=()
   if [[ -n "${FG_API_KEY}" ]]; then
-    fg_build_curl
+    fgcli_build_curl
     FG_CMD+=("${FG_BASE_URL}/cli/${id}/metadata")
     meta="$("${FG_CMD[@]}" 2>/dev/null || true)"
   else
@@ -428,21 +428,21 @@ fg_cmd_get() {
   fi
 
   if [[ -z "${meta}" ]]; then
-    fg_die "get: could not fetch metadata for '${id}' (item missing, or 'fg setup' not run)"
+    fgcli_die "get: could not fetch metadata for '${id}' (item missing, or 'fgcli setup' not run)"
   fi
 
   local is_file
-  is_file="$(echo "${meta}" | fg_json_bool isFile)"
+  is_file="$(echo "${meta}" | fgcli_json_bool isFile)"
   local filename
-  filename="$(echo "${meta}" | fg_json_str filename)"
+  filename="$(echo "${meta}" | fgcli_json_str filename)"
 
   if [[ "${is_file}" != "true" && -z "${is_file}" ]]; then
-    fg_die "get: unexpected metadata response: ${meta}"
+    fgcli_die "get: unexpected metadata response: ${meta}"
   fi
 
   # Build the actual GET.
   if [[ -n "${FG_API_KEY}" ]]; then
-    fg_build_curl
+    fgcli_build_curl
   else
     FG_CMD=(curl -fsSL)
   fi
@@ -465,7 +465,7 @@ fg_cmd_get() {
   else
     # Text item. Always to stdout. --out/-O is ignored.
     if [[ -n "${out}" ]]; then
-      fg_warn "--out/-O ignored for text items; printing to stdout"
+      fgcli_warn "--out/-O ignored for text items; printing to stdout"
     fi
     "${FG_CMD[@]}"
   fi
@@ -473,25 +473,25 @@ fg_cmd_get() {
 
 # ---------- metadata ----------
 
-fg_cmd_metadata() {
-  fg_load_config
+fgcli_cmd_metadata() {
+  fgcli_load_config
 
   local id="" as_json="false"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --json) as_json="true"; shift;;
-      -h|--help) fg_help; exit 0;;
+      -h|--help) fgcli_help; exit 0;;
       *) id="$1"; shift;;
     esac
   done
 
   if [[ -z "${id}" ]]; then
-    fg_die "metadata: id required"
+    fgcli_die "metadata: id required"
   fi
 
   local resp
   if [[ -n "${FG_API_KEY}" ]]; then
-    fg_run_curl "${FG_BASE_URL}/cli/${id}/metadata"
+    fgcli_run_curl "${FG_BASE_URL}/cli/${id}/metadata"
   else
     curl -fsSL "${FG_BASE_URL}/cli/${id}/metadata"
   fi
@@ -515,21 +515,21 @@ fg_cmd_metadata() {
 
 # ---------- delete ----------
 
-fg_cmd_delete() {
-  fg_load_config
-  fg_require_api_key
+fgcli_cmd_delete() {
+  fgcli_load_config
+  fgcli_require_api_key
 
   local id="" yes="false"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --yes|-y) yes="true"; shift;;
-      -h|--help) fg_help; exit 0;;
+      -h|--help) fgcli_help; exit 0;;
       *) id="$1"; shift;;
     esac
   done
 
   if [[ -z "${id}" ]]; then
-    fg_die "delete: id required"
+    fgcli_die "delete: id required"
   fi
 
   if [[ "${yes}" != "true" ]]; then
@@ -542,7 +542,7 @@ fg_cmd_delete() {
     esac
   fi
 
-  fg_build_curl
+  fgcli_build_curl
   FG_CMD+=(-X DELETE "${FG_BASE_URL}/cli/${id}")
   "${FG_CMD[@]}"
   echo
@@ -555,7 +555,7 @@ fg_cmd_delete() {
 
 # ---------- completion ----------
 
-fg_cmd_completion() {
+fgcli_cmd_completion() {
   local shell="${1:-}"
   case "${shell}" in
     bash)
@@ -605,12 +605,12 @@ _fg() {
       ;;
   esac
 }
-complete -F _fg fg
+complete -F _fgcli fgcli
 EOF
       ;;
     zsh)
       cat <<'EOF'
-#compdef fg
+#compdef fgcli
 _fg() {
   local -a commands
   commands=(
@@ -664,17 +664,17 @@ _fg "$@"
 EOF
       ;;
     *)
-      fg_die "completion: specify 'bash' or 'zsh'"
+      fgcli_die "completion: specify 'bash' or 'zsh'"
       ;;
   esac
 }
 
 # ---------- entrypoint ----------
 
-fg_load_config
+fgcli_load_config
 
 if [[ $# -eq 0 ]]; then
-  fg_help
+  fgcli_help
   exit 0
 fi
 
@@ -682,14 +682,14 @@ cmd="$1"
 shift
 
 case "${cmd}" in
-  setup) fg_cmd_setup "$@";;
-  post|upload) fg_cmd_post "$@";;
-  get|download) fg_cmd_get "$@";;
-  metadata) fg_cmd_metadata "$@";;
-  delete|rm) fg_cmd_delete "$@";;
-  config) fg_cmd_config "$@";;
-  completion) fg_cmd_completion "$@";;
-  help|-h|--help) fg_help;;
-  version|-V|--version) fg_version;;
-  *) fg_die "unknown command: ${cmd} (try 'fg help')";;
+  setup) fgcli_cmd_setup "$@";;
+  post|upload) fgcli_cmd_post "$@";;
+  get|download) fgcli_cmd_get "$@";;
+  metadata) fgcli_cmd_metadata "$@";;
+  delete|rm) fgcli_cmd_delete "$@";;
+  config) fgcli_cmd_config "$@";;
+  completion) fgcli_cmd_completion "$@";;
+  help|-h|--help) fgcli_help;;
+  version|-V|--version) fgcli_version;;
+  *) fgcli_die "unknown command: ${cmd} (try 'fgcli help')";;
 esac
