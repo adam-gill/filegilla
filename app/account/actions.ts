@@ -11,11 +11,12 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
 import { randomId } from "@/lib/helpers";
+import { success } from "zod";
 
 const S3_PUBLIC_BUCKET_NAME = process.env.S3_PUBLIC_BUCKET_NAME!;
 
 export const editUsername = async (
-  newUsername: string
+  newUsername: string,
 ): Promise<{ success: boolean; message: string }> => {
   try {
     const hdrs = await headers();
@@ -64,7 +65,7 @@ export const editUsername = async (
 export const changeAvatar = async (
   userId: string,
   fileName: string,
-  contentType: string
+  contentType: string,
 ): Promise<{
   success: boolean;
   message: string;
@@ -99,7 +100,7 @@ export const changeAvatar = async (
       new ListObjectsV2Command({
         Bucket: S3_PUBLIC_BUCKET_NAME,
         Prefix: folderPrefix,
-      })
+      }),
     );
 
     const contents: { Key?: string }[] = (listResp.Contents || []) as {
@@ -116,7 +117,7 @@ export const changeAvatar = async (
           new DeleteObjectsCommand({
             Bucket: S3_PUBLIC_BUCKET_NAME,
             Delete: { Objects: chunk, Quiet: true },
-          })
+          }),
         );
       }
     }
@@ -141,5 +142,103 @@ export const changeAvatar = async (
   } catch (error) {
     console.error("Error preparing avatar upload:", error);
     return { success: false, message: "Failed to prepare avatar upload" };
+  }
+};
+
+export const createApiKey = async (
+  expirationTime: number | null,
+): Promise<{
+  success: boolean;
+  message: string;
+  apiKey?: string;
+  apiKeyId?: string;
+}> => {
+  try {
+    const hdrs = await headers();
+    const session = await auth.api.getSession({ headers: hdrs });
+
+    if (!session?.user.id) {
+      return { success: false, message: "failed to get user id" };
+    }
+
+    const ONE_YEAR = 60 * 60 * 24 * 365;
+    const expiresIn =
+      expirationTime && expirationTime > 0 ? expirationTime : ONE_YEAR;
+
+    const { key, id } = await auth.api.createApiKey({
+      headers: hdrs,
+      body: { expiresIn },
+    });
+
+    return {
+      success: true,
+      message: "successfully created api key",
+      apiKey: key,
+      apiKeyId: id,
+    };
+  } catch (error) {
+    console.error(`failed to create api key: ${error}`);
+    return {
+      success: false,
+      message: "failed to create api key, please try again",
+    };
+  }
+};
+
+export const deleteApiKey = async (
+  apiKeyId: string,
+): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  try {
+    await auth.api.deleteApiKey({
+      body: {
+        keyId: apiKeyId,
+      },
+      headers: await headers(),
+    });
+
+    await auth.api.deleteAllExpiredApiKeys();
+
+    return {
+      success: true,
+      message: "successfully deleted api key",
+    };
+  } catch (error) {
+    console.error(`Failed to delete apiKey ${apiKeyId}: ${error}`);
+    return {
+      success: false,
+      message: "failed to delete api key",
+    };
+  }
+};
+
+export const getApiKeys = async (): Promise<{
+  success: boolean;
+  message: string;
+  apiKeysMetadata?: { id: string; expiresAt: Date | null }[];
+}> => {
+  try {
+    const { apiKeys } = await auth.api.listApiKeys({
+      headers: await headers(),
+    });
+
+    const apiKeysMetadata = apiKeys.map((k) => ({
+      id: k.id,
+      expiresAt: k.expiresAt, // Date | null
+    }));
+
+    return {
+      success: true,
+      message: "successfully fetched user's api keys",
+      apiKeysMetadata,
+    };
+  } catch (error) {
+    console.error(`failed to get api keys for user: ${error}`);
+    return {
+      success: false,
+      message: "failed to get user's api keys",
+    };
   }
 };

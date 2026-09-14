@@ -1,3 +1,4 @@
+
 generator client {
   provider     = "prisma-client"
   output       = "./generated"
@@ -40,6 +41,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
+  @@index([userId])
 }
 
 model Account {
@@ -59,6 +61,7 @@ model Account {
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
+  @@index([userId])
 }
 
 model Verification {
@@ -70,6 +73,7 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+  @@index([identifier])
 }
 
 model WebKey {
@@ -86,6 +90,9 @@ model Jwks {
   publicKey  String
   privateKey String
   createdAt  DateTime
+  expiresAt DateTime?
+  alg       String?
+  crv       String?
 
   @@map("jwks")
 }
@@ -108,6 +115,7 @@ model share {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+
 model verificationCode {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email            String
@@ -149,4 +157,34 @@ model cliItem {
 enum item_type_enum {
   file
   folder
+}
+
+model Apikey {
+  id                  String    @id
+  configId            String    @default("default")
+  name                String?
+  start               String?
+  referenceId         String
+  prefix              String?
+  key                 String
+  refillInterval      Int?
+  refillAmount        Int?
+  lastRefillAt        DateTime?
+  enabled             Boolean?  @default(true)
+  rateLimitEnabled    Boolean?  @default(true)
+  rateLimitTimeWindow Int?      @default(86400000)
+  rateLimitMax        Int?      @default(10)
+  requestCount        Int?      @default(0)
+  remaining           Int?
+  lastRequest         DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime
+  updatedAt           DateTime
+  permissions         String?
+  metadata            String?
+
+  @@index([configId])
+  @@index([referenceId])
+  @@index([key])
+  @@map("apikey")
 }

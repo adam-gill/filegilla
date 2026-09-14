@@ -29,7 +29,6 @@ export default function AccountCard() {
   const { data: session, isPending, refetch } = authClient.useSession();
   const [username, setUsername] = useState<string>("");
   const userData = session?.user;
-  console.log("userData", userData);
   const inputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 

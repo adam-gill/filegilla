@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { generateUsername } from "./generate-username";
 import { prisma } from "@/lib/prisma";
 import { jwt } from "better-auth/plugins";
+import { apiKey } from "@better-auth/api-key";
 import { createUserFolder } from "./actions";
 
 export const auth = betterAuth({
@@ -54,5 +55,13 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // 1 day
   },
-  plugins: [jwt()],
+  plugins: [
+    jwt(),
+    apiKey({
+      keyExpiration: {
+        maxExpiresIn: 3650, // 5 years, in days
+        minExpiresIn: 1,
+      },
+    }),
+  ],
 });

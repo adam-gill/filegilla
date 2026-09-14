@@ -50,7 +50,7 @@ export default function CopyText({
   return (
     <div className={`${isMinWidth ? "" : "w-full"}`}>
       {showingAnimation ? (
-        <Check className={cn("text-green-500 stroke-[2.5]", className)} />
+        <Check className={cn("text-green-500 stroke-[2.5] w-4 h-4", className)} />
       ) : (
         <Copy
           className={cn("cursor-pointer w-4 h-4", className)}
