@@ -18,11 +18,11 @@
 #     fgcli delete my-photo
 #
 # Configuration is read from:
-#     ~/.config/fgcli/config              (base URL, key id; mode 600)
+#     ~/.config/fgcli/config              (base URL; mode 600)
 #     ~/.config/fgcli/api_key             (key secret; mode 600)
 #
 # Environment variables override config-file values:
-#     FG_BASE_URL, FG_API_KEY, FG_API_KEY_ID
+#     FG_BASE_URL, FG_API_KEY
 #
 # Shell completion:
 #     fgcli completion bash > ~/.local/share/bash-completion/completions/fgcli
@@ -30,15 +30,19 @@
 
 set -euo pipefail
 
-FG_VERSION="0.1.1"
+FG_VERSION="0.1.3"
 FG_CONFIG_DIR="${FG_CONFIG_DIR:-${HOME}/.config/fgcli}"
 FG_CONFIG_FILE="${FG_CONFIG_DIR}/config"
 FG_API_KEY_FILE="${FG_CONFIG_DIR}/api_key"
 
+# Update uses the same GitHub release layout as install.sh. Override any
+# of these via env vars if you self-host.
+FG_REPO="${FG_REPO:-adam-gill/filegilla}"
+FG_ASSET_NAME="${FG_ASSET_NAME:-fgcli}"
+
 # In-memory config (loaded from disk by fgcli_load_config).
 FG_BASE_URL=""
 FG_API_KEY=""
-FG_API_KEY_ID=""
 
 # ---------- config I/O ----------
 
@@ -46,17 +50,12 @@ fgcli_load_config() {
   if [[ -r "${FG_CONFIG_FILE}" ]]; then
     # Source the config file. The file is written by this script and
     # only contains KEY=VALUE lines, so we don't need a subshell to
-    # isolate it. (A previous version used a subshell for `set +u`
-    # isolation, but the subshell returned non-zero when the config
-    # was minimal, which killed the parent under `set -e`.)
+    # isolate it.
     FG_BASE_URL_IN=""
-    FG_API_KEY_ID_IN=""
     # shellcheck disable=SC1090
     . "${FG_CONFIG_FILE}"
     [[ -n "${FG_BASE_URL:-}" ]] && FG_BASE_URL_IN="${FG_BASE_URL}"
-    [[ -n "${FG_API_KEY_ID:-}" ]] && FG_API_KEY_ID_IN="${FG_API_KEY_ID}"
     FG_BASE_URL="${FG_BASE_URL:-${FG_BASE_URL_IN:-https://www.filegilla.com}}"
-    FG_API_KEY_ID="${FG_API_KEY_ID:-${FG_API_KEY_ID_IN:-}}"
   else
     FG_BASE_URL="${FG_BASE_URL:-https://www.filegilla.com}"
   fi
@@ -72,9 +71,6 @@ fgcli_save_config() {
   chmod 700 "${FG_CONFIG_DIR}"
   {
     printf 'FG_BASE_URL=%q\n' "${FG_BASE_URL}"
-    if [[ -n "${FG_API_KEY_ID}" ]]; then
-      printf 'FG_API_KEY_ID=%q\n' "${FG_API_KEY_ID}"
-    fi
   } > "${FG_CONFIG_FILE}"
   chmod 600 "${FG_CONFIG_FILE}"
 }
@@ -130,14 +126,6 @@ fgcli_json_bool() {
 
 # ---------- HTTP helpers ----------
 
-# Echoes a single -H argument per call. Caller builds the array.
-fgcli_auth_headers() {
-  printf '%s\n' "-H" "x-api-key: ${FG_API_KEY}"
-  if [[ -n "${FG_API_KEY_ID}" ]]; then
-    printf '%s\n' "-H" "x-api-key-id: ${FG_API_KEY_ID}"
-  fi
-}
-
 # Build a curl command as a bash array. Returns via the global
 # FG_CMD array because bash arrays can't be returned from functions.
 FG_CMD=()
@@ -145,9 +133,6 @@ fgcli_build_curl() {
   FG_CMD=(curl -fsSL --connect-timeout 10 --max-time 3600)
   if [[ -n "${FG_API_KEY}" ]]; then
     FG_CMD+=(-H "x-api-key: ${FG_API_KEY}")
-    if [[ -n "${FG_API_KEY_ID}" ]]; then
-      FG_CMD+=(-H "x-api-key-id: ${FG_API_KEY_ID}")
-    fi
   fi
 }
 
@@ -163,6 +148,23 @@ fgcli_require_api_key() {
   fi
 }
 
+# Echoes the absolute path of the currently-installed fgcli binary, or
+# the empty string if not found on PATH. Used by update/uninstall so
+# they target the installed copy, not whichever invocation ran them.
+fgcli_installed_bin_path() {
+  command -v fgcli 2>/dev/null || true
+}
+
+# Extracts FG_VERSION="..." from a script. Echoes the version string, or
+# empty if not found (e.g. very old installs before this helper existed).
+fgcli_extract_version() {
+  local file="$1"
+  [[ -r "${file}" ]] || return 0
+  grep -oE 'FG_VERSION="[^"]+"' "${file}" 2>/dev/null \
+    | head -n1 \
+    | sed -E 's/.*"([^"]+)".*/\1/'
+}
+
 # ---------- commands ----------
 
 fgcli_help() {
@@ -173,7 +175,9 @@ Usage:
   fgcli <command> [options]
 
 Commands:
-  setup                              Configure base URL, API key id, and key secret
+  setup                              Configure base URL and API key secret
+  update                             Replace the fgcli binary with the latest version
+  uninstall                          Remove fgcli and its config files
   post <file> [options]              Upload a file
   post --text <text> [options]       Upload a text snippet
   get <id> [options]                 Download a file or print a text item
@@ -209,14 +213,16 @@ Delete options:
   --yes, -y        Skip the confirmation prompt.
 
 Config layout (created by 'fgcli setup'):
-  ~/.config/fgcli/config          base URL and key id (mode 600)
+  ~/.config/fgcli/config          base URL (mode 600)
   ~/.config/fgcli/api_key         key secret (mode 600)
 
 Environment variables override config-file values:
-  FG_BASE_URL, FG_API_KEY, FG_API_KEY_ID
+  FG_BASE_URL, FG_API_KEY
 
 Examples:
   fgcli setup
+  fgcli update
+  fgcli uninstall
   fgcli post ./photo.jpg
   fgcli post ./photo.jpg --id my-photo --public
   fgcli post --text "hello world" --id greeting
@@ -247,12 +253,6 @@ fgcli_cmd_setup() {
   echo -n "Base URL [${default_url}]: "
   read -r url
   FG_BASE_URL="${url:-${default_url}}"
-
-  # API key id (optional).
-  local default_id="${FG_API_KEY_ID:-}"
-  echo -n "API key id [${default_id:-none}]: "
-  read -r kid
-  FG_API_KEY_ID="${kid:-${default_id}}"
 
   # API key secret (required).
   local secret
@@ -289,11 +289,6 @@ fgcli_cmd_setup() {
 fgcli_cmd_config() {
   fgcli_load_config
   echo "FG_BASE_URL    = ${FG_BASE_URL}"
-  if [[ -n "${FG_API_KEY_ID}" ]]; then
-    echo "FG_API_KEY_ID  = ${FG_API_KEY_ID}"
-  else
-    echo "FG_API_KEY_ID  = (not set; server default will be used)"
-  fi
   if [[ -n "${FG_API_KEY}" ]]; then
     echo "FG_API_KEY     = (set, ${#FG_API_KEY} chars)"
   else
@@ -303,6 +298,141 @@ fgcli_cmd_config() {
   echo "Files:"
   [[ -f "${FG_CONFIG_FILE}" ]] && echo "  ${FG_CONFIG_FILE} (mode $(stat -c '%a' "${FG_CONFIG_FILE}" 2>/dev/null || stat -f '%Lp' "${FG_CONFIG_FILE}"))" || echo "  ${FG_CONFIG_FILE} (missing)"
   [[ -f "${FG_API_KEY_FILE}" ]] && echo "  ${FG_API_KEY_FILE} (mode $(stat -c '%a' "${FG_API_KEY_FILE}" 2>/dev/null || stat -f '%Lp' "${FG_API_KEY_FILE}"))" || echo "  ${FG_API_KEY_FILE} (missing)"
+}
+
+# ---------- update ----------
+
+fgcli_cmd_update() {
+  local version="${FG_VERSION:-latest}"
+
+  local bin_path
+  bin_path="$(fgcli_installed_bin_path)"
+  if [[ -z "${bin_path}" || ! -f "${bin_path}" ]]; then
+    fgcli_die "could not locate the fgcli binary on PATH; aborting"
+  fi
+
+  if [[ "${version}" == "latest" ]]; then
+    local url="https://github.com/${FG_REPO}/releases/latest/download/${FG_ASSET_NAME}"
+  else
+    local url="https://github.com/${FG_REPO}/releases/download/${version}/${FG_ASSET_NAME}"
+  fi
+
+  local current_version
+  current_version="$(fgcli_extract_version "${bin_path}")"
+
+  echo "Updating fgcli"
+  echo "  binary:    ${bin_path}"
+  echo "  source:    ${url}"
+  echo "  current:   ${current_version:-unknown}"
+  echo "  target:    ${version}"
+
+  local tmp
+  tmp="$(mktemp -t fgcli.XXXXXX)"
+  cleanup() { rm -f "${tmp}"; }
+  trap cleanup EXIT
+
+  if ! curl -fsSL "${url}" -o "${tmp}"; then
+    trap - EXIT
+    cleanup
+    fgcli_die "download failed: ${url}"
+  fi
+  chmod +x "${tmp}"
+
+  local new_version
+  new_version="$(fgcli_extract_version "${tmp}")"
+  echo "  new:       ${new_version:-unknown}"
+
+  if [[ -n "${current_version}" && "${current_version}" == "${new_version}" ]]; then
+    trap - EXIT
+    cleanup
+    echo
+    echo "Already up to date (${current_version})."
+    return 0
+  fi
+
+  # Atomic replace. Try direct mv first; fall back to a friendly error
+  # so the user knows to re-run with sudo if the install dir is owned
+  # by root (e.g. /usr/local/bin from the original install.sh).
+  if ! mv "${tmp}" "${bin_path}" 2>/dev/null; then
+    trap - EXIT
+    cleanup
+    if [[ ! -w "$(dirname "${bin_path}")" ]]; then
+      fgcli_die "cannot write to $(dirname "${bin_path}"); try: sudo fgcli update"
+    fi
+    fgcli_die "could not replace ${bin_path}"
+  fi
+  chmod +x "${bin_path}"
+
+  # Drop the EXIT trap — we successfully moved the temp into place.
+  trap - EXIT
+
+  echo
+  echo "fgcli updated: ${current_version:-unknown} -> ${new_version:-unknown}"
+}
+
+# ---------- uninstall ----------
+
+fgcli_cmd_uninstall() {
+  local yes="false"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --yes|-y) yes="true"; shift;;
+      -h|--help) fgcli_help; exit 0;;
+      *) shift;;
+    esac
+  done
+
+  local bin_path
+  bin_path="$(fgcli_installed_bin_path)"
+  local config_dir="${FG_CONFIG_DIR}"
+
+  echo "This will permanently remove:"
+  if [[ -n "${bin_path}" && -f "${bin_path}" ]]; then
+    echo "  - ${bin_path} (the fgcli binary)"
+  else
+    echo "  - fgcli binary (not found on PATH)"
+  fi
+  if [[ -d "${config_dir}" ]]; then
+    echo "  - ${config_dir}/ (config and API key)"
+  else
+    echo "  - ${config_dir}/ (not present)"
+  fi
+  echo "  - shell completions, if installed under ~/.local or ~/.zsh (best-effort)"
+  echo
+
+  if [[ "${yes}" != "true" ]]; then
+    echo -n "Continue? [y/N] "
+    local ans
+    read -r ans
+    case "${ans}" in
+      y|Y|yes|YES) ;;
+      *) echo "aborted"; exit 1;;
+    esac
+  fi
+
+  # Remove the binary. If it's in a system path (e.g. /usr/local/bin
+  # from a root install), rm will fail without sudo.
+  if [[ -n "${bin_path}" && -f "${bin_path}" ]]; then
+    if rm -f "${bin_path}" 2>/dev/null; then
+      echo "removed ${bin_path}"
+    else
+      fgcli_die "could not remove ${bin_path}; try: sudo rm '${bin_path}'"
+    fi
+  fi
+
+  # Remove config + API key.
+  if [[ -d "${config_dir}" ]]; then
+    rm -rf "${config_dir}"
+    echo "removed ${config_dir}"
+  fi
+
+  # Best-effort removal of common completion install locations. Failures
+  # here are not fatal — the user can remove them by hand.
+  rm -f "${HOME}/.local/share/bash-completion/completions/fgcli" 2>/dev/null || true
+  rm -f "${HOME}/.zsh/completions/_fgcli" 2>/dev/null || true
+
+  echo
+  echo "fgcli has been uninstalled."
 }
 
 # ---------- post (upload) ----------
@@ -568,7 +698,7 @@ _fg() {
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
-  cmds="setup post get metadata delete config completion help version"
+  cmds="setup update uninstall post get metadata delete config completion help version"
 
   if [[ ${COMP_CWORD} -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "${cmds}" -- "${cur}") )
@@ -617,7 +747,9 @@ EOF
 _fg() {
   local -a commands
   commands=(
-    'setup:Configure base URL, API key id, and key secret'
+    'setup:Configure base URL and API key secret'
+    'update:Replace the fgcli binary with the latest version'
+    'uninstall:Remove fgcli and its config files'
     'post:Upload a file or text'
     'get:Download a file or print a text item'
     'metadata:Show metadata for an item'
@@ -686,6 +818,8 @@ shift
 
 case "${cmd}" in
   setup) fgcli_cmd_setup "$@";;
+  update) fgcli_cmd_update "$@";;
+  uninstall|remove) fgcli_cmd_uninstall "$@";;
   post|upload) fgcli_cmd_post "$@";;
   get|download) fgcli_cmd_get "$@";;
   metadata) fgcli_cmd_metadata "$@";;

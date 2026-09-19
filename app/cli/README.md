@@ -7,23 +7,22 @@ The base URL is your filegilla instance, e.g. `http://localhost:3000`.
 
 ## Authentication
 
-Every request must include two headers:
+Every request must include one header:
 
 | Header        | Value                                                |
 | ------------- | ---------------------------------------------------- |
-| `x-api-key`   | The API key **secret** (the plaintext string).       |
-| `x-api-key-id`| The API key **id** (the UUID, with or without this header — see below). |
+| `x-api-key`   | The API key **secret** (the plaintext string).      |
 
-If you omit `x-api-key-id`, the server falls back to a built-in default
-(`cb7c658b-2660-4d9c-ad22-b5dda0875d53`). For most users you only need to
-send `x-api-key`. For multi-key setups, send both.
+API keys are created from your account page. Each key is bound to the
+user who created it and verified server-side by the Better Auth API
+key plugin — only a SHA-256 hash of the secret is stored, so the
+plaintext cannot be recovered.
 
 Example:
 
 ```bash
 curl http://localhost:3000/cli \
-  -H "x-api-key: sk_live_abc123..." \
-  -H "x-api-key-id: cb7c658b-2660-4d9c-ad22-b5dda0875d53"
+  -H "x-api-key: sk_live_abc123..."
 ```
 
 ## Authorization

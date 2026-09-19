@@ -45,15 +45,14 @@ const forbidden = () =>
 
 const authenticateAndAuthorize = async (req: NextRequest, id: string) => {
   const apiKeySecret = req.headers.get("x-api-key");
-  const apiKeyId = req.headers.get("x-api-key-id");
 
-  const auth = await authenticateApiKey(apiKeySecret, apiKeyId);
+  const auth = await authenticateApiKey(apiKeySecret);
 
-  if (!auth.authenticated || !auth.apiKey.user) {
+  if (!auth.authenticated) {
     return { ok: false as const, response: unauthorized() };
   }
 
-  const userId = auth.apiKey.user;
+  const userId = auth.userId;
 
   const authz = await authorizeCliItem(userId, id);
 
@@ -86,19 +85,18 @@ export const authorizeGet = async (req: NextRequest, id: string): Promise<AuthCh
   }
 
   const apiKeySecret = req.headers.get("x-api-key");
-  const apiKeyId = req.headers.get("x-api-key-id");
 
-  const auth = await authenticateApiKey(apiKeySecret, apiKeyId);
+  const auth = await authenticateApiKey(apiKeySecret);
 
-  if (!auth.authenticated || !auth.apiKey.user) {
+  if (!auth.authenticated) {
     return { ok: false, response: unauthorized() };
   }
 
-  if (item.ownerId !== auth.apiKey.user) {
+  if (item.ownerId !== auth.userId) {
     return { ok: false, response: forbidden() };
   }
 
-  return { ok: true, userId: auth.apiKey.user, cliItem: item };
+  return { ok: true, userId: auth.userId, cliItem: item };
 };
 
 export async function GET(

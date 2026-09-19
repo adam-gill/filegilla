@@ -25,12 +25,11 @@ export async function POST(
 ) {
   const formData = await req.formData();
 
-  const apiKeyId = req.headers.get("x-api-key-id");
   const apiKeySecret = req.headers.get("x-api-key");
 
-  const auth = await authenticateApiKey(apiKeySecret, apiKeyId);
+  const auth = await authenticateApiKey(apiKeySecret);
 
-  if (!auth.authenticated || !auth.apiKey.user) {
+  if (!auth.authenticated) {
     return NextResponse.json(
       {
         success: false,
@@ -41,7 +40,7 @@ export async function POST(
     );
   }
 
-  const userId = auth.apiKey.user;
+  const userId = auth.userId;
 
   const file = formData.get("file") as File | null;
   const text = formData.get("text") as string;

@@ -1,18 +1,10 @@
-import { prisma } from "./prisma";
-import bcrypt from "bcrypt";
-import { apiKey, cliItem } from "@/prisma/generated/client";
-
-const DEFAULT_API_KEY_ID = "90edb81b-898e-44fc-a712-fbfe2a4ea267";
-
-// A structurally-valid bcrypt hash used to keep the comparison time constant
-// when the requested key id doesn't exist. Any string that parses as bcrypt
-// will do; this one was generated with cost 10 against random input.
-const DUMMY_BCRYPT_HASH =
-  "$2b$10$abcdefghijklmnopqrstuuP9HGsF3qfBOEtE5Z6Q8R0sJ7mWk5KXe";
+import { auth } from "@/lib/auth/auth";
+import { prisma } from "@/lib/prisma";
+import type { cliItem } from "@/prisma/generated/client";
 
 type AuthSuccess = {
   authenticated: true;
-  apiKey: apiKey;
+  userId: string;
 };
 
 type AuthFailure = {
@@ -21,31 +13,29 @@ type AuthFailure = {
 
 type AuthResult = AuthSuccess | AuthFailure;
 
+// Verifies a Better Auth API key (sent in the `x-api-key` header) and
+// returns the owning user id on success. Better Auth hashes the secret
+// server-side and looks it up by hash, so no api-key-id is required.
 export const authenticateApiKey = async (
   apiKeySecret: string | null,
-  apiKeyId: string | null,
 ): Promise<AuthResult> => {
   if (!apiKeySecret) {
     return { authenticated: false };
   }
 
-  const keyId = apiKeyId ?? DEFAULT_API_KEY_ID;
+  try {
+    const result = await auth.api.verifyApiKey({
+      body: { key: apiKeySecret },
+    });
 
-  const apiKeyDB = await prisma.apiKey.findUnique({
-    where: { id: keyId },
-  });
+    if (!result.valid || !result.key?.referenceId) {
+      return { authenticated: false };
+    }
 
-  // Constant-time compare: always run bcrypt even if the key id is unknown,
-  // so an attacker can't distinguish "key id doesn't exist" from "wrong secret"
-  // by response time.
-  const hashToCompare = apiKeyDB?.hash ?? DUMMY_BCRYPT_HASH;
-  const hashIsValid = await bcrypt.compare(apiKeySecret, hashToCompare);
-
-  if (!apiKeyDB || !hashIsValid) {
+    return { authenticated: true, userId: result.key.referenceId };
+  } catch {
     return { authenticated: false };
   }
-
-  return { authenticated: true, apiKey: apiKeyDB };
 };
 
 type AuthorizationResult =
