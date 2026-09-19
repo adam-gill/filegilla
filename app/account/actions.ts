@@ -146,7 +146,7 @@ export const changeAvatar = async (
 };
 
 export const createApiKey = async (
-  expirationTime: number | null,
+  name: string,
 ): Promise<{
   success: boolean;
   message: string;
@@ -161,13 +161,12 @@ export const createApiKey = async (
       return { success: false, message: "failed to get user id" };
     }
 
-    const ONE_YEAR = 60 * 60 * 24 * 365;
-    const expiresIn =
-      expirationTime && expirationTime > 0 ? expirationTime : ONE_YEAR;
-
     const { key, id } = await auth.api.createApiKey({
       headers: hdrs,
-      body: { expiresIn },
+      body: {
+        name,
+        expiresIn: null,
+      },
     });
 
     return {
@@ -217,7 +216,7 @@ export const deleteApiKey = async (
 export const getApiKeys = async (): Promise<{
   success: boolean;
   message: string;
-  apiKeysMetadata?: { id: string; expiresAt: Date | null }[];
+  apiKeysMetadata?: { id: string; name: string | null }[];
 }> => {
   try {
     const { apiKeys } = await auth.api.listApiKeys({
@@ -226,7 +225,7 @@ export const getApiKeys = async (): Promise<{
 
     const apiKeysMetadata = apiKeys.map((k) => ({
       id: k.id,
-      expiresAt: k.expiresAt, // Date | null
+      name: k.name,
     }));
 
     return {

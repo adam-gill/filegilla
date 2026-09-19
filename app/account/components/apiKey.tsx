@@ -13,12 +13,21 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { authClient } from "@/lib/auth/auth-client";
-import { Copy, KeyRound, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Copy,
+  KeyRound,
+  Loader2,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { createApiKey, deleteApiKey, getApiKeys } from "../actions";
-import CopyText from "@/app/u/components/copyText";
+import {
+  createApiKey,
+  deleteApiKey,
+  getApiKeys,
+} from "../actions";
 
-type ApiKeyMeta = { id: string; expiresAt: Date | null };
+type ApiKeyMeta = { id: string; name: string | null };
 
 export default function ApiKey() {
   const { data: session, isPending } = authClient.useSession();
@@ -32,13 +41,12 @@ export default function ApiKey() {
   // closes it or navigates away.
   const [revealedKey, setRevealedKey] = useState<{
     id: string;
+    name: string;
     key: string;
-    expiresAt: Date;
   } | null>(null);
 
-  // Date input value is a YYYY-MM-DD string. Empty = default 1 year.
-  const [expirationDate, setExpirationDate] = useState<string>("");
-  const [dateError, setDateError] = useState<string | undefined>(undefined);
+  const [name, setName] = useState<string>("");
+  const [nameError, setNameError] = useState<string | undefined>(undefined);
 
   // Two-click delete confirmation: click once to arm, again within 3s.
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -72,36 +80,29 @@ export default function ApiKey() {
     setKeys(res.apiKeysMetadata ?? []);
   };
 
-  const handleExpirationChange = (value: string) => {
-    setExpirationDate(value);
-    if (!value) {
-      setDateError(undefined);
-      return;
-    }
-    const ms = new Date(value).getTime() - Date.now();
-    if (Number.isNaN(ms) || ms <= 0) {
-      setDateError("expiration date must be in the future");
+  const handleNameChange = (value: string) => {
+    setName(value);
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      setNameError("name is required");
+    } else if (trimmed.length > 64) {
+      setNameError("name must be 64 characters or less");
     } else {
-      setDateError(undefined);
+      setNameError(undefined);
     }
   };
 
   const handleCreate = async () => {
-    if (dateError) return;
-
-    setIsCreating(true);
-    let expiresIn: number | null = null;
-    let expiresAt: Date;
-
-    if (expirationDate) {
-      const ms = new Date(expirationDate).getTime() - Date.now();
-      expiresIn = Math.max(1, Math.floor(ms / 1000));
-      expiresAt = new Date(new Date(expirationDate).setHours(23, 59, 59, 999));
-    } else {
-      expiresAt = new Date(Date.now() + 60 * 60 * 24 * 365 * 1000);
+    if (nameError) return;
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNameError("name is required");
+      return;
     }
 
-    const res = await createApiKey(expiresIn);
+    setIsCreating(true);
+
+    const res = await createApiKey(trimmedName);
 
     setIsCreating(false);
 
@@ -116,11 +117,11 @@ export default function ApiKey() {
 
     setRevealedKey({
       id: res.apiKeyId,
+      name: trimmedName,
       key: res.apiKey,
-      expiresAt,
     });
-    setExpirationDate("");
-    setDateError(undefined);
+    setName("");
+    setNameError(undefined);
 
     toast({
       title: "api key created",
@@ -175,7 +176,6 @@ export default function ApiKey() {
       return;
     }
 
-    // If the deleted key was the one being revealed, hide its plaintext too.
     if (revealedKey?.id === id) setRevealedKey(null);
 
     toast({
@@ -185,15 +185,6 @@ export default function ApiKey() {
     });
 
     await refreshKeys();
-  };
-
-  const formatExpiration = (expiresAt: Date | null) => {
-    if (!expiresAt) return "never expires";
-    return expiresAt.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   // --- Render guards -------------------------------------------------------
@@ -222,7 +213,9 @@ export default function ApiKey() {
           <CardTitle className="text-2xl">api keys</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-lg text-black">sign in to manage your api keys.</p>
+          <p className="text-lg text-black">
+            sign in to manage your api keys.
+          </p>
         </CardContent>
       </Card>
     );
@@ -230,19 +223,11 @@ export default function ApiKey() {
 
   // --- Authenticated render -------------------------------------------------
 
-  const oneYearFromNow = new Date(
-    Date.now() + 60 * 60 * 24 * 365 * 1000,
-  ).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
   return (
     <Card className="w-full max-w-2xl mx-auto mt-6 fg-grad border-none flex flex-col text-black">
       <CardHeader className="flex flex-row items-center gap-3">
-        <KeyRound className="h-6 w-6 text-black m-0" />
-        <CardTitle className="text-2xl text-black">api keys</CardTitle>
+        <KeyRound className="h-6 w-6" />
+        <CardTitle className="text-2xl">api keys</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -250,24 +235,26 @@ export default function ApiKey() {
         <div className="space-y-3">
           <div>
             <Label
-              htmlFor="expiration"
-              className="text-base font-semibold text-black"
+              htmlFor="name"
+              className="text-base font-medium text-black"
             >
-              expiration date (optional)
+              key name
             </Label>
             <div className="flex gap-2 mt-1">
               <Input
-                id="expiration"
-                type="date"
-                value={expirationDate}
-                onChange={(e) => handleExpirationChange(e.target.value)}
-                className="bg-transparent text-black cursor-pointer"
+                id="name"
+                type="text"
+                placeholder="e.g. my-cli-script"
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                className="bg-transparent text-black"
+                maxLength={64}
               />
               <Button
                 onClick={handleCreate}
-                disabled={isCreating || !!dateError}
-                variant="black"
-                className="bg-black text-white cursor-pointer"
+                disabled={isCreating || !!nameError || !name.trim()}
+                variant="default"
+                className="bg-black text-white hover:bg-black/90"
               >
                 {isCreating ? (
                   <>
@@ -279,13 +266,12 @@ export default function ApiKey() {
                 )}
               </Button>
             </div>
-            {dateError ? (
-              <p className="text-red-500 text-base mt-1">{dateError}</p>
-            ) : (
-              <p className="text-base text-black mt-1">
-                leave blank to default to {oneYearFromNow} (1 year).
-              </p>
+            {nameError && (
+              <p className="text-red-500 text-sm mt-1">{nameError}</p>
             )}
+            <p className="text-sm text-black mt-1">
+              keys never expire. give each one a unique name so you can revoke them later.
+            </p>
           </div>
         </div>
 
@@ -294,7 +280,7 @@ export default function ApiKey() {
           <div className="rounded-md border border-amber-500 bg-amber-100 p-4 space-y-3 text-black">
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-700 mt-0.5 shrink-0" />
-              <div className="text-base">
+              <div className="text-sm">
                 <p className="font-semibold text-amber-900">
                   copy this api key now.
                 </p>
@@ -304,18 +290,29 @@ export default function ApiKey() {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2">
-              <code className="flex-1 break-all rounded bg-white border border-amber-300 px-3 py-2 font-mono text-base select-all">
-                {revealedKey.key}
-              </code>
-              <CopyText isMinWidth={true} textToCopy={revealedKey.key} />
+            <div>
+              <p className="text-sm font-semibold text-black">
+                {revealedKey.name}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="flex-1 break-all rounded bg-white border border-amber-300 px-3 py-2 font-mono text-sm select-all">
+                  {revealedKey.key}
+                </code>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => handleCopy(revealedKey.key)}
+                  aria-label="copy api key"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-amber-800">
-              <span>expires {formatExpiration(revealedKey.expiresAt)}</span>
+            <div className="flex items-center justify-end text-xs text-amber-800">
               <button
                 onClick={handleDismissRevealed}
-                className="underline hover:no-underline cursor-pointer"
+                className="underline hover:no-underline"
               >
                 i've saved it, hide
               </button>
@@ -324,15 +321,15 @@ export default function ApiKey() {
         )}
 
         {/* ----- Existing keys ----- */}
-        <div className="flex flex-col space-y-2 gap-1">
-          <Label className="text-base font-semibold text-black m-0">
+        <div className="space-y-2">
+          <Label className="text-base font-medium text-black">
             your api keys
           </Label>
 
           {isFetching ? (
             <Skeleton className="h-16 w-full bg-neutral-700/30!" />
           ) : keys.length === 0 ? (
-            <p className="text-base text-black">
+            <p className="text-sm text-black">
               you don't have any api keys yet.
             </p>
           ) : (
@@ -343,22 +340,24 @@ export default function ApiKey() {
                 return (
                   <li
                     key={k.id}
-                    className="flex items-center justify-between gap-3 rounded-md border border-black/90 px-3 py-2"
+                    className="flex items-center justify-between gap-3 rounded-md border border-black/10 bg-white/70 px-3 py-2"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-mono text-sm truncate text-black font-semibold" title={k.id}>
-                        {`key id: ${k.id}`}
+                      <p className="font-semibold truncate" title={k.name ?? ""}>
+                        {k.name ?? "(unnamed)"}
                       </p>
-                      <p className="text-sm text-black">
-                        expires {formatExpiration(k.expiresAt)}
+                      <p
+                        className="font-mono text-xs text-black truncate"
+                        title={`apiKeyId: ${k.id}`}
+                      >
+                        apiKeyId: {k.id}
                       </p>
                     </div>
                     <Button
                       size="sm"
-                      variant={isConfirming ? "destructive" : "black"}
+                      variant={isConfirming ? "destructive" : "outline"}
                       onClick={() => handleDeleteClick(k.id)}
                       disabled={isDeleting}
-                      className="cursor-pointer"
                     >
                       {isDeleting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
