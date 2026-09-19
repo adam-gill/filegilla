@@ -299,7 +299,7 @@ export default function ApiKey() {
                 <code className="flex-1 break-all rounded bg-white border border-amber-300 px-3 py-2 font-mono text-sm select-all">
                   {revealedKey.key}
                 </code>
-                <CopyText isMinWidth={true} />
+                <CopyText isMinWidth={true} textToCopy={revealedKey.key} />
               </div>
             </div>
 
