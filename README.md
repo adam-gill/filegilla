@@ -70,3 +70,6 @@ RESEND_API_KEY=
 - integrate yt-dlp/cobalt with uploading button (enter url to download content which is then uploaded to filegilla)
 - migrate from cloudflared tunnels to ngnix
 - make fg api/cli upload to users' folders or a public space
+    - try to reuse the other uploading/sharing features, and would also have to incorporate file preview generation
+    - text uploads will stay in the db and have to be user scoped instead of global
+    - only view text via cli or api unless i want to render in the text into an fg document that the user can mess with, this would require more work for little benefit
