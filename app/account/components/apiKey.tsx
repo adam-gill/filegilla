@@ -26,6 +26,7 @@ import {
   deleteApiKey,
   getApiKeys,
 } from "../actions";
+import CopyText from "@/app/u/components/copyText";
 
 type ApiKeyMeta = { id: string; name: string | null };
 
@@ -226,8 +227,8 @@ export default function ApiKey() {
   return (
     <Card className="w-full max-w-2xl mx-auto mt-6 fg-grad border-none flex flex-col text-black">
       <CardHeader className="flex flex-row items-center gap-3">
-        <KeyRound className="h-6 w-6" />
-        <CardTitle className="text-2xl">api keys</CardTitle>
+        <KeyRound className="h-6 w-6 text-black m-0" />
+        <CardTitle className="text-2xl text-black">api keys</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -298,14 +299,7 @@ export default function ApiKey() {
                 <code className="flex-1 break-all rounded bg-white border border-amber-300 px-3 py-2 font-mono text-sm select-all">
                   {revealedKey.key}
                 </code>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => handleCopy(revealedKey.key)}
-                  aria-label="copy api key"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                <CopyText isMinWidth={true} />
               </div>
             </div>
 
@@ -343,7 +337,7 @@ export default function ApiKey() {
                     className="flex items-center justify-between gap-3 rounded-md border border-black/10 bg-white/70 px-3 py-2"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold truncate" title={k.name ?? ""}>
+                      <p className="font-semibold truncate text-black" title={k.name ?? ""}>
                         {k.name ?? "(unnamed)"}
                       </p>
                       <p
