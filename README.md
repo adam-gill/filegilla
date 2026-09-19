@@ -68,5 +68,5 @@ RESEND_API_KEY=
 - add feature to select multiple items to move/delete (two separate things probably)
 - url shortener (server actions only, at least for text sharing so that i can put something on filegilla then curl it on my server)
 - integrate yt-dlp/cobalt with uploading button (enter url to download content which is then uploaded to filegilla)
-- api key crud
 - migrate from cloudflared tunnels to ngnix
+- make fg api/cli upload to users' folders or a public space
